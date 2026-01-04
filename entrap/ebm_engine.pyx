@@ -389,6 +389,24 @@ cdef class EBM_Reassignment_Engine:
         cluster_stats : dict
             Per-cluster statistics: {cluster_id: {iterations, rescued, tda_calls, ...}}
         """
+
+        cdef int iteration = 0
+        cdef int total_rescued = 0
+        cdef int cid
+        cdef int candidate_idx
+        cdef int k_adaptive, k_query, d
+        cdef bint recruited_this_round = False
+        cdef bint noise_mask_any
+        cdef int consecutive_rejects
+        cdef int early_stop_threshold = 2
+        cdef double E_G, E_cheap, E_total, E_noise
+        cdef double delta_T, delta_T_hat
+        cdef double lambda_G_t
+        cdef int candidate_local_indices_len
+        cdef int cluster_size
+        cdef int N_noise
+        cdef int len_candidates_list
+        
         refined_labels = labels.copy()
         noise_mask = (refined_labels == -1)
         
@@ -480,7 +498,8 @@ cdef class EBM_Reassignment_Engine:
                     continue
                 
                 candidates_list = [idx for idx in candidates if refined_labels[idx] == -1]
-                if len(candidates_list) == 0:
+                len_candidates_list = len(candidates_list)
+                if len_candidates_list == 0:
                     continue
                 
                 # Get current cluster points
@@ -514,7 +533,6 @@ cdef class EBM_Reassignment_Engine:
                 
                 # Early stopping counter
                 consecutive_rejects = 0
-                early_stop_threshold = 2
                 
                 for candidate_idx, E_G in candidate_energies:
                     E_cheap = lambda_G_t * E_G
