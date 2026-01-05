@@ -173,7 +173,7 @@ class Incremental_TDA_Engine:
         LRU cache for persistence diagrams
     """
     
-    def __init__(self, energy_computer, cache_config=None):
+    def __init__(self, energy_computer, alpha, cache_config=None):
         """
         Initialize incremental TDA engine.
         
@@ -181,6 +181,8 @@ class Incremental_TDA_Engine:
         ----------
         energy_computer : Topological_Energy_Computer
             Main energy computer instance
+        alpha : float
+            Topological energy normalization exponent (from EBM engine)
         cache_config : dict, optional
             Cache configuration:
             - max_diagrams (int): max cached diagrams
@@ -188,6 +190,7 @@ class Incremental_TDA_Engine:
             - validity_window (int): staleness threshold
         """
         self.energy_computer = energy_computer
+        self.alpha = alpha
         
         if cache_config is None:
             cache_config = {}
@@ -240,7 +243,7 @@ class Incremental_TDA_Engine:
         augmented_cluster = np.vstack([cluster_points, x.reshape(1, -1)])
         result = self.energy_computer.compute_raw_topological_energy(augmented_cluster)
         
-        T_new_norm = result['T_raw'] / (cluster_size + 1) ** self.energy_computer.alpha
+        T_new_norm = result['T_raw'] / (cluster_size + 1) ** self.alpha
         
         # Cache for future use (if memory allows)
         dgm_h0, dgm_h1 = self.energy_computer.compute_persistence(augmented_cluster, maxdim=1)

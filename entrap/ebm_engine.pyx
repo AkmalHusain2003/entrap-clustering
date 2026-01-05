@@ -151,6 +151,7 @@ cdef class EBM_Reassignment_Engine:
         if use_incremental_tda:
             self.incremental_tda = Incremental_TDA_Engine(
                 self.energy_computer,
+                alpha=alpha,
                 cache_config={
                     'max_diagrams': 10,
                     'memory_threshold_mb': 500,
