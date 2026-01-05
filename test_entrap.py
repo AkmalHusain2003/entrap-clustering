@@ -26,7 +26,7 @@ print()
 
 # Run ENTRAP
 print("Fitting ENTRAP...")
-clf = ENTRAP(min_cluster_size=20, alpha=0.5, lambda_T=1.0)
+clf = ENTRAP(min_cluster_size=20, alpha=0.5, lambda_T=1.0, use_incremental_tda=True)
 labels = clf.fit_predict(X)
 
 print("✓ Fitting complete!")

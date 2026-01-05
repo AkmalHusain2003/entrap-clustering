@@ -3,6 +3,9 @@
 
 cimport numpy as np
 
+# Helper function for sorting
+cdef double _get_energy_value(tuple item)
+
 cdef class EBM_Reassignment_Engine:
     cdef public double alpha
     cdef public double beta
@@ -17,7 +20,9 @@ cdef class EBM_Reassignment_Engine:
     cdef public object metric
     cdef public dict metric_params
     cdef public bint use_memmap
+    cdef public bint use_incremental_tda
     cdef public object energy_computer  # Pure Python object
+    cdef public object incremental_tda  # Incremental TDA engine (optional)
     cdef public object empirical_noise_energy_
     cdef public dict noise_energy_details_
     
@@ -54,5 +59,8 @@ cdef class EBM_Reassignment_Engine:
         np.ndarray X,
         np.ndarray true_noise_indices
     )
+    
+    
+    # Note: reassign is def (not cpdef) to allow list comprehensions and lambdas
     
     cpdef void cleanup(self)

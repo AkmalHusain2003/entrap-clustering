@@ -181,7 +181,8 @@ class ENTRAP(BaseEstimator, ClusterMixin):
                  ridge_epsilon: float = RIDGE_EPSILON,
                  metric: str = 'euclidean',
                  metric_params: Optional[dict] = None,
-                 use_memmap: bool = True):
+                 use_memmap: bool = True,
+                 use_incremental_tda: bool = False):
         """
         Initialize ENTRAP clusterer.
         
@@ -204,6 +205,7 @@ class ENTRAP(BaseEstimator, ClusterMixin):
         self.metric = validate_metric(metric)
         self.metric_params = metric_params or {}
         self.use_memmap = use_memmap
+        self.use_incremental_tda = use_incremental_tda
 
         self.ebm_engine = EBM_Reassignment_Engine(
             alpha=alpha,
@@ -218,6 +220,7 @@ class ENTRAP(BaseEstimator, ClusterMixin):
             ridge_epsilon=ridge_epsilon,
             metric=metric,
             use_memmap=use_memmap,
+            use_incremental_tda=use_incremental_tda,
             **self.metric_params
         )
 

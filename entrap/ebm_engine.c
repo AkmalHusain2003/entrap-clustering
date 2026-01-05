@@ -1797,8 +1797,8 @@ struct __pyx_opt_args_6entrap_9utilities_select_landmarks_lhs {
   PyObject *metric_params;
 };
 
-/* "entrap/ebm_engine.pxd":6
- * cimport numpy as np
+/* "entrap/ebm_engine.pxd":9
+ * cdef double _get_energy_value(tuple item)
  * 
  * cdef class EBM_Reassignment_Engine:             # <<<<<<<<<<<<<<
  *     cdef public double alpha
@@ -1820,14 +1820,16 @@ struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine {
   PyObject *metric;
   PyObject *metric_params;
   int use_memmap;
+  int use_incremental_tda;
   PyObject *energy_computer;
+  PyObject *incremental_tda;
   PyObject *empirical_noise_energy_;
   PyObject *noise_energy_details_;
 };
 
 
 
-/* "entrap/ebm_engine.pyx":46
+/* "entrap/ebm_engine.pyx":55
  * 
  * 
  * cdef class EBM_Reassignment_Engine:             # <<<<<<<<<<<<<<
@@ -2277,6 +2279,24 @@ static CYTHON_INLINE int __Pyx_dict_iter_next(PyObject* dict_or_iter, Py_ssize_t
 /* MergeKeywords.proto */
 static int __Pyx_MergeKeywords(PyObject *kwdict, PyObject *source_mapping);
 
+/* PyObjectVectorCallKwBuilder.proto */
+CYTHON_UNUSED static int __Pyx_VectorcallBuilder_AddArg_Check(PyObject *key, PyObject *value, PyObject *builder, PyObject **args, int n);
+#if CYTHON_VECTORCALL
+#if PY_VERSION_HEX >= 0x03090000
+#define __Pyx_Object_Vectorcall_CallFromBuilder PyObject_Vectorcall
+#else
+#define __Pyx_Object_Vectorcall_CallFromBuilder _PyObject_Vectorcall
+#endif
+#define __Pyx_MakeVectorcallBuilderKwds(n) PyTuple_New(n)
+static int __Pyx_VectorcallBuilder_AddArg(PyObject *key, PyObject *value, PyObject *builder, PyObject **args, int n);
+static int __Pyx_VectorcallBuilder_AddArgStr(const char *key, PyObject *value, PyObject *builder, PyObject **args, int n);
+#else
+#define __Pyx_Object_Vectorcall_CallFromBuilder __Pyx_PyObject_FastCallDict
+#define __Pyx_MakeVectorcallBuilderKwds(n) __Pyx_PyDict_NewPresized(n)
+#define __Pyx_VectorcallBuilder_AddArg(key, value, builder, args, n) PyDict_SetItem(builder, key, value)
+#define __Pyx_VectorcallBuilder_AddArgStr(key, value, builder, args, n) PyDict_SetItemString(builder, key, value)
+#endif
+
 /* ExtTypeTest.proto */
 static CYTHON_INLINE int __Pyx_TypeTest(PyObject *obj, PyTypeObject *type);
 
@@ -2355,24 +2375,6 @@ static CYTHON_INLINE PyObject *__Pyx_PyObject_GetItem(PyObject *obj, PyObject *k
 #define __Pyx_PyObject_GetItem(obj, key)  PyObject_GetItem(obj, key)
 #endif
 
-/* PyObjectVectorCallKwBuilder.proto */
-CYTHON_UNUSED static int __Pyx_VectorcallBuilder_AddArg_Check(PyObject *key, PyObject *value, PyObject *builder, PyObject **args, int n);
-#if CYTHON_VECTORCALL
-#if PY_VERSION_HEX >= 0x03090000
-#define __Pyx_Object_Vectorcall_CallFromBuilder PyObject_Vectorcall
-#else
-#define __Pyx_Object_Vectorcall_CallFromBuilder _PyObject_Vectorcall
-#endif
-#define __Pyx_MakeVectorcallBuilderKwds(n) PyTuple_New(n)
-static int __Pyx_VectorcallBuilder_AddArg(PyObject *key, PyObject *value, PyObject *builder, PyObject **args, int n);
-static int __Pyx_VectorcallBuilder_AddArgStr(const char *key, PyObject *value, PyObject *builder, PyObject **args, int n);
-#else
-#define __Pyx_Object_Vectorcall_CallFromBuilder __Pyx_PyObject_FastCallDict
-#define __Pyx_MakeVectorcallBuilderKwds(n) __Pyx_PyDict_NewPresized(n)
-#define __Pyx_VectorcallBuilder_AddArg(key, value, builder, args, n) PyDict_SetItem(builder, key, value)
-#define __Pyx_VectorcallBuilder_AddArgStr(key, value, builder, args, n) PyDict_SetItemString(builder, key, value)
-#endif
-
 /* PyFloatBinop.proto */
 #if !CYTHON_COMPILING_IN_PYPY
 static PyObject* __Pyx_PyFloat_AddObjC(PyObject *op1, PyObject *op2, double floatval, int inplace, int zerodivision_check);
@@ -2409,9 +2411,6 @@ static CYTHON_INLINE void __Pyx__ExceptionSwap(PyThreadState *tstate, PyObject *
 #else
 static CYTHON_INLINE void __Pyx_ExceptionSwap(PyObject **type, PyObject **value, PyObject **tb);
 #endif
-
-/* PyLongCompare.proto */
-static CYTHON_INLINE PyObject* __Pyx_PyLong_EqObjC(PyObject *op1, PyObject *op2, long intval, long inplace);
 
 /* ListCompAppend.proto */
 #if CYTHON_USE_PYLIST_INTERNALS && CYTHON_ASSUME_SAFE_MACROS
@@ -2577,9 +2576,6 @@ static PyObject *__Pyx_CyFunction_New(PyMethodDef *ml,
 static PyObject *__Pyx_Object_VectorcallMethod_CallFromBuilder(PyObject *name, PyObject *const *args, size_t nargsf, PyObject *kwnames);
 #endif
 
-/* PyLongCompare.proto */
-static CYTHON_INLINE int __Pyx_PyLong_BoolEqObjC(PyObject *op1, PyObject *op2, long intval, long inplace);
-
 /* PyObjectCall2Args.proto */
 static CYTHON_INLINE PyObject* __Pyx_PyObject_Call2Args(PyObject* function, PyObject* arg1, PyObject* arg2);
 
@@ -2591,6 +2587,17 @@ static CYTHON_INLINE PyObject* __Pyx_CallUnboundCMethod1(__Pyx_CachedCFunction* 
 #else
 #define __Pyx_CallUnboundCMethod1(cfunc, self, arg)  __Pyx__CallUnboundCMethod1(cfunc, self, arg)
 #endif
+
+/* set_iter.proto */
+static CYTHON_INLINE PyObject* __Pyx_set_iterator(PyObject* iterable, int is_set,
+                                                  Py_ssize_t* p_orig_length, int* p_source_is_set);
+static CYTHON_INLINE int __Pyx_set_iter_next(
+        PyObject* iter_obj, Py_ssize_t orig_length,
+        Py_ssize_t* ppos, PyObject **value,
+        int source_is_set);
+
+/* PyLongCompare.proto */
+static CYTHON_INLINE int __Pyx_PyLong_BoolEqObjC(PyObject *op1, PyObject *op2, long intval, long inplace);
 
 /* PyFloatBinop.proto */
 #if !CYTHON_COMPILING_IN_PYPY
@@ -2638,6 +2645,12 @@ static CYTHON_INLINE PyObject* __Pyx_PyLong_AddObjC(PyObject *op1, PyObject *op2
 static int __Pyx_SetItemInt_Generic(PyObject *o, PyObject *j, PyObject *v);
 static CYTHON_INLINE int __Pyx_SetItemInt_Fast(PyObject *o, Py_ssize_t i, PyObject *v,
                                                int is_list, int wraparound, int boundscheck);
+
+/* pyfrozenset_new.proto */
+static CYTHON_INLINE PyObject* __Pyx_PyFrozenSet_New(PyObject* it);
+
+/* py_set_discard.proto */
+static CYTHON_INLINE int __Pyx_PySet_Discard(PyObject *set, PyObject *key);
 
 /* RejectKeywords.proto */
 static void __Pyx_RejectKeywords(const char* function_name, PyObject *kwds);
@@ -2925,6 +2938,9 @@ static unsigned long __Pyx_get_runtime_version(void);
 /* CheckBinaryVersion.proto */
 static int __Pyx_check_binary_version(unsigned long ct_version, unsigned long rt_version, int allow_newer);
 
+/* FunctionExport.proto */
+static int __Pyx_ExportFunction(const char *name, void (*f)(void), const char *sig);
+
 /* FunctionImport.proto */
 static int __Pyx_ImportFunction_3_1_4(PyObject *module, const char *funcname, void (**f)(void), const char *sig);
 
@@ -3042,12 +3058,14 @@ int __pyx_module_is_main_entrap__ebm_engine = 0;
 
 /* Implementation of "entrap.ebm_engine" */
 /* #### Code section: global_var ### */
+static PyObject *__pyx_builtin_sorted;
 static PyObject *__pyx_builtin_ImportError;
 /* #### Code section: string_decls ### */
 static const char __pyx_k_[] = ".";
 static const char __pyx_k_X[] = "X";
 static const char __pyx_k_d[] = "d";
 static const char __pyx_k_k[] = "k";
+static const char __pyx_k_t[] = "t";
 static const char __pyx_k_x[] = "x";
 static const char __pyx_k_E0[] = "E0";
 static const char __pyx_k_E1[] = "E1";
@@ -3072,15 +3090,13 @@ static const char __pyx_k_sum[] = "sum";
 static const char __pyx_k_tau[] = "tau";
 static const char __pyx_k_z_1[] = "\230z\250\021\250!\2501";
 static const char __pyx_k_5QfA[] = "\200\001\330\0045\260Q\260f\270A";
-static const char __pyx_k_A_HA[] = "\200A\340\010\014\320\014\034\230H\240A";
-static const char __pyx_k_M_Qa[] = "\250M\270\024\270Q\270a";
 static const char __pyx_k_axis[] = "axis";
 static const char __pyx_k_beta[] = "beta";
 static const char __pyx_k_copy[] = "copy";
 static const char __pyx_k_dict[] = "__dict__";
 static const char __pyx_k_eps0[] = "eps0";
 static const char __pyx_k_func[] = "__func__";
-static const char __pyx_k_item[] = "item";
+static const char __pyx_k_info[] = "info";
 static const char __pyx_k_main[] = "__main__";
 static const char __pyx_k_name[] = "__name__";
 static const char __pyx_k_prod[] = "prod";
@@ -3089,6 +3105,7 @@ static const char __pyx_k_size[] = "size";
 static const char __pyx_k_sort[] = "sort";
 static const char __pyx_k_spec[] = "__spec__";
 static const char __pyx_k_test[] = "__test__";
+static const char __pyx_k_JaqPQ[] = "\300J\310a\310q\320PQ";
 static const char __pyx_k_T_raw[] = "T_raw";
 static const char __pyx_k_alpha[] = "alpha";
 static const char __pyx_k_array[] = "array";
@@ -3099,7 +3116,6 @@ static const char __pyx_k_items[] = "items";
 static const char __pyx_k_numpy[] = "numpy";
 static const char __pyx_k_query[] = "query";
 static const char __pyx_k_ravel[] = "ravel";
-static const char __pyx_k_shape[] = "shape";
 static const char __pyx_k_state[] = "state";
 static const char __pyx_k_trace[] = "trace";
 static const char __pyx_k_where[] = "where";
@@ -3115,6 +3131,8 @@ static const char __pyx_k_module[] = "__module__";
 static const char __pyx_k_pickle[] = "pickle";
 static const char __pyx_k_points[] = "points";
 static const char __pyx_k_reduce[] = "__reduce__";
+static const char __pyx_k_sorted[] = "sorted";
+static const char __pyx_k_tolist[] = "tolist";
 static const char __pyx_k_unique[] = "unique";
 static const char __pyx_k_update[] = "update";
 static const char __pyx_k_vstack[] = "vstack";
@@ -3139,6 +3157,7 @@ static const char __pyx_k_reverse[] = "reverse";
 static const char __pyx_k_slogdet[] = "slogdet";
 static const char __pyx_k_warning[] = "warning";
 static const char __pyx_k_workers[] = "workers";
+static const char __pyx_k_A_HA_4_q[] = "\200A\340\010\014\320\014\034\230H\240A\330\010\013\2104\320\017 \240\007\240q\330\014\020\320\020 \240\010\250\001";
 static const char __pyx_k_add_note[] = "add_note";
 static const char __pyx_k_getstate[] = "__getstate__";
 static const char __pyx_k_lambda_T[] = "lambda_T";
@@ -3149,8 +3168,10 @@ static const char __pyx_k_qualname[] = "__qualname__";
 static const char __pyx_k_reassign[] = "reassign";
 static const char __pyx_k_set_name[] = "__set_name__";
 static const char __pyx_k_setstate[] = "__setstate__";
+static const char __pyx_k_tda_meta[] = "tda_meta";
 static const char __pyx_k_Sigma_inv[] = "Sigma_inv";
 static const char __pyx_k_Sigma_reg[] = "Sigma_reg";
+static const char __pyx_k_cache_hit[] = "cache_hit";
 static const char __pyx_k_converged[] = "converged";
 static const char __pyx_k_distances[] = "distances";
 static const char __pyx_k_euclidean[] = "euclidean";
@@ -3164,6 +3185,7 @@ static const char __pyx_k_reduce_ex[] = "__reduce_ex__";
 static const char __pyx_k_tda_calls[] = "tda_calls";
 static const char __pyx_k_H0_entropy[] = "H0_entropy";
 static const char __pyx_k_H1_entropy[] = "H1_entropy";
+static const char __pyx_k_cache_hits[] = "cache_hits";
 static const char __pyx_k_candidates[] = "candidates";
 static const char __pyx_k_final_size[] = "final_size";
 static const char __pyx_k_iterations[] = "iterations";
@@ -3176,16 +3198,20 @@ static const char __pyx_k_pyx_result[] = "__pyx_result";
 static const char __pyx_k_pyx_vtable[] = "__pyx_vtable__";
 static const char __pyx_k_use_memmap[] = "use_memmap";
 static const char __pyx_k_A_fC_D_Q_9A[] = "\200A\360&\000\t\033\230$\230f\240C\240}\260D\270\001\270\024\270Q\330\010\017\320\017*\250!\2509\260A";
+static const char __pyx_k_Cache_stats[] = "Cache stats: ";
 static const char __pyx_k_ImportError[] = "ImportError";
 static const char __pyx_k_PickleError[] = "PickleError";
 static const char __pyx_k_T_prev_norm[] = "T_prev_norm";
+static const char __pyx_k_cache_stats[] = "cache_stats";
 static const char __pyx_k_delta_T_hat[] = "delta_T_hat";
+static const char __pyx_k_cache_config[] = "cache_config";
 static const char __pyx_k_cluster_mask[] = "cluster_mask";
 static const char __pyx_k_cluster_size[] = "cluster_size";
 static const char __pyx_k_dek_selector[] = "dek_selector";
 static const char __pyx_k_final_T_norm[] = "final_T_norm";
 static const char __pyx_k_initializing[] = "_initializing";
 static const char __pyx_k_is_coroutine[] = "_is_coroutine";
+static const char __pyx_k_max_diagrams[] = "max_diagrams";
 static const char __pyx_k_noise_points[] = "noise_points";
 static const char __pyx_k_numpy_linalg[] = "numpy.linalg";
 static const char __pyx_k_pyx_checksum[] = "__pyx_checksum";
@@ -3212,12 +3238,17 @@ static const char __pyx_k_cluster_points[] = "cluster_points";
 static const char __pyx_k_cluster_states[] = "cluster_states";
 static const char __pyx_k_n_points_final[] = "n_points_final";
 static const char __pyx_k_needs_T_update[] = "needs_T_update";
+static const char __pyx_k_next_iteration[] = "next_iteration";
 static const char __pyx_k_noise_mask_any[] = "noise_mask_any";
 static const char __pyx_k_refined_labels[] = "refined_labels";
 static const char __pyx_k_candidates_list[] = "candidates_list";
+static const char __pyx_k_cluster_indices[] = "cluster_indices";
+static const char __pyx_k_get_cache_stats[] = "get_cache_stats";
+static const char __pyx_k_incremental_tda[] = "incremental_tda";
 static const char __pyx_k_n_components_h0[] = "n_components_h0";
 static const char __pyx_k_pyx_PickleError[] = "__pyx_PickleError";
 static const char __pyx_k_setstate_cython[] = "__setstate_cython__";
+static const char __pyx_k_validity_window[] = "validity_window";
 static const char __pyx_k_volume_fallback[] = "volume_fallback";
 static const char __pyx_k_geometric_energy[] = "geometric_energy";
 static const char __pyx_k_get_k_percentile[] = "get_k_percentile";
@@ -3234,6 +3265,8 @@ static const char __pyx_k_true_noise_indices[] = "true_noise_indices";
 static const char __pyx_k_A_4_Naq_F_1_V3m3d_q[] = "\200A\360.\000\t\034\2304\320\037/\320/N\310a\310q\330\010\034\230F\240!\2401\330\010\035\230V\2403\240m\2603\260d\270!\330\010\017\210q";
 static const char __pyx_k_consecutive_rejects[] = "consecutive_rejects";
 static const char __pyx_k_len_candidates_list[] = "len_candidates_list";
+static const char __pyx_k_memory_threshold_mb[] = "memory_threshold_mb";
+static const char __pyx_k_use_incremental_tda[] = "use_incremental_tda";
 static const char __pyx_k_bounded_delta_energy[] = "bounded_delta_energy";
 static const char __pyx_k_cluster_mask_current[] = "cluster_mask_current";
 static const char __pyx_k_cluster_mask_updated[] = "cluster_mask_updated";
@@ -3241,6 +3274,7 @@ static const char __pyx_k_early_stop_threshold[] = "early_stop_threshold";
 static const char __pyx_k_recruited_this_round[] = "recruited_this_round";
 static const char __pyx_k_entrap_ebm_engine_pyx[] = "entrap/ebm_engine.pyx";
 static const char __pyx_k_estimate_noise_energy[] = "estimate_noise_energy";
+static const char __pyx_k_Incremental_TDA_Engine[] = "Incremental_TDA_Engine";
 static const char __pyx_k_all_claimed_candidates[] = "all_claimed_candidates";
 static const char __pyx_k_cluster_candidate_sets[] = "cluster_candidate_sets";
 static const char __pyx_k_cluster_points_current[] = "cluster_points_current";
@@ -3250,42 +3284,45 @@ static const char __pyx_k_topological_normalized[] = "topological_normalized";
 static const char __pyx_k_true_noise_indices_arr[] = "true_noise_indices_arr";
 static const char __pyx_k_EBM_Reassignment_Engine[] = "EBM_Reassignment_Engine";
 static const char __pyx_k_candidate_local_indices[] = "candidate_local_indices";
+static const char __pyx_k_cluster_indices_current[] = "cluster_indices_current";
 static const char __pyx_k_candidate_global_indices[] = "candidate_global_indices";
 static const char __pyx_k_delta_topological_energy[] = "delta_topological_energy";
+static const char __pyx_k_invalidate_cluster_cache[] = "invalidate_cluster_cache";
 static const char __pyx_k_A8_BgQa7Gq_PQQUUV_K1_Ba_A[] = "\200A\3608\000\t-\250B\250g\260Q\260a\3207G\300q\310\010\320PQ\320QU\320UV\330\010!\240\024\320%K\3101\330\014\037\230}\250B\250a\340\010\017\210{\230\"\230A";
 static const char __pyx_k_Topological_Energy_Computer[] = "Topological_Energy_Computer";
 static const char __pyx_k_candidate_local_indices_len[] = "candidate_local_indices_len";
 static const char __pyx_k_landmark_variance_threshold[] = "landmark_variance_threshold";
 static const char __pyx_k_pyx_unpickle_EBM_Reassignment[] = "__pyx_unpickle_EBM_Reassignment_Engine";
-static const char __pyx_k_T_WD_B_FXX_ccggssw_x_C_C_G_G_e[] = "\200\001\360\010\000\005\016\210T\220\030\230\024\230W\240D\320(B\300$\320FX\320X\\\320\\c\320cg\320gs\320sw\360\000\000x\001C\002\360\000\000C\002G\002\360\000\000G\002e\002\360\000\000e\002i\002\360\000\000i\002y\002\360\000\000y\002}\002\360\000\000}\002F\003\360\000\000F\003J\003\360\000\000J\003Z\003\360\000\000Z\003^\003\360\000\000^\003n\003\360\000\000n\003r\003\360\000\000r\003J\004\360\000\000J\004N\004\360\000\000N\004^\004\360\000\000^\004b\004\360\000\000b\004h\004\360\000\000h\004l\004\360\000\000l\004m\004\330\004\014\210G\2201\220F\230,\240a\330\004\007\200v\210W\220A\330\010\022\220!\330\010\027\220q\340\010\027\220t\320\0334\260G\2705\300\003\3004\320GX\320X_\320_d\320dg\320gk\320ks\320sz\320z\177\360\000\000@\002C\002\360\000\000C\002G\002\360\000\000G\002V\002\360\000\000V\002]\002\360\000\000]\002b\002\360\000\000b\002e\002\360\000\000e\002i\002\360\000\000i\002@\003\360\000\000@\003G\003\360\000\000G\003H\003\330\004\007\200q\330\010\017\320\0178\270\004\270A\270W\300K\310w\320VW\340\010\017\320\0178\270\004\270A\270W\300K\310q";
 static const char __pyx_k_compute_raw_topological_energy[] = "compute_raw_topological_energy";
-static const char __pyx_k_hk_A_1_E_E_G_G_H_1_7_9_TTbbc_1[] = "\200\001\360\006\000\005\010\200\177\220h\230k\250\033\260A\330\010\r\210^\2301\330\010\016\320\016!\360\000\000\"E\005\360\000\000E\005G\005\360\000\000G\005H\005\330\004\023\320\023*\250(\260!\2601\330\004\007\200|\2207\230!\330\0109\270\021\320:T\320Tb\320bc\330\004\013\2101";
+static const char __pyx_k_hk_A_1_k_k_m_m_n_1_7_9_TTbbc_1[] = "\200\001\360\006\000\005\010\200\177\220h\230k\250\033\260A\330\010\r\210^\2301\330\010\016\320\016!\360\000\000\"k\005\360\000\000k\005m\005\360\000\000m\005n\005\330\004\023\320\023*\250(\260!\2601\330\004\007\200|\2207\230!\330\0109\270\021\320:T\320Tb\320bc\330\004\013\2101";
 static const char __pyx_k_EBM_Reassignment_Engine_bounded[] = "EBM_Reassignment_Engine.bounded_delta_energy";
 static const char __pyx_k_EBM_Reassignment_Engine_cleanup[] = "EBM_Reassignment_Engine.cleanup";
 static const char __pyx_k_EBM_Reassignment_Engine_compute[] = "EBM_Reassignment_Engine.compute_normalized_topological_energy";
+static const char __pyx_k_T_WD_B_FXX_ccggyy_J_J_N_N_Y_Y_O[] = "\200\001\360\010\000\005\016\210T\220\030\230\024\230W\240D\320(B\300$\320FX\320X\\\320\\c\320cg\320gy\320y}\360\000\000~\001J\002\360\000\000J\002N\002\360\000\000N\002Y\002\360\000\000Y\002]\002\360\000\000]\002{\002\360\000\000{\002\177\002\360\000\000\177\002O\003\360\000\000O\003S\003\360\000\000S\003\\\003\360\000\000\\\003`\003\360\000\000`\003p\003\360\000\000p\003t\003\360\000\000t\003D\004\360\000\000D\004H\004\360\000\000H\004`\004\360\000\000`\004d\004\360\000\000d\004t\004\360\000\000t\004x\004\360\000\000x\004~\004\360\000\000~\004B\005\360\000\000B\005X\005\360\000\000X\005\\\005\360\000\000\\\005]\005\330\004\014\210G\2201\220F\230,\240a\330\004\007\200v\210W\220A\330\010\022\220!\330\010\027\220q\340\010\027\220t\320\0334\260G\2705\300\003\3004\320GX\320X_\320_d\320dg\320gk\320k|\360\000\000}\001D\002\360\000\000D\002I\002\360\000\000I\002L\002\360\000\000L\002P\002\360\000\000P\002X\002\360\000\000X\002_\002\360\000\000_\002d\002\360\000\000d\002g\002\360\000\000g\002k\002\360\000\000k\002z\002\360\000\000z\002A\003\360\000\000A\003F\003\360\000\000F\003I\003\360\000\000I\003M\003\360\000\000M\003d\003\360\000\000d\003k\003\360\000\000k\003l\003\330\004\007\200q\330\010\017\320\0178\270\004\270A\270W\300K\310w\320VW\340\010\017\320\0178\270\004\270A\270W\300K\310q";
 static const char __pyx_k_A8_Qa_83a_L_1_1_82Q_1AQ_HARt1N_t[] = "\200A\3608\000\t#\240#\240Q\240a\340\010\013\2108\2203\220a\330\014\020\320\020*\250*\260L\300\013\3101\330\014\023\2201\360\014\000\t\014\2108\2202\220Q\330\014\033\2301\230A\230Q\330\014\032\230\"\230H\240A\240R\240t\2501\250N\270%\270t\3001\330\014\026\220c\230\021\230\"\230E\240\021\240-\250r\260\021\330\014\020\220\001\330\020\032\230!\330\020\033\2301\330\020\034\230A\340\014\023\2201\340\010\027\220q\230\001\230\021\360\020\000\t\n\330\014\017\210x\220r\230\024\230Q\330\020\033\230:\240[\3200D\300A\330\024\025\330\024\030\230\001\330\024\030\230\001\330\024\030\230\001\330\024\030\230\013\240:\250Q\250d\260)\270:\300Q\330\024\030\230\001\340\020 \240\004\320$4\3204S\320ST\320TU\340\020 \240\004\320$4\3204S\320ST\320TU\330\020\033\2301\330\020\033\2301\340\014\024\220M\240\021\240!\330\014\025\220V\2303\230h\240c\250\024\250Q\340\014\020\220\001\330\020\032\230!\330\020\033\2301\330\020\031\230\021\330\020\026\220m\2401\240A\330\020\026\220m\2401\240A\330\020\036\230m\2501\250A\330\020\036\230m\2501\250A\330\020#\240=\260\001\260\021\330\020\036\230m\2501\250A\330\020%\240Q\330\020\"\240!\330\020%\240Q\330\020\031\230\024\230Q\360\006\000\r\024\2201\340\010\017\210}\230A\330\014\022\220(\230!\2302\320\035D\300A\330\014\032\230\"\230H\240A\240R\240t\2501\250N\270%\270t\3001\330\014\026\220c\230\021\230\"\230E\240\021\240-\250r\260\021\330\014\020\220\001\330\020\032\230!\330\020\033\2301\330\020\034\230A\330\020\031\230\023\230A\230Q\340\014\023\2201";
-static const char __pyx_k_A_Q_uA_oT_4z_Q_3a_1_3a_c_3a_QfCq[] = "\200A\360>\000\t\036\230Q\330\010!\240\021\360\010\000\t*\250\021\360\006\000\t)\250\001\360\022\000\t\032\230\026\230u\240A\330\010\026\220o\240T\250\021\340\010\013\2104\210z\230\024\230Q\330\014\023\320\023#\2403\240a\340\010\030\230\002\230'\240\021\240.\260\001\260\037\300\003\3001\330\010\013\2103\210a\210\177\230c\240\021\330\014\023\320\023#\2403\240a\360\006\000\t\031\230\002\230#\230Q\230f\240C\240q\250\002\250$\250a\250\177\270c\300\021\330\030\034\230G\2401\330\010\025\220U\230!\2304\320\037/\250x\260q\330\010\035\230Q\230d\240$\240e\2505\260\001\360\006\000\t\"\240\021\330\010$\240A\340\010\030\230\002\230&\240\001\240\033\250A\250Q\330\010\027\220q\230\001\230\021\330\010\025\220W\230A\230^\250>\270\026\270~\310Q\340\010\014\210G\2201\330\014\034\230O\2503\250a\330\014\035\230Q\230a\230q\340\014\017\210}\230G\2401\330\020\035\230\\\320):\270!\2701\340\020\035\230S\240\001\240\021\330\014\031\230\021\230,\240c\250\021\250!\340\014\027\220z\240\032\2506\260\021\3202B\300\"\300I\310Y\320VW\340\014\017\210~\230V\2401\240C\240s\250!\330\020\034\230I\240X\250Q\250d\260!\330\020\032\230'\240\030\250\021\250$\250a\340\014&\240b\250\007\250q\260\007\260v\270Q\330\014&\320&=\270Q\330\020(\250\002\250#\250Q\250a\360\006\000\r\020\210s\220!\320\023,\250B\250a\330\020+\250=\270\001\270\021\330\020&\240a\240w\250c\260\021\260!\330\020&\240g\250Q\250a\340\020&\240a\240z\260\021\360\006\000\t\036\230T\240\021\240#\240Q\240o\260R\260q\330\010!\240\022\2406\250\021\320*>\270f\300B\300a\330\010\022\220$\320\026,\250A\250S\260\001\330\010\014\320\014'\240q\360\006\000\t\032\230\021\330\010\014\210G\2201\330\014\034\230O\2503\250a\330\014\035\230Q\230a\230q\330\014\033\2303\230a\230q\340\014\025\220T\320\031?\270q\320@P\320PQ\340\014\032\230!\2301\330\020\032\230!\330\020\030\230\001\330\020\036\320\0364\260A\260T\270\025\270a\330\020!\240\021\330\020\035\230Q\330\020\"\240!\360\010\000\t\025\220A\330\010\030\230\001\340\010\t\330\014#\2401\340\014\020\220\007\220q\330""\020\030\230\016\240a\240q\330\020\035\230U\240!\2401\340\020\023\2203\220a\220|\2403\240a\330\024\025\340\020\"\240!\2404\240t\2507\260+\270S\300\016\310a\310u\320TX\320XY\330\020&\240c\250\021\250!\330\020\023\320\023'\240s\250!\330\024\025\360\006\000\021!\240\017\250s\260!\330\020!\240\021\240!\2401\330\020\035\230T\240\033\250C\250t\2602\260R\260t\2701\270A\270Z\300r\310\024\310Q\360\006\000\021\025\220N\240&\250\001\250\021\330\020\025\220R\220x\230q\320 4\260A\260Q\330\020\034\230B\230h\240a\320'A\300\021\330\024$\240D\250\004\250A\360\006\000\021\022\330\024 \240\003\2401\240A\330\024$\240G\2501\250J\260a\260q\340\024 \240\002\240$\240a\240s\250#\250R\250v\260Q\260k\300\022\3002\300R\300q\330\024$\240A\360\006\000\021&\240Q\330\020\024\320\024%\240Q\330\024\030\230\001\230\021\230!\330\024\032\230$\320\036/\250q\260\003\2604\260{\300!\330\024&\240g\250R\250\177\270a\360\006\000\021#\240%\240q\250\004\250A\360\006\000\021'\240a\340\020\024\220O\2407\250!\330\024\036\230k\250\022\2501\340\024\027\220t\2303\230a\330\030/\250q\330\030\033\320\033/\250s\260!\330\034\035\330\030\031\340\030.\250a\340\024\027\220x\230s\240!\330\030\031\340\024\030\230\001\230\021\230!\330\024,\250O\2703\270a\330\024-\250Q\250a\250q\340\024\036\230d\320\";\2701\330\030\033\320\0333\2605\270\001\270\033\300E\310\021\310!\340\024\"\240$\320&;\2701\270I\300U\310!\3101\330\024\031\230\021\320\032*\250!\340\024\036\230h\240b\250\004\250J\260b\270\001\340\024\027\220x\230r\240\021\340\030&\240a\320'8\270\001\330\030\"\240(\250!\2501\340\030\035\230Q\320\0362\260!\330\030\035\230Q\230k\250\021\330\030\035\230Q\320\0362\260!\340\030)\250\021\330\030/\250q\340\030\034\230M\250\021\330\034\037\230z\250\023\250A\330 .\250a\250z\270\021\270-\300x\310q\320PQ\340\030\031\360\006\000\r\021\220\007\220q\330\020\030\230\016\240a\240q\330\020\023\2205\230\004\230A\320\035/\250q\330\024,\250O\2703\270a\330\024-\250Q\250a\250q\340\024\031\230\021\230,\240d\320*P\320PQ\330\0300\260\005\260Q\260a\340""\024\031\230\021\320\032.\250a\340\014\031\230\021\340\014\017\210t\2201\330\020\021\360\006\000\t\031\230\001\330\010\014\210G\2201\330\014\024\220N\240!\2401\330\014\031\230\021\230!\330\020\036\230a\330\020\033\2305\240\001\240\021\330\020\035\230U\240!\2401\330\020\036\230e\2401\240A\330\020 \240\005\240Q\240a\330\020\035\230Q\360\006\000\t\013\210(\220!\330\010\017\320\017\037\230\177\250a";
+static const char __pyx_k_AD_Q_uA_oT_4z_Q_3a_1_3a_c_3a_QfC[] = "\200A\360D\001\000\t\036\230Q\330\010!\240\021\360\010\000\t*\250\021\360\006\000\t)\250\001\360*\000\t\032\230\026\230u\240A\330\010\026\220o\240T\250\021\340\010\013\2104\210z\230\024\230Q\330\014\023\320\023#\2403\240a\340\010\030\230\002\230'\240\021\240.\260\001\260\037\300\003\3001\330\010\013\2103\210a\210\177\230c\240\021\330\014\023\320\023#\2403\240a\360\006\000\t\031\230\002\230#\230Q\230f\240C\240q\250\002\250$\250a\250\177\270c\300\021\330\030\034\230G\2401\330\010\025\220U\230!\2304\320\037/\250x\260q\330\010\035\230Q\230d\240$\240e\2505\260\001\360\006\000\t\"\240\021\330\010$\240A\340\010\030\230\002\230&\240\001\240\033\250A\250Q\330\010\027\220q\230\001\230\021\330\010\025\220W\230A\230^\250>\270\026\270~\310Q\340\010\014\210G\2201\330\014\034\230O\2503\250a\330\014\035\230Q\230a\230q\340\014\017\210}\230G\2401\330\020\035\230\\\320):\270!\2701\340\020\035\230S\240\001\240\021\330\014\031\230\021\230,\240c\250\021\250!\340\014\027\220z\240\032\2506\260\021\3202B\300\"\300I\310Y\320VW\340\014\017\210~\230V\2401\240C\240s\250!\330\020\034\230I\240X\250Q\250d\260!\330\020\032\230'\240\030\250\021\250$\250a\340\014&\240b\250\007\250q\260\007\260v\270Q\330\014&\320&=\270Q\330\020(\250\002\250#\250Q\250a\360\006\000\r\020\210s\220!\320\023,\250B\250a\330\020+\250=\270\001\270\021\330\020&\240a\240w\250c\260\021\260!\330\020&\240g\250Q\250a\340\020&\240a\240z\260\021\360\006\000\t\036\230T\240\021\240#\240Q\240o\260R\260q\330\010!\240\022\2406\250\021\320*>\270f\300B\300a\330\010\022\220$\320\026,\250A\250S\260\001\330\010\014\320\014'\240q\360\006\000\t\032\230\021\330\010\014\210G\2201\330\014\034\230O\2503\250a\330\014\035\230Q\230a\230q\330\014\033\2303\230a\230q\340\014\025\220T\320\031?\270q\320@P\320PQ\340\014\032\230!\2301\330\020\032\230!\330\020\030\230\001\330\020\036\320\0364\260A\260T\270\025\270a\330\020#\2402\240V\2501\250M\270\021\270\"\270G\3001\330\020!\240\021\330\020\035\230Q\330\020\036\230a\330\020\"\240!\360\010\000\t\025\220A\330""\010\030\230\001\340\010\t\330\014#\2401\340\014\020\220\007\220q\330\020\030\230\016\240a\240q\330\020\035\230U\240!\2401\340\020\023\2203\220a\220|\2403\240a\330\024\025\340\020\"\240!\2404\240t\2507\260+\270S\300\016\310a\310u\320TX\320XY\330\020&\240c\250\021\250!\330\020\023\320\023'\240s\250!\330\024\025\360\006\000\021!\240\017\250s\260!\330\020!\240\021\240!\2401\330\020\035\230T\240\033\250C\250t\2602\260R\260t\2701\270A\270Z\300r\310\024\310Q\360\006\000\021\025\220N\240&\250\001\250\021\330\020\025\220R\220x\230q\320 4\260A\260Q\330\020\034\230B\230h\240a\320'A\300\021\330\024$\240D\250\004\250A\360\006\000\021\022\330\024 \240\003\2401\240A\330\024$\240G\2501\250J\260a\260q\340\024 \240\002\240$\240a\240s\250#\250R\250v\260Q\260k\300\022\3002\300R\300q\330\024$\240A\360\006\000\021&\240Q\330\020\024\320\024%\240Q\330\024\030\230\001\230\021\230!\330\024\032\230$\320\036/\250q\260\003\2604\260{\300!\330\024&\240g\250R\250\177\270a\360\010\000\021&\240V\2501\320,@\300\004\300A\360\006\000\021'\240a\340\020\024\220O\2407\250!\330\024\036\230k\250\022\2501\340\024\027\220t\2303\230a\330\030/\250q\330\030\033\320\033/\250s\260!\330\034\035\330\030\031\340\030.\250a\340\024\027\220x\230s\240!\330\030\031\340\024\030\230\001\230\021\230!\330\024,\250O\2703\270a\330\024-\250Q\250a\250q\360\006\000\025\030\220t\320\033,\250G\2601\330\0302\260\"\260F\270!\320;P\320PQ\320QR\330\030!\240\033\250D\3200@\320@a\320ab\330\034\037\320\0377\260q\330\034!\240\021\240+\250U\260!\2601\340\030\035\230Q\320\036.\250a\330\030\033\2308\2404\240q\250\r\260Q\330\034!\240\021\320\"3\2601\340\030\"\240$\320&?\270q\330\034\037\320\0377\260u\270A\270[\310\005\310Q\310a\340\030\035\230Q\320\036.\250a\340\024\"\240$\320&;\2701\270I\300U\310!\3101\330\024\036\230h\240b\250\004\250J\260b\270\001\340\024\027\220x\230r\240\021\340\030&\240a\320'8\270\001\330\030\"\240(\250!\2501\340\030\035\230Q\320\0362\260!\330\030\035\230Q\230k\250\021\330\030\035\230Q\320\0362\260!\340\030)\250\021\330""\030/\250q\340\030\034\230M\250\021\330\034\037\230z\250\023\250A\330 .\250a\250z\270\021\270-\300x\310q\320PQ\340\030\031\360\006\000\r\021\220\007\220q\330\020\030\230\016\240a\240q\330\020\023\2205\230\004\230A\320\035/\250q\330\024,\250O\2703\270a\330\024-\250Q\250a\250q\340\024\031\230\021\230,\240d\320*P\320PQ\330\0300\260\005\260Q\260a\340\024\031\230\021\320\032.\250a\360\006\000\021\024\2204\320\027(\250\007\250u\260D\270\003\2701\270E\300\021\300/\320QT\320TU\330\024\030\320\030(\320(A\300\021\300%\300q\310\001\360\006\000\r\020\210t\320\023$\240G\2501\330\020\024\320\024$\240O\2601\340\014\031\230\021\340\014\017\210t\2201\330\020\021\360\006\000\t\031\230\001\330\010\014\210G\2201\330\014\024\220N\240!\2401\330\014\031\230\021\230!\330\020\036\230a\330\020\033\2305\240\001\240\021\330\020\035\230U\240!\2401\330\020\036\230e\2404\240q\250\016\260a\330\020\036\230e\2401\240A\330\020 \240\005\240Q\240a\330\020\035\230Q\360\010\000\t\014\2104\320\017 \240\007\240q\330\014\032\230$\320\036.\320.>\270a\330\014\022\220%\220q\230\002\320\032+\2501\340\014\020\320\020 \240\010\250\001\340\010\n\210(\220!\330\010\017\320\017\037\230\177\250a";
 static const char __pyx_k_EBM_Reassignment_Engine___reduce[] = "EBM_Reassignment_Engine.__reduce_cython__";
 static const char __pyx_k_EBM_Reassignment_Engine___setsta[] = "EBM_Reassignment_Engine.__setstate_cython__";
 static const char __pyx_k_EBM_Reassignment_Engine_delta_to[] = "EBM_Reassignment_Engine.delta_topological_energy";
 static const char __pyx_k_EBM_Reassignment_Engine_estimate[] = "EBM_Reassignment_Engine.estimate_noise_energy";
 static const char __pyx_k_EBM_Reassignment_Engine_geometri[] = "EBM_Reassignment_Engine.geometric_energy";
 static const char __pyx_k_EBM_Reassignment_Engine_reassign[] = "EBM_Reassignment_Engine.reassign";
-static const char __pyx_k_Incompatible_checksums_0x_x_vs_0[] = "Incompatible checksums (0x%x vs (0x66e8b4b, 0x9ef3519, 0x1fa2104) = (alpha, beta, empirical_noise_energy_, energy_computer, eps0, lambda_G0, lambda_T, landmark_variance_threshold, max_landmarks, metric, metric_params, min_landmarks, noise_energy_details_, ridge_epsilon, tau, use_memmap))";
+static const char __pyx_k_Incompatible_checksums_0x_x_vs_0[] = "Incompatible checksums (0x%x vs (0x9f6179c, 0x828e6c7, 0x8f8dc98) = (alpha, beta, empirical_noise_energy_, energy_computer, eps0, incremental_tda, lambda_G0, lambda_T, landmark_variance_threshold, max_landmarks, metric, metric_params, min_landmarks, noise_energy_details_, ridge_epsilon, tau, use_incremental_tda, use_memmap))";
 static const char __pyx_k_Noise_topology_computation_faile[] = "Noise topology computation failed: ";
 static const char __pyx_k_Note_that_Cython_is_deliberately[] = "Note that Cython is deliberately stricter than PEP-484 and rejects subclasses of builtin types. If you need to pass subclasses then set the 'annotation_typing' directive to False.";
+static const char __pyx_k_compute_delta_topological_energy[] = "compute_delta_topological_energy";
 static const char __pyx_k_compute_normalized_topological_e[] = "compute_normalized_topological_energy";
 static const char __pyx_k_numpy__core_multiarray_failed_to[] = "numpy._core.multiarray failed to import";
 static const char __pyx_k_numpy__core_umath_failed_to_impo[] = "numpy._core.umath failed to import";
 /* #### Code section: decls ### */
-static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine___init__(struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *__pyx_v_self, double __pyx_v_alpha, double __pyx_v_beta, double __pyx_v_eps0, double __pyx_v_lambda_T, double __pyx_v_lambda_G0, double __pyx_v_tau, int __pyx_v_max_landmarks, int __pyx_v_min_landmarks, double __pyx_v_landmark_variance_threshold, double __pyx_v_ridge_epsilon, PyObject *__pyx_v_metric, int __pyx_v_use_memmap, PyObject *__pyx_v_metric_params); /* proto */
+static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine___init__(struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *__pyx_v_self, double __pyx_v_alpha, double __pyx_v_beta, double __pyx_v_eps0, double __pyx_v_lambda_T, double __pyx_v_lambda_G0, double __pyx_v_tau, int __pyx_v_max_landmarks, int __pyx_v_min_landmarks, double __pyx_v_landmark_variance_threshold, double __pyx_v_ridge_epsilon, PyObject *__pyx_v_metric, int __pyx_v_use_memmap, int __pyx_v_use_incremental_tda, PyObject *__pyx_v_metric_params); /* proto */
 static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_2geometric_energy(struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *__pyx_v_self, PyArrayObject *__pyx_v_x, PyArrayObject *__pyx_v_mu, PyArrayObject *__pyx_v_Sigma_inv, double __pyx_v_log_det_Sigma); /* proto */
 static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_4compute_normalized_topological_energy(struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *__pyx_v_self, PyArrayObject *__pyx_v_points, int __pyx_v_cluster_size); /* proto */
 static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_6delta_topological_energy(struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *__pyx_v_self, PyArrayObject *__pyx_v_x, PyArrayObject *__pyx_v_cluster_points, double __pyx_v_T_prev_norm, int __pyx_v_cluster_size); /* proto */
 static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_8bounded_delta_energy(struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *__pyx_v_self, double __pyx_v_delta_T, int __pyx_v_cluster_size); /* proto */
 static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_10estimate_noise_energy(struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *__pyx_v_self, PyArrayObject *__pyx_v_X, PyArrayObject *__pyx_v_true_noise_indices); /* proto */
 static PyObject *__pyx_lambda_funcdef_lambda(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_x); /* proto */
-static PyObject *__pyx_lambda_funcdef_lambda1(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_item); /* proto */
+static PyObject *__pyx_lambda_funcdef_lambda1(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_t); /* proto */
 static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reassign(struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *__pyx_v_self, PyObject *__pyx_v_X, PyObject *__pyx_v_labels, PyObject *__pyx_v_dek_selector); /* proto */
 static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_14cleanup(struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_5alpha___get__(struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *__pyx_v_self); /* proto */
@@ -3316,9 +3353,14 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_13metric_para
 static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_13metric_params_4__del__(struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_10use_memmap___get__(struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *__pyx_v_self); /* proto */
 static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_10use_memmap_2__set__(struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
+static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_19use_incremental_tda___get__(struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *__pyx_v_self); /* proto */
+static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_19use_incremental_tda_2__set__(struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
 static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_15energy_computer___get__(struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *__pyx_v_self); /* proto */
 static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_15energy_computer_2__set__(struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
 static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_15energy_computer_4__del__(struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_15incremental_tda___get__(struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *__pyx_v_self); /* proto */
+static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_15incremental_tda_2__set__(struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
+static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_15incremental_tda_4__del__(struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_23empirical_noise_energy____get__(struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *__pyx_v_self); /* proto */
 static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_23empirical_noise_energy__2__set__(struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
 static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_23empirical_noise_energy__4__del__(struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *__pyx_v_self); /* proto */
@@ -3387,9 +3429,9 @@ typedef struct {
   PyTypeObject *__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine;
   __Pyx_CachedCFunction __pyx_umethod_PyDict_Type_pop;
   __Pyx_CachedCFunction __pyx_umethod_PySet_Type__update;
-  PyObject *__pyx_tuple[3];
+  PyObject *__pyx_tuple[5];
   PyObject *__pyx_codeobj_tab[12];
-  PyObject *__pyx_string_tab[222];
+  PyObject *__pyx_string_tab[242];
   PyObject *__pyx_float_0_0;
   PyObject *__pyx_float_1_0;
   PyObject *__pyx_float_10_0;
@@ -3397,9 +3439,12 @@ typedef struct {
   PyObject *__pyx_float_1eneg_12;
   PyObject *__pyx_int_0;
   PyObject *__pyx_int_1;
-  PyObject *__pyx_int_33169668;
-  PyObject *__pyx_int_107907915;
-  PyObject *__pyx_int_166671641;
+  PyObject *__pyx_int_5;
+  PyObject *__pyx_int_10;
+  PyObject *__pyx_int_500;
+  PyObject *__pyx_int_136898247;
+  PyObject *__pyx_int_150527128;
+  PyObject *__pyx_int_167122844;
   PyObject *__pyx_int_neg_1;
 /* #### Code section: module_state_contents ### */
 /* CommonTypesMetaclass.module_state_decls */
@@ -3439,227 +3484,247 @@ static __pyx_mstatetype * const __pyx_mstate_global = &__pyx_mstate_global_stati
 #endif
 /* #### Code section: constant_name_defines ### */
 #define __pyx_kp_u_ __pyx_string_tab[0]
-#define __pyx_n_u_E0 __pyx_string_tab[1]
-#define __pyx_n_u_E1 __pyx_string_tab[2]
-#define __pyx_n_u_EBM_Reassignment_Engine __pyx_string_tab[3]
-#define __pyx_n_u_EBM_Reassignment_Engine___reduce __pyx_string_tab[4]
-#define __pyx_n_u_EBM_Reassignment_Engine___setsta __pyx_string_tab[5]
-#define __pyx_n_u_EBM_Reassignment_Engine_bounded __pyx_string_tab[6]
-#define __pyx_n_u_EBM_Reassignment_Engine_cleanup __pyx_string_tab[7]
-#define __pyx_n_u_EBM_Reassignment_Engine_compute __pyx_string_tab[8]
-#define __pyx_n_u_EBM_Reassignment_Engine_delta_to __pyx_string_tab[9]
-#define __pyx_n_u_EBM_Reassignment_Engine_estimate __pyx_string_tab[10]
-#define __pyx_n_u_EBM_Reassignment_Engine_geometri __pyx_string_tab[11]
-#define __pyx_n_u_EBM_Reassignment_Engine_reassign __pyx_string_tab[12]
-#define __pyx_n_u_E_G __pyx_string_tab[13]
-#define __pyx_n_u_E_cheap __pyx_string_tab[14]
-#define __pyx_n_u_E_noise __pyx_string_tab[15]
-#define __pyx_n_u_E_total __pyx_string_tab[16]
-#define __pyx_n_u_H0_entropy __pyx_string_tab[17]
-#define __pyx_n_u_H1_entropy __pyx_string_tab[18]
-#define __pyx_n_u_ImportError __pyx_string_tab[19]
-#define __pyx_kp_u_Incompatible_checksums_0x_x_vs_0 __pyx_string_tab[20]
-#define __pyx_n_u_N_noise __pyx_string_tab[21]
-#define __pyx_kp_u_Noise_topology_computation_faile __pyx_string_tab[22]
-#define __pyx_kp_u_Note_that_Cython_is_deliberately __pyx_string_tab[23]
-#define __pyx_n_u_PickleError __pyx_string_tab[24]
-#define __pyx_n_u_Sigma_inv __pyx_string_tab[25]
-#define __pyx_n_u_Sigma_reg __pyx_string_tab[26]
-#define __pyx_n_u_T_norm __pyx_string_tab[27]
-#define __pyx_n_u_T_prev_norm __pyx_string_tab[28]
-#define __pyx_n_u_T_raw __pyx_string_tab[29]
-#define __pyx_n_u_Topological_Energy_Computer __pyx_string_tab[30]
-#define __pyx_n_u_X __pyx_string_tab[31]
-#define __pyx_kp_u__2 __pyx_string_tab[32]
-#define __pyx_n_u__3 __pyx_string_tab[33]
-#define __pyx_kp_u_add_note __pyx_string_tab[34]
-#define __pyx_n_u_all_claimed_candidates __pyx_string_tab[35]
-#define __pyx_n_u_alpha __pyx_string_tab[36]
-#define __pyx_n_u_any __pyx_string_tab[37]
-#define __pyx_n_u_array __pyx_string_tab[38]
-#define __pyx_n_u_asarray __pyx_string_tab[39]
-#define __pyx_n_u_asyncio_coroutines __pyx_string_tab[40]
-#define __pyx_n_u_axis __pyx_string_tab[41]
-#define __pyx_n_u_balanced_tree __pyx_string_tab[42]
-#define __pyx_n_u_beta __pyx_string_tab[43]
-#define __pyx_n_u_bounded_delta_energy __pyx_string_tab[44]
-#define __pyx_n_u_cKDTree __pyx_string_tab[45]
-#define __pyx_n_u_candidate_energies __pyx_string_tab[46]
-#define __pyx_n_u_candidate_global_indices __pyx_string_tab[47]
-#define __pyx_n_u_candidate_idx __pyx_string_tab[48]
-#define __pyx_n_u_candidate_local_indices __pyx_string_tab[49]
-#define __pyx_n_u_candidate_local_indices_len __pyx_string_tab[50]
-#define __pyx_n_u_candidates __pyx_string_tab[51]
-#define __pyx_n_u_candidates_list __pyx_string_tab[52]
-#define __pyx_n_u_cid __pyx_string_tab[53]
-#define __pyx_n_u_class_getitem __pyx_string_tab[54]
-#define __pyx_n_u_cleanup __pyx_string_tab[55]
-#define __pyx_n_u_cline_in_traceback __pyx_string_tab[56]
-#define __pyx_n_u_cluster_candidate_sets __pyx_string_tab[57]
-#define __pyx_n_u_cluster_mask __pyx_string_tab[58]
-#define __pyx_n_u_cluster_mask_current __pyx_string_tab[59]
-#define __pyx_n_u_cluster_mask_updated __pyx_string_tab[60]
-#define __pyx_n_u_cluster_points __pyx_string_tab[61]
-#define __pyx_n_u_cluster_points_current __pyx_string_tab[62]
-#define __pyx_n_u_cluster_points_updated __pyx_string_tab[63]
-#define __pyx_n_u_cluster_size __pyx_string_tab[64]
-#define __pyx_n_u_cluster_sizes __pyx_string_tab[65]
-#define __pyx_n_u_cluster_states __pyx_string_tab[66]
-#define __pyx_n_u_cluster_stats __pyx_string_tab[67]
-#define __pyx_n_u_collect __pyx_string_tab[68]
-#define __pyx_n_u_compact_nodes __pyx_string_tab[69]
-#define __pyx_n_u_compute_normalized_topological_e __pyx_string_tab[70]
-#define __pyx_n_u_compute_raw_topological_energy __pyx_string_tab[71]
-#define __pyx_n_u_consecutive_rejects __pyx_string_tab[72]
-#define __pyx_n_u_converged __pyx_string_tab[73]
-#define __pyx_n_u_copy __pyx_string_tab[74]
-#define __pyx_n_u_d __pyx_string_tab[75]
-#define __pyx_n_u_dek_selector __pyx_string_tab[76]
-#define __pyx_n_u_delta_T __pyx_string_tab[77]
-#define __pyx_n_u_delta_T_hat __pyx_string_tab[78]
-#define __pyx_n_u_delta_topological_energy __pyx_string_tab[79]
-#define __pyx_n_u_dict __pyx_string_tab[80]
-#define __pyx_n_u_dict_2 __pyx_string_tab[81]
-#define __pyx_kp_u_disable __pyx_string_tab[82]
-#define __pyx_n_u_discard __pyx_string_tab[83]
-#define __pyx_n_u_distances __pyx_string_tab[84]
-#define __pyx_n_u_dtype __pyx_string_tab[85]
-#define __pyx_n_u_early_stop_threshold __pyx_string_tab[86]
-#define __pyx_kp_u_enable __pyx_string_tab[87]
-#define __pyx_n_u_entrap_ebm_engine __pyx_string_tab[88]
-#define __pyx_kp_u_entrap_ebm_engine_pyx __pyx_string_tab[89]
-#define __pyx_n_u_eps0 __pyx_string_tab[90]
-#define __pyx_n_u_error __pyx_string_tab[91]
-#define __pyx_n_u_estimate_noise_energy __pyx_string_tab[92]
-#define __pyx_n_u_euclidean __pyx_string_tab[93]
-#define __pyx_n_u_exp __pyx_string_tab[94]
-#define __pyx_n_u_eye __pyx_string_tab[95]
-#define __pyx_n_u_final_T_norm __pyx_string_tab[96]
-#define __pyx_n_u_final_size __pyx_string_tab[97]
-#define __pyx_n_u_func __pyx_string_tab[98]
-#define __pyx_n_u_gc __pyx_string_tab[99]
-#define __pyx_kp_u_gc __pyx_string_tab[100]
-#define __pyx_n_u_geometric_energy __pyx_string_tab[101]
-#define __pyx_n_u_get __pyx_string_tab[102]
-#define __pyx_n_u_getLogger __pyx_string_tab[103]
-#define __pyx_n_u_get_k_percentile __pyx_string_tab[104]
-#define __pyx_n_u_getstate __pyx_string_tab[105]
-#define __pyx_n_u_idx __pyx_string_tab[106]
-#define __pyx_n_u_indices __pyx_string_tab[107]
-#define __pyx_n_u_initializing __pyx_string_tab[108]
-#define __pyx_n_u_int64 __pyx_string_tab[109]
-#define __pyx_n_u_inv __pyx_string_tab[110]
-#define __pyx_n_u_is_coroutine __pyx_string_tab[111]
-#define __pyx_kp_u_isenabled __pyx_string_tab[112]
-#define __pyx_n_u_item __pyx_string_tab[113]
-#define __pyx_n_u_items __pyx_string_tab[114]
-#define __pyx_n_u_iteration __pyx_string_tab[115]
-#define __pyx_n_u_iterations __pyx_string_tab[116]
-#define __pyx_n_u_k __pyx_string_tab[117]
-#define __pyx_n_u_k_adaptive __pyx_string_tab[118]
-#define __pyx_n_u_k_query __pyx_string_tab[119]
-#define __pyx_n_u_key __pyx_string_tab[120]
-#define __pyx_n_u_labels __pyx_string_tab[121]
-#define __pyx_n_u_lambda __pyx_string_tab[122]
-#define __pyx_n_u_lambda_G0 __pyx_string_tab[123]
-#define __pyx_n_u_lambda_G_t __pyx_string_tab[124]
-#define __pyx_n_u_lambda_T __pyx_string_tab[125]
-#define __pyx_n_u_landmark_variance_threshold __pyx_string_tab[126]
-#define __pyx_n_u_len_candidates_list __pyx_string_tab[127]
-#define __pyx_n_u_log_det_Sigma __pyx_string_tab[128]
-#define __pyx_n_u_logger __pyx_string_tab[129]
-#define __pyx_n_u_logging __pyx_string_tab[130]
-#define __pyx_n_u_main __pyx_string_tab[131]
-#define __pyx_n_u_max_landmarks __pyx_string_tab[132]
-#define __pyx_n_u_maximum __pyx_string_tab[133]
-#define __pyx_n_u_method __pyx_string_tab[134]
-#define __pyx_n_u_metric __pyx_string_tab[135]
-#define __pyx_n_u_min_landmarks __pyx_string_tab[136]
-#define __pyx_n_u_module __pyx_string_tab[137]
-#define __pyx_n_u_mu __pyx_string_tab[138]
-#define __pyx_n_u_n_components_h0 __pyx_string_tab[139]
-#define __pyx_n_u_n_loops_h1 __pyx_string_tab[140]
-#define __pyx_n_u_n_points __pyx_string_tab[141]
-#define __pyx_n_u_n_points_final __pyx_string_tab[142]
-#define __pyx_n_u_n_points_original __pyx_string_tab[143]
-#define __pyx_n_u_name __pyx_string_tab[144]
-#define __pyx_n_u_needs_T_update __pyx_string_tab[145]
-#define __pyx_n_u_new __pyx_string_tab[146]
-#define __pyx_n_u_no_noise __pyx_string_tab[147]
-#define __pyx_n_u_noise_indices __pyx_string_tab[148]
-#define __pyx_n_u_noise_mask __pyx_string_tab[149]
-#define __pyx_n_u_noise_mask_any __pyx_string_tab[150]
-#define __pyx_n_u_noise_points __pyx_string_tab[151]
-#define __pyx_n_u_noise_tree __pyx_string_tab[152]
-#define __pyx_n_u_np __pyx_string_tab[153]
-#define __pyx_n_u_numpy __pyx_string_tab[154]
-#define __pyx_kp_u_numpy__core_multiarray_failed_to __pyx_string_tab[155]
-#define __pyx_kp_u_numpy__core_umath_failed_to_impo __pyx_string_tab[156]
-#define __pyx_n_u_numpy_linalg __pyx_string_tab[157]
-#define __pyx_n_u_other_cid __pyx_string_tab[158]
-#define __pyx_n_u_pickle __pyx_string_tab[159]
-#define __pyx_n_u_points __pyx_string_tab[160]
-#define __pyx_n_u_pop __pyx_string_tab[161]
-#define __pyx_n_u_prod __pyx_string_tab[162]
-#define __pyx_n_u_ptp __pyx_string_tab[163]
-#define __pyx_n_u_pyx_PickleError __pyx_string_tab[164]
-#define __pyx_n_u_pyx_checksum __pyx_string_tab[165]
-#define __pyx_n_u_pyx_result __pyx_string_tab[166]
-#define __pyx_n_u_pyx_state __pyx_string_tab[167]
-#define __pyx_n_u_pyx_type __pyx_string_tab[168]
-#define __pyx_n_u_pyx_unpickle_EBM_Reassignment __pyx_string_tab[169]
-#define __pyx_n_u_pyx_vtable __pyx_string_tab[170]
-#define __pyx_n_u_qualname __pyx_string_tab[171]
-#define __pyx_n_u_query __pyx_string_tab[172]
-#define __pyx_n_u_ravel __pyx_string_tab[173]
-#define __pyx_n_u_reassign __pyx_string_tab[174]
-#define __pyx_n_u_reassign_locals_lambda __pyx_string_tab[175]
-#define __pyx_n_u_recruited_this_round __pyx_string_tab[176]
-#define __pyx_n_u_reduce __pyx_string_tab[177]
-#define __pyx_n_u_reduce_cython __pyx_string_tab[178]
-#define __pyx_n_u_reduce_ex __pyx_string_tab[179]
-#define __pyx_n_u_refined_labels __pyx_string_tab[180]
-#define __pyx_n_u_rescued __pyx_string_tab[181]
-#define __pyx_n_u_rescued_count __pyx_string_tab[182]
-#define __pyx_n_u_reshape __pyx_string_tab[183]
-#define __pyx_n_u_reverse __pyx_string_tab[184]
-#define __pyx_n_u_ridge_epsilon __pyx_string_tab[185]
-#define __pyx_n_u_scipy_linalg __pyx_string_tab[186]
-#define __pyx_n_u_scipy_spatial __pyx_string_tab[187]
-#define __pyx_n_u_self __pyx_string_tab[188]
-#define __pyx_n_u_set_name __pyx_string_tab[189]
-#define __pyx_n_u_setstate __pyx_string_tab[190]
-#define __pyx_n_u_setstate_cython __pyx_string_tab[191]
-#define __pyx_n_u_shape __pyx_string_tab[192]
-#define __pyx_n_u_size __pyx_string_tab[193]
-#define __pyx_n_u_slogdet __pyx_string_tab[194]
-#define __pyx_n_u_sort __pyx_string_tab[195]
-#define __pyx_n_u_sorted_cluster_ids __pyx_string_tab[196]
-#define __pyx_n_u_spec __pyx_string_tab[197]
-#define __pyx_n_u_state __pyx_string_tab[198]
-#define __pyx_kp_u_stringsource __pyx_string_tab[199]
-#define __pyx_n_u_sum __pyx_string_tab[200]
-#define __pyx_n_u_tau __pyx_string_tab[201]
-#define __pyx_n_u_tda_calls __pyx_string_tab[202]
-#define __pyx_n_u_test __pyx_string_tab[203]
-#define __pyx_n_u_topological_energy __pyx_string_tab[204]
-#define __pyx_n_u_topological_normalized __pyx_string_tab[205]
-#define __pyx_n_u_total_rescued __pyx_string_tab[206]
-#define __pyx_n_u_trace __pyx_string_tab[207]
-#define __pyx_n_u_true_noise_indices __pyx_string_tab[208]
-#define __pyx_n_u_true_noise_indices_arr __pyx_string_tab[209]
-#define __pyx_n_u_unique __pyx_string_tab[210]
-#define __pyx_n_u_unique_labels __pyx_string_tab[211]
-#define __pyx_n_u_update __pyx_string_tab[212]
-#define __pyx_n_u_use_memmap __pyx_string_tab[213]
-#define __pyx_n_u_use_setstate __pyx_string_tab[214]
-#define __pyx_n_u_variance_captured __pyx_string_tab[215]
-#define __pyx_n_u_volume_fallback __pyx_string_tab[216]
-#define __pyx_n_u_vstack __pyx_string_tab[217]
-#define __pyx_n_u_warning __pyx_string_tab[218]
-#define __pyx_n_u_where __pyx_string_tab[219]
-#define __pyx_n_u_workers __pyx_string_tab[220]
-#define __pyx_n_u_x __pyx_string_tab[221]
+#define __pyx_kp_u_Cache_stats __pyx_string_tab[1]
+#define __pyx_n_u_E0 __pyx_string_tab[2]
+#define __pyx_n_u_E1 __pyx_string_tab[3]
+#define __pyx_n_u_EBM_Reassignment_Engine __pyx_string_tab[4]
+#define __pyx_n_u_EBM_Reassignment_Engine___reduce __pyx_string_tab[5]
+#define __pyx_n_u_EBM_Reassignment_Engine___setsta __pyx_string_tab[6]
+#define __pyx_n_u_EBM_Reassignment_Engine_bounded __pyx_string_tab[7]
+#define __pyx_n_u_EBM_Reassignment_Engine_cleanup __pyx_string_tab[8]
+#define __pyx_n_u_EBM_Reassignment_Engine_compute __pyx_string_tab[9]
+#define __pyx_n_u_EBM_Reassignment_Engine_delta_to __pyx_string_tab[10]
+#define __pyx_n_u_EBM_Reassignment_Engine_estimate __pyx_string_tab[11]
+#define __pyx_n_u_EBM_Reassignment_Engine_geometri __pyx_string_tab[12]
+#define __pyx_n_u_EBM_Reassignment_Engine_reassign __pyx_string_tab[13]
+#define __pyx_n_u_E_G __pyx_string_tab[14]
+#define __pyx_n_u_E_cheap __pyx_string_tab[15]
+#define __pyx_n_u_E_noise __pyx_string_tab[16]
+#define __pyx_n_u_E_total __pyx_string_tab[17]
+#define __pyx_n_u_H0_entropy __pyx_string_tab[18]
+#define __pyx_n_u_H1_entropy __pyx_string_tab[19]
+#define __pyx_n_u_ImportError __pyx_string_tab[20]
+#define __pyx_kp_u_Incompatible_checksums_0x_x_vs_0 __pyx_string_tab[21]
+#define __pyx_n_u_Incremental_TDA_Engine __pyx_string_tab[22]
+#define __pyx_n_u_N_noise __pyx_string_tab[23]
+#define __pyx_kp_u_Noise_topology_computation_faile __pyx_string_tab[24]
+#define __pyx_kp_u_Note_that_Cython_is_deliberately __pyx_string_tab[25]
+#define __pyx_n_u_PickleError __pyx_string_tab[26]
+#define __pyx_n_u_Sigma_inv __pyx_string_tab[27]
+#define __pyx_n_u_Sigma_reg __pyx_string_tab[28]
+#define __pyx_n_u_T_norm __pyx_string_tab[29]
+#define __pyx_n_u_T_prev_norm __pyx_string_tab[30]
+#define __pyx_n_u_T_raw __pyx_string_tab[31]
+#define __pyx_n_u_Topological_Energy_Computer __pyx_string_tab[32]
+#define __pyx_n_u_X __pyx_string_tab[33]
+#define __pyx_kp_u__2 __pyx_string_tab[34]
+#define __pyx_n_u__3 __pyx_string_tab[35]
+#define __pyx_kp_u_add_note __pyx_string_tab[36]
+#define __pyx_n_u_all_claimed_candidates __pyx_string_tab[37]
+#define __pyx_n_u_alpha __pyx_string_tab[38]
+#define __pyx_n_u_any __pyx_string_tab[39]
+#define __pyx_n_u_array __pyx_string_tab[40]
+#define __pyx_n_u_asarray __pyx_string_tab[41]
+#define __pyx_n_u_asyncio_coroutines __pyx_string_tab[42]
+#define __pyx_n_u_axis __pyx_string_tab[43]
+#define __pyx_n_u_balanced_tree __pyx_string_tab[44]
+#define __pyx_n_u_beta __pyx_string_tab[45]
+#define __pyx_n_u_bounded_delta_energy __pyx_string_tab[46]
+#define __pyx_n_u_cKDTree __pyx_string_tab[47]
+#define __pyx_n_u_cache_config __pyx_string_tab[48]
+#define __pyx_n_u_cache_hit __pyx_string_tab[49]
+#define __pyx_n_u_cache_hits __pyx_string_tab[50]
+#define __pyx_n_u_cache_stats __pyx_string_tab[51]
+#define __pyx_n_u_candidate_energies __pyx_string_tab[52]
+#define __pyx_n_u_candidate_global_indices __pyx_string_tab[53]
+#define __pyx_n_u_candidate_idx __pyx_string_tab[54]
+#define __pyx_n_u_candidate_local_indices __pyx_string_tab[55]
+#define __pyx_n_u_candidate_local_indices_len __pyx_string_tab[56]
+#define __pyx_n_u_candidates __pyx_string_tab[57]
+#define __pyx_n_u_candidates_list __pyx_string_tab[58]
+#define __pyx_n_u_cid __pyx_string_tab[59]
+#define __pyx_n_u_class_getitem __pyx_string_tab[60]
+#define __pyx_n_u_cleanup __pyx_string_tab[61]
+#define __pyx_n_u_cline_in_traceback __pyx_string_tab[62]
+#define __pyx_n_u_cluster_candidate_sets __pyx_string_tab[63]
+#define __pyx_n_u_cluster_indices __pyx_string_tab[64]
+#define __pyx_n_u_cluster_indices_current __pyx_string_tab[65]
+#define __pyx_n_u_cluster_mask __pyx_string_tab[66]
+#define __pyx_n_u_cluster_mask_current __pyx_string_tab[67]
+#define __pyx_n_u_cluster_mask_updated __pyx_string_tab[68]
+#define __pyx_n_u_cluster_points __pyx_string_tab[69]
+#define __pyx_n_u_cluster_points_current __pyx_string_tab[70]
+#define __pyx_n_u_cluster_points_updated __pyx_string_tab[71]
+#define __pyx_n_u_cluster_size __pyx_string_tab[72]
+#define __pyx_n_u_cluster_sizes __pyx_string_tab[73]
+#define __pyx_n_u_cluster_states __pyx_string_tab[74]
+#define __pyx_n_u_cluster_stats __pyx_string_tab[75]
+#define __pyx_n_u_collect __pyx_string_tab[76]
+#define __pyx_n_u_compact_nodes __pyx_string_tab[77]
+#define __pyx_n_u_compute_delta_topological_energy __pyx_string_tab[78]
+#define __pyx_n_u_compute_normalized_topological_e __pyx_string_tab[79]
+#define __pyx_n_u_compute_raw_topological_energy __pyx_string_tab[80]
+#define __pyx_n_u_consecutive_rejects __pyx_string_tab[81]
+#define __pyx_n_u_converged __pyx_string_tab[82]
+#define __pyx_n_u_copy __pyx_string_tab[83]
+#define __pyx_n_u_d __pyx_string_tab[84]
+#define __pyx_n_u_dek_selector __pyx_string_tab[85]
+#define __pyx_n_u_delta_T __pyx_string_tab[86]
+#define __pyx_n_u_delta_T_hat __pyx_string_tab[87]
+#define __pyx_n_u_delta_topological_energy __pyx_string_tab[88]
+#define __pyx_n_u_dict __pyx_string_tab[89]
+#define __pyx_n_u_dict_2 __pyx_string_tab[90]
+#define __pyx_kp_u_disable __pyx_string_tab[91]
+#define __pyx_n_u_discard __pyx_string_tab[92]
+#define __pyx_n_u_distances __pyx_string_tab[93]
+#define __pyx_n_u_dtype __pyx_string_tab[94]
+#define __pyx_n_u_early_stop_threshold __pyx_string_tab[95]
+#define __pyx_kp_u_enable __pyx_string_tab[96]
+#define __pyx_n_u_entrap_ebm_engine __pyx_string_tab[97]
+#define __pyx_kp_u_entrap_ebm_engine_pyx __pyx_string_tab[98]
+#define __pyx_n_u_eps0 __pyx_string_tab[99]
+#define __pyx_n_u_error __pyx_string_tab[100]
+#define __pyx_n_u_estimate_noise_energy __pyx_string_tab[101]
+#define __pyx_n_u_euclidean __pyx_string_tab[102]
+#define __pyx_n_u_exp __pyx_string_tab[103]
+#define __pyx_n_u_eye __pyx_string_tab[104]
+#define __pyx_n_u_final_T_norm __pyx_string_tab[105]
+#define __pyx_n_u_final_size __pyx_string_tab[106]
+#define __pyx_n_u_func __pyx_string_tab[107]
+#define __pyx_n_u_gc __pyx_string_tab[108]
+#define __pyx_kp_u_gc __pyx_string_tab[109]
+#define __pyx_n_u_geometric_energy __pyx_string_tab[110]
+#define __pyx_n_u_get __pyx_string_tab[111]
+#define __pyx_n_u_getLogger __pyx_string_tab[112]
+#define __pyx_n_u_get_cache_stats __pyx_string_tab[113]
+#define __pyx_n_u_get_k_percentile __pyx_string_tab[114]
+#define __pyx_n_u_getstate __pyx_string_tab[115]
+#define __pyx_n_u_idx __pyx_string_tab[116]
+#define __pyx_n_u_incremental_tda __pyx_string_tab[117]
+#define __pyx_n_u_indices __pyx_string_tab[118]
+#define __pyx_n_u_info __pyx_string_tab[119]
+#define __pyx_n_u_initializing __pyx_string_tab[120]
+#define __pyx_n_u_int64 __pyx_string_tab[121]
+#define __pyx_n_u_inv __pyx_string_tab[122]
+#define __pyx_n_u_invalidate_cluster_cache __pyx_string_tab[123]
+#define __pyx_n_u_is_coroutine __pyx_string_tab[124]
+#define __pyx_kp_u_isenabled __pyx_string_tab[125]
+#define __pyx_n_u_items __pyx_string_tab[126]
+#define __pyx_n_u_iteration __pyx_string_tab[127]
+#define __pyx_n_u_iterations __pyx_string_tab[128]
+#define __pyx_n_u_k __pyx_string_tab[129]
+#define __pyx_n_u_k_adaptive __pyx_string_tab[130]
+#define __pyx_n_u_k_query __pyx_string_tab[131]
+#define __pyx_n_u_key __pyx_string_tab[132]
+#define __pyx_n_u_labels __pyx_string_tab[133]
+#define __pyx_n_u_lambda __pyx_string_tab[134]
+#define __pyx_n_u_lambda_G0 __pyx_string_tab[135]
+#define __pyx_n_u_lambda_G_t __pyx_string_tab[136]
+#define __pyx_n_u_lambda_T __pyx_string_tab[137]
+#define __pyx_n_u_landmark_variance_threshold __pyx_string_tab[138]
+#define __pyx_n_u_len_candidates_list __pyx_string_tab[139]
+#define __pyx_n_u_log_det_Sigma __pyx_string_tab[140]
+#define __pyx_n_u_logger __pyx_string_tab[141]
+#define __pyx_n_u_logging __pyx_string_tab[142]
+#define __pyx_n_u_main __pyx_string_tab[143]
+#define __pyx_n_u_max_diagrams __pyx_string_tab[144]
+#define __pyx_n_u_max_landmarks __pyx_string_tab[145]
+#define __pyx_n_u_maximum __pyx_string_tab[146]
+#define __pyx_n_u_memory_threshold_mb __pyx_string_tab[147]
+#define __pyx_n_u_method __pyx_string_tab[148]
+#define __pyx_n_u_metric __pyx_string_tab[149]
+#define __pyx_n_u_min_landmarks __pyx_string_tab[150]
+#define __pyx_n_u_module __pyx_string_tab[151]
+#define __pyx_n_u_mu __pyx_string_tab[152]
+#define __pyx_n_u_n_components_h0 __pyx_string_tab[153]
+#define __pyx_n_u_n_loops_h1 __pyx_string_tab[154]
+#define __pyx_n_u_n_points __pyx_string_tab[155]
+#define __pyx_n_u_n_points_final __pyx_string_tab[156]
+#define __pyx_n_u_n_points_original __pyx_string_tab[157]
+#define __pyx_n_u_name __pyx_string_tab[158]
+#define __pyx_n_u_needs_T_update __pyx_string_tab[159]
+#define __pyx_n_u_new __pyx_string_tab[160]
+#define __pyx_n_u_next_iteration __pyx_string_tab[161]
+#define __pyx_n_u_no_noise __pyx_string_tab[162]
+#define __pyx_n_u_noise_indices __pyx_string_tab[163]
+#define __pyx_n_u_noise_mask __pyx_string_tab[164]
+#define __pyx_n_u_noise_mask_any __pyx_string_tab[165]
+#define __pyx_n_u_noise_points __pyx_string_tab[166]
+#define __pyx_n_u_noise_tree __pyx_string_tab[167]
+#define __pyx_n_u_np __pyx_string_tab[168]
+#define __pyx_n_u_numpy __pyx_string_tab[169]
+#define __pyx_kp_u_numpy__core_multiarray_failed_to __pyx_string_tab[170]
+#define __pyx_kp_u_numpy__core_umath_failed_to_impo __pyx_string_tab[171]
+#define __pyx_n_u_numpy_linalg __pyx_string_tab[172]
+#define __pyx_n_u_other_cid __pyx_string_tab[173]
+#define __pyx_n_u_pickle __pyx_string_tab[174]
+#define __pyx_n_u_points __pyx_string_tab[175]
+#define __pyx_n_u_pop __pyx_string_tab[176]
+#define __pyx_n_u_prod __pyx_string_tab[177]
+#define __pyx_n_u_ptp __pyx_string_tab[178]
+#define __pyx_n_u_pyx_PickleError __pyx_string_tab[179]
+#define __pyx_n_u_pyx_checksum __pyx_string_tab[180]
+#define __pyx_n_u_pyx_result __pyx_string_tab[181]
+#define __pyx_n_u_pyx_state __pyx_string_tab[182]
+#define __pyx_n_u_pyx_type __pyx_string_tab[183]
+#define __pyx_n_u_pyx_unpickle_EBM_Reassignment __pyx_string_tab[184]
+#define __pyx_n_u_pyx_vtable __pyx_string_tab[185]
+#define __pyx_n_u_qualname __pyx_string_tab[186]
+#define __pyx_n_u_query __pyx_string_tab[187]
+#define __pyx_n_u_ravel __pyx_string_tab[188]
+#define __pyx_n_u_reassign __pyx_string_tab[189]
+#define __pyx_n_u_reassign_locals_lambda __pyx_string_tab[190]
+#define __pyx_n_u_recruited_this_round __pyx_string_tab[191]
+#define __pyx_n_u_reduce __pyx_string_tab[192]
+#define __pyx_n_u_reduce_cython __pyx_string_tab[193]
+#define __pyx_n_u_reduce_ex __pyx_string_tab[194]
+#define __pyx_n_u_refined_labels __pyx_string_tab[195]
+#define __pyx_n_u_rescued __pyx_string_tab[196]
+#define __pyx_n_u_rescued_count __pyx_string_tab[197]
+#define __pyx_n_u_reshape __pyx_string_tab[198]
+#define __pyx_n_u_reverse __pyx_string_tab[199]
+#define __pyx_n_u_ridge_epsilon __pyx_string_tab[200]
+#define __pyx_n_u_scipy_linalg __pyx_string_tab[201]
+#define __pyx_n_u_scipy_spatial __pyx_string_tab[202]
+#define __pyx_n_u_self __pyx_string_tab[203]
+#define __pyx_n_u_set_name __pyx_string_tab[204]
+#define __pyx_n_u_setstate __pyx_string_tab[205]
+#define __pyx_n_u_setstate_cython __pyx_string_tab[206]
+#define __pyx_n_u_size __pyx_string_tab[207]
+#define __pyx_n_u_slogdet __pyx_string_tab[208]
+#define __pyx_n_u_sort __pyx_string_tab[209]
+#define __pyx_n_u_sorted __pyx_string_tab[210]
+#define __pyx_n_u_sorted_cluster_ids __pyx_string_tab[211]
+#define __pyx_n_u_spec __pyx_string_tab[212]
+#define __pyx_n_u_state __pyx_string_tab[213]
+#define __pyx_kp_u_stringsource __pyx_string_tab[214]
+#define __pyx_n_u_sum __pyx_string_tab[215]
+#define __pyx_n_u_t __pyx_string_tab[216]
+#define __pyx_n_u_tau __pyx_string_tab[217]
+#define __pyx_n_u_tda_calls __pyx_string_tab[218]
+#define __pyx_n_u_tda_meta __pyx_string_tab[219]
+#define __pyx_n_u_test __pyx_string_tab[220]
+#define __pyx_n_u_tolist __pyx_string_tab[221]
+#define __pyx_n_u_topological_energy __pyx_string_tab[222]
+#define __pyx_n_u_topological_normalized __pyx_string_tab[223]
+#define __pyx_n_u_total_rescued __pyx_string_tab[224]
+#define __pyx_n_u_trace __pyx_string_tab[225]
+#define __pyx_n_u_true_noise_indices __pyx_string_tab[226]
+#define __pyx_n_u_true_noise_indices_arr __pyx_string_tab[227]
+#define __pyx_n_u_unique __pyx_string_tab[228]
+#define __pyx_n_u_unique_labels __pyx_string_tab[229]
+#define __pyx_n_u_update __pyx_string_tab[230]
+#define __pyx_n_u_use_incremental_tda __pyx_string_tab[231]
+#define __pyx_n_u_use_memmap __pyx_string_tab[232]
+#define __pyx_n_u_use_setstate __pyx_string_tab[233]
+#define __pyx_n_u_validity_window __pyx_string_tab[234]
+#define __pyx_n_u_variance_captured __pyx_string_tab[235]
+#define __pyx_n_u_volume_fallback __pyx_string_tab[236]
+#define __pyx_n_u_vstack __pyx_string_tab[237]
+#define __pyx_n_u_warning __pyx_string_tab[238]
+#define __pyx_n_u_where __pyx_string_tab[239]
+#define __pyx_n_u_workers __pyx_string_tab[240]
+#define __pyx_n_u_x __pyx_string_tab[241]
 /* #### Code section: module_state_clear ### */
 #if CYTHON_USE_MODULE_STATE
 static CYTHON_SMALL_CODE int __pyx_m_clear(PyObject *m) {
@@ -3698,9 +3763,9 @@ static CYTHON_SMALL_CODE int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_ptype_5numpy_ufunc);
   Py_CLEAR(clear_module_state->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine);
   Py_CLEAR(clear_module_state->__pyx_type_6entrap_10ebm_engine_EBM_Reassignment_Engine);
-  for (int i=0; i<3; ++i) { Py_CLEAR(clear_module_state->__pyx_tuple[i]); }
+  for (int i=0; i<5; ++i) { Py_CLEAR(clear_module_state->__pyx_tuple[i]); }
   for (int i=0; i<12; ++i) { Py_CLEAR(clear_module_state->__pyx_codeobj_tab[i]); }
-  for (int i=0; i<222; ++i) { Py_CLEAR(clear_module_state->__pyx_string_tab[i]); }
+  for (int i=0; i<242; ++i) { Py_CLEAR(clear_module_state->__pyx_string_tab[i]); }
   Py_CLEAR(clear_module_state->__pyx_float_0_0);
   Py_CLEAR(clear_module_state->__pyx_float_1_0);
   Py_CLEAR(clear_module_state->__pyx_float_10_0);
@@ -3708,9 +3773,12 @@ static CYTHON_SMALL_CODE int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_float_1eneg_12);
   Py_CLEAR(clear_module_state->__pyx_int_0);
   Py_CLEAR(clear_module_state->__pyx_int_1);
-  Py_CLEAR(clear_module_state->__pyx_int_33169668);
-  Py_CLEAR(clear_module_state->__pyx_int_107907915);
-  Py_CLEAR(clear_module_state->__pyx_int_166671641);
+  Py_CLEAR(clear_module_state->__pyx_int_5);
+  Py_CLEAR(clear_module_state->__pyx_int_10);
+  Py_CLEAR(clear_module_state->__pyx_int_500);
+  Py_CLEAR(clear_module_state->__pyx_int_136898247);
+  Py_CLEAR(clear_module_state->__pyx_int_150527128);
+  Py_CLEAR(clear_module_state->__pyx_int_167122844);
   Py_CLEAR(clear_module_state->__pyx_int_neg_1);
   return 0;
 }
@@ -3750,9 +3818,9 @@ static CYTHON_SMALL_CODE int __pyx_m_traverse(PyObject *m, visitproc visit, void
   Py_VISIT(traverse_module_state->__pyx_ptype_5numpy_ufunc);
   Py_VISIT(traverse_module_state->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine);
   Py_VISIT(traverse_module_state->__pyx_type_6entrap_10ebm_engine_EBM_Reassignment_Engine);
-  for (int i=0; i<3; ++i) { __Pyx_VISIT_CONST(traverse_module_state->__pyx_tuple[i]); }
+  for (int i=0; i<5; ++i) { __Pyx_VISIT_CONST(traverse_module_state->__pyx_tuple[i]); }
   for (int i=0; i<12; ++i) { __Pyx_VISIT_CONST(traverse_module_state->__pyx_codeobj_tab[i]); }
-  for (int i=0; i<222; ++i) { __Pyx_VISIT_CONST(traverse_module_state->__pyx_string_tab[i]); }
+  for (int i=0; i<242; ++i) { __Pyx_VISIT_CONST(traverse_module_state->__pyx_string_tab[i]); }
   __Pyx_VISIT_CONST(traverse_module_state->__pyx_float_0_0);
   __Pyx_VISIT_CONST(traverse_module_state->__pyx_float_1_0);
   __Pyx_VISIT_CONST(traverse_module_state->__pyx_float_10_0);
@@ -3760,9 +3828,12 @@ static CYTHON_SMALL_CODE int __pyx_m_traverse(PyObject *m, visitproc visit, void
   __Pyx_VISIT_CONST(traverse_module_state->__pyx_float_1eneg_12);
   __Pyx_VISIT_CONST(traverse_module_state->__pyx_int_0);
   __Pyx_VISIT_CONST(traverse_module_state->__pyx_int_1);
-  __Pyx_VISIT_CONST(traverse_module_state->__pyx_int_33169668);
-  __Pyx_VISIT_CONST(traverse_module_state->__pyx_int_107907915);
-  __Pyx_VISIT_CONST(traverse_module_state->__pyx_int_166671641);
+  __Pyx_VISIT_CONST(traverse_module_state->__pyx_int_5);
+  __Pyx_VISIT_CONST(traverse_module_state->__pyx_int_10);
+  __Pyx_VISIT_CONST(traverse_module_state->__pyx_int_500);
+  __Pyx_VISIT_CONST(traverse_module_state->__pyx_int_136898247);
+  __Pyx_VISIT_CONST(traverse_module_state->__pyx_int_150527128);
+  __Pyx_VISIT_CONST(traverse_module_state->__pyx_int_167122844);
   __Pyx_VISIT_CONST(traverse_module_state->__pyx_int_neg_1);
   return 0;
 }
@@ -5504,7 +5575,53 @@ static CYTHON_INLINE NPY_DATETIMEUNIT __pyx_f_5numpy_get_datetime64_unit(PyObjec
   return __pyx_r;
 }
 
-/* "entrap/ebm_engine.pyx":71
+/* "entrap/ebm_engine.pyx":36
+ * 
+ * # Helper: Extract energy from tuple for sorting (replaces lambda)
+ * cdef inline double _get_energy_value(tuple item):             # <<<<<<<<<<<<<<
+ *     """Extract energy value from (index, energy) tuple."""
+ *     return item[1]
+*/
+
+static CYTHON_INLINE double __pyx_f_6entrap_10ebm_engine__get_energy_value(PyObject *__pyx_v_item) {
+  double __pyx_r;
+  double __pyx_t_1;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+
+  /* "entrap/ebm_engine.pyx":38
+ * cdef inline double _get_energy_value(tuple item):
+ *     """Extract energy value from (index, energy) tuple."""
+ *     return item[1]             # <<<<<<<<<<<<<<
+ * 
+ * 
+*/
+  if (unlikely(__pyx_v_item == Py_None)) {
+    PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+    __PYX_ERR(0, 38, __pyx_L1_error)
+  }
+  __pyx_t_1 = __Pyx_PyFloat_AsDouble(__Pyx_PyTuple_GET_ITEM(__pyx_v_item, 1)); if (unlikely((__pyx_t_1 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 38, __pyx_L1_error)
+  __pyx_r = __pyx_t_1;
+  goto __pyx_L0;
+
+  /* "entrap/ebm_engine.pyx":36
+ * 
+ * # Helper: Extract energy from tuple for sorting (replaces lambda)
+ * cdef inline double _get_energy_value(tuple item):             # <<<<<<<<<<<<<<
+ *     """Extract energy value from (index, energy) tuple."""
+ *     return item[1]
+*/
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_AddTraceback("entrap.ebm_engine._get_energy_value", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = -1;
+  __pyx_L0:;
+  return __pyx_r;
+}
+
+/* "entrap/ebm_engine.pyx":80
  *     """
  * 
  *     def __init__(self,             # <<<<<<<<<<<<<<
@@ -5514,7 +5631,7 @@ static CYTHON_INLINE NPY_DATETIMEUNIT __pyx_f_5numpy_get_datetime64_unit(PyObjec
 
 /* Python wrapper */
 static int __pyx_pw_6entrap_10ebm_engine_23EBM_Reassignment_Engine_1__init__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-PyDoc_STRVAR(__pyx_doc_6entrap_10ebm_engine_23EBM_Reassignment_Engine___init__, "\n        Initialize EBM_Reassignment_Engine.\n        \n        Parameters\n        ----------\n        alpha : float, default=0.5\n            Topological energy normalization exponent: T_norm = T_raw / n^\316\261.\n        beta : float, default=0.5\n            Trust-region decay exponent: \316\265_t = \316\2650 * n^(-\316\262).\n        eps0 : float, default=1.0\n            Base trust-region radius.\n        lambda_T : float, default=1.0\n            Weight of bounded topological energy in total energy.\n        lambda_G0 : float, default=1.0\n            Maximum weight of geometric energy (decreases with iterations).\n        tau : float, default=5.0\n            Annealing time constant for geometric weight decay.\n        max_landmarks : int, default=5000\n            Max landmarks for noise energy estimation via TDA.\n        min_landmarks : int, default=10\n            Min landmarks for noise energy estimation.\n        landmark_variance_threshold : float, default=0.95\n            Variance capture target for landmark selection.\n        ridge_epsilon : float, default=1e-6\n            Covariance regularization strength.\n        metric : str, default='euclidean'\n            Distance metric.\n        use_memmap : bool, default=True\n            Use memory mapping for large distance matrices.\n        **metric_params\n            Additional metric parameters.\n        ");
+PyDoc_STRVAR(__pyx_doc_6entrap_10ebm_engine_23EBM_Reassignment_Engine___init__, "\n        Initialize EBM_Reassignment_Engine.\n        \n        Parameters\n        ----------\n        alpha : float, default=0.5\n            Topological energy normalization exponent: T_norm = T_raw / n^\316\261.\n        beta : float, default=0.5\n            Trust-region decay exponent: \316\265_t = \316\2650 * n^(-\316\262).\n        eps0 : float, default=1.0\n            Base trust-region radius.\n        lambda_T : float, default=1.0\n            Weight of bounded topological energy in total energy.\n        lambda_G0 : float, default=1.0\n            Maximum weight of geometric energy (decreases with iterations).\n        tau : float, default=5.0\n            Annealing time constant for geometric weight decay.\n        max_landmarks : int, default=5000\n            Max landmarks for noise energy estimation via TDA.\n        min_landmarks : int, default=10\n            Min landmarks for noise energy estimation.\n        landmark_variance_threshold : float, default=0.95\n            Variance capture target for landmark selection.\n        ridge_epsilon : float, default=1e-6\n            Covariance regularization strength.\n        metric : str, default='euclidean'\n            Distance metric.\n        use_memmap : bool, default=True\n            Use memory mapping for large distance matrices.\n        use_incremental_tda : bool, default=False\n            Enable incremental TDA with memory-bounded caching for faster\n            iterative topological energy computation.\n        **metric_params\n            Additional metric parameters.\n        ");
 #if CYTHON_UPDATE_DESCRIPTOR_DOC
 struct wrapperbase __pyx_wrapperbase_6entrap_10ebm_engine_23EBM_Reassignment_Engine___init__;
 #endif
@@ -5531,10 +5648,11 @@ static int __pyx_pw_6entrap_10ebm_engine_23EBM_Reassignment_Engine_1__init__(PyO
   double __pyx_v_ridge_epsilon;
   PyObject *__pyx_v_metric = 0;
   int __pyx_v_use_memmap;
+  int __pyx_v_use_incremental_tda;
   PyObject *__pyx_v_metric_params = 0;
   CYTHON_UNUSED Py_ssize_t __pyx_nargs;
   CYTHON_UNUSED PyObject *const *__pyx_kwvalues;
-  PyObject* values[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
+  PyObject* values[13] = {0,0,0,0,0,0,0,0,0,0,0,0,0};
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
@@ -5550,114 +5668,122 @@ static int __pyx_pw_6entrap_10ebm_engine_23EBM_Reassignment_Engine_1__init__(PyO
   __pyx_v_metric_params = PyDict_New(); if (unlikely(!__pyx_v_metric_params)) return -1;
   __Pyx_GOTREF(__pyx_v_metric_params);
   {
-    PyObject ** const __pyx_pyargnames[] = {&__pyx_mstate_global->__pyx_n_u_alpha,&__pyx_mstate_global->__pyx_n_u_beta,&__pyx_mstate_global->__pyx_n_u_eps0,&__pyx_mstate_global->__pyx_n_u_lambda_T,&__pyx_mstate_global->__pyx_n_u_lambda_G0,&__pyx_mstate_global->__pyx_n_u_tau,&__pyx_mstate_global->__pyx_n_u_max_landmarks,&__pyx_mstate_global->__pyx_n_u_min_landmarks,&__pyx_mstate_global->__pyx_n_u_landmark_variance_threshold,&__pyx_mstate_global->__pyx_n_u_ridge_epsilon,&__pyx_mstate_global->__pyx_n_u_metric,&__pyx_mstate_global->__pyx_n_u_use_memmap,0};
+    PyObject ** const __pyx_pyargnames[] = {&__pyx_mstate_global->__pyx_n_u_alpha,&__pyx_mstate_global->__pyx_n_u_beta,&__pyx_mstate_global->__pyx_n_u_eps0,&__pyx_mstate_global->__pyx_n_u_lambda_T,&__pyx_mstate_global->__pyx_n_u_lambda_G0,&__pyx_mstate_global->__pyx_n_u_tau,&__pyx_mstate_global->__pyx_n_u_max_landmarks,&__pyx_mstate_global->__pyx_n_u_min_landmarks,&__pyx_mstate_global->__pyx_n_u_landmark_variance_threshold,&__pyx_mstate_global->__pyx_n_u_ridge_epsilon,&__pyx_mstate_global->__pyx_n_u_metric,&__pyx_mstate_global->__pyx_n_u_use_memmap,&__pyx_mstate_global->__pyx_n_u_use_incremental_tda,0};
     const Py_ssize_t __pyx_kwds_len = (__pyx_kwds) ? __Pyx_NumKwargs_VARARGS(__pyx_kwds) : 0;
-    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 71, __pyx_L3_error)
+    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 80, __pyx_L3_error)
     if (__pyx_kwds_len > 0) {
       switch (__pyx_nargs) {
+        case 13:
+        values[12] = __Pyx_ArgRef_VARARGS(__pyx_args, 12);
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[12])) __PYX_ERR(0, 80, __pyx_L3_error)
+        CYTHON_FALLTHROUGH;
         case 12:
         values[11] = __Pyx_ArgRef_VARARGS(__pyx_args, 11);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[11])) __PYX_ERR(0, 71, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[11])) __PYX_ERR(0, 80, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case 11:
         values[10] = __Pyx_ArgRef_VARARGS(__pyx_args, 10);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[10])) __PYX_ERR(0, 71, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[10])) __PYX_ERR(0, 80, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case 10:
         values[9] = __Pyx_ArgRef_VARARGS(__pyx_args, 9);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[9])) __PYX_ERR(0, 71, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[9])) __PYX_ERR(0, 80, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  9:
         values[8] = __Pyx_ArgRef_VARARGS(__pyx_args, 8);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[8])) __PYX_ERR(0, 71, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[8])) __PYX_ERR(0, 80, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  8:
         values[7] = __Pyx_ArgRef_VARARGS(__pyx_args, 7);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[7])) __PYX_ERR(0, 71, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[7])) __PYX_ERR(0, 80, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  7:
         values[6] = __Pyx_ArgRef_VARARGS(__pyx_args, 6);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[6])) __PYX_ERR(0, 71, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[6])) __PYX_ERR(0, 80, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  6:
         values[5] = __Pyx_ArgRef_VARARGS(__pyx_args, 5);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[5])) __PYX_ERR(0, 71, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[5])) __PYX_ERR(0, 80, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  5:
         values[4] = __Pyx_ArgRef_VARARGS(__pyx_args, 4);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[4])) __PYX_ERR(0, 71, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[4])) __PYX_ERR(0, 80, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  4:
         values[3] = __Pyx_ArgRef_VARARGS(__pyx_args, 3);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 71, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 80, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  3:
         values[2] = __Pyx_ArgRef_VARARGS(__pyx_args, 2);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 71, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 80, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  2:
         values[1] = __Pyx_ArgRef_VARARGS(__pyx_args, 1);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 71, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 80, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  1:
         values[0] = __Pyx_ArgRef_VARARGS(__pyx_args, 0);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 71, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 80, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  0: break;
         default: goto __pyx_L5_argtuple_error;
       }
       const Py_ssize_t kwd_pos_args = __pyx_nargs;
-      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, __pyx_v_metric_params, values, kwd_pos_args, __pyx_kwds_len, "__init__", 1) < 0) __PYX_ERR(0, 71, __pyx_L3_error)
+      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, __pyx_v_metric_params, values, kwd_pos_args, __pyx_kwds_len, "__init__", 1) < 0) __PYX_ERR(0, 80, __pyx_L3_error)
       if (!values[10]) values[10] = __Pyx_NewRef(((PyObject*)__pyx_mstate_global->__pyx_n_u_euclidean));
     } else {
       switch (__pyx_nargs) {
+        case 13:
+        values[12] = __Pyx_ArgRef_VARARGS(__pyx_args, 12);
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[12])) __PYX_ERR(0, 80, __pyx_L3_error)
+        CYTHON_FALLTHROUGH;
         case 12:
         values[11] = __Pyx_ArgRef_VARARGS(__pyx_args, 11);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[11])) __PYX_ERR(0, 71, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[11])) __PYX_ERR(0, 80, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case 11:
         values[10] = __Pyx_ArgRef_VARARGS(__pyx_args, 10);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[10])) __PYX_ERR(0, 71, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[10])) __PYX_ERR(0, 80, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case 10:
         values[9] = __Pyx_ArgRef_VARARGS(__pyx_args, 9);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[9])) __PYX_ERR(0, 71, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[9])) __PYX_ERR(0, 80, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  9:
         values[8] = __Pyx_ArgRef_VARARGS(__pyx_args, 8);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[8])) __PYX_ERR(0, 71, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[8])) __PYX_ERR(0, 80, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  8:
         values[7] = __Pyx_ArgRef_VARARGS(__pyx_args, 7);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[7])) __PYX_ERR(0, 71, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[7])) __PYX_ERR(0, 80, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  7:
         values[6] = __Pyx_ArgRef_VARARGS(__pyx_args, 6);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[6])) __PYX_ERR(0, 71, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[6])) __PYX_ERR(0, 80, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  6:
         values[5] = __Pyx_ArgRef_VARARGS(__pyx_args, 5);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[5])) __PYX_ERR(0, 71, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[5])) __PYX_ERR(0, 80, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  5:
         values[4] = __Pyx_ArgRef_VARARGS(__pyx_args, 4);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[4])) __PYX_ERR(0, 71, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[4])) __PYX_ERR(0, 80, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  4:
         values[3] = __Pyx_ArgRef_VARARGS(__pyx_args, 3);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 71, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 80, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  3:
         values[2] = __Pyx_ArgRef_VARARGS(__pyx_args, 2);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 71, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 80, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  2:
         values[1] = __Pyx_ArgRef_VARARGS(__pyx_args, 1);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 71, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 80, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  1:
         values[0] = __Pyx_ArgRef_VARARGS(__pyx_args, 0);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 71, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 80, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  0: break;
         default: goto __pyx_L5_argtuple_error;
@@ -5665,73 +5791,86 @@ static int __pyx_pw_6entrap_10ebm_engine_23EBM_Reassignment_Engine_1__init__(PyO
       if (!values[10]) values[10] = __Pyx_NewRef(((PyObject*)__pyx_mstate_global->__pyx_n_u_euclidean));
     }
     if (values[0]) {
-      __pyx_v_alpha = __Pyx_PyFloat_AsDouble(values[0]); if (unlikely((__pyx_v_alpha == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 72, __pyx_L3_error)
+      __pyx_v_alpha = __Pyx_PyFloat_AsDouble(values[0]); if (unlikely((__pyx_v_alpha == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 81, __pyx_L3_error)
     } else {
       __pyx_v_alpha = ((double)0.5);
     }
     if (values[1]) {
-      __pyx_v_beta = __Pyx_PyFloat_AsDouble(values[1]); if (unlikely((__pyx_v_beta == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 73, __pyx_L3_error)
+      __pyx_v_beta = __Pyx_PyFloat_AsDouble(values[1]); if (unlikely((__pyx_v_beta == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 82, __pyx_L3_error)
     } else {
       __pyx_v_beta = ((double)0.5);
     }
     if (values[2]) {
-      __pyx_v_eps0 = __Pyx_PyFloat_AsDouble(values[2]); if (unlikely((__pyx_v_eps0 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 74, __pyx_L3_error)
+      __pyx_v_eps0 = __Pyx_PyFloat_AsDouble(values[2]); if (unlikely((__pyx_v_eps0 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 83, __pyx_L3_error)
     } else {
       __pyx_v_eps0 = ((double)1.0);
     }
     if (values[3]) {
-      __pyx_v_lambda_T = __Pyx_PyFloat_AsDouble(values[3]); if (unlikely((__pyx_v_lambda_T == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 75, __pyx_L3_error)
+      __pyx_v_lambda_T = __Pyx_PyFloat_AsDouble(values[3]); if (unlikely((__pyx_v_lambda_T == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 84, __pyx_L3_error)
     } else {
       __pyx_v_lambda_T = ((double)1.0);
     }
     if (values[4]) {
-      __pyx_v_lambda_G0 = __Pyx_PyFloat_AsDouble(values[4]); if (unlikely((__pyx_v_lambda_G0 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 76, __pyx_L3_error)
+      __pyx_v_lambda_G0 = __Pyx_PyFloat_AsDouble(values[4]); if (unlikely((__pyx_v_lambda_G0 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 85, __pyx_L3_error)
     } else {
       __pyx_v_lambda_G0 = ((double)1.0);
     }
     if (values[5]) {
-      __pyx_v_tau = __Pyx_PyFloat_AsDouble(values[5]); if (unlikely((__pyx_v_tau == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 77, __pyx_L3_error)
+      __pyx_v_tau = __Pyx_PyFloat_AsDouble(values[5]); if (unlikely((__pyx_v_tau == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 86, __pyx_L3_error)
     } else {
       __pyx_v_tau = ((double)5.0);
     }
     if (values[6]) {
-      __pyx_v_max_landmarks = __Pyx_PyLong_As_int(values[6]); if (unlikely((__pyx_v_max_landmarks == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 78, __pyx_L3_error)
+      __pyx_v_max_landmarks = __Pyx_PyLong_As_int(values[6]); if (unlikely((__pyx_v_max_landmarks == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 87, __pyx_L3_error)
     } else {
       __pyx_v_max_landmarks = ((int)0x1388);
     }
     if (values[7]) {
-      __pyx_v_min_landmarks = __Pyx_PyLong_As_int(values[7]); if (unlikely((__pyx_v_min_landmarks == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 79, __pyx_L3_error)
+      __pyx_v_min_landmarks = __Pyx_PyLong_As_int(values[7]); if (unlikely((__pyx_v_min_landmarks == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 88, __pyx_L3_error)
     } else {
       __pyx_v_min_landmarks = ((int)10);
     }
     if (values[8]) {
-      __pyx_v_landmark_variance_threshold = __Pyx_PyFloat_AsDouble(values[8]); if (unlikely((__pyx_v_landmark_variance_threshold == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 80, __pyx_L3_error)
+      __pyx_v_landmark_variance_threshold = __Pyx_PyFloat_AsDouble(values[8]); if (unlikely((__pyx_v_landmark_variance_threshold == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 89, __pyx_L3_error)
     } else {
       __pyx_v_landmark_variance_threshold = ((double)0.95);
     }
     if (values[9]) {
-      __pyx_v_ridge_epsilon = __Pyx_PyFloat_AsDouble(values[9]); if (unlikely((__pyx_v_ridge_epsilon == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 81, __pyx_L3_error)
+      __pyx_v_ridge_epsilon = __Pyx_PyFloat_AsDouble(values[9]); if (unlikely((__pyx_v_ridge_epsilon == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 90, __pyx_L3_error)
     } else {
       __pyx_v_ridge_epsilon = ((double)1e-06);
     }
     __pyx_v_metric = ((PyObject*)values[10]);
     if (values[11]) {
-      __pyx_v_use_memmap = __Pyx_PyObject_IsTrue(values[11]); if (unlikely((__pyx_v_use_memmap == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 83, __pyx_L3_error)
+      __pyx_v_use_memmap = __Pyx_PyObject_IsTrue(values[11]); if (unlikely((__pyx_v_use_memmap == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 92, __pyx_L3_error)
     } else {
 
-      /* "entrap/ebm_engine.pyx":83
+      /* "entrap/ebm_engine.pyx":92
  *                  double ridge_epsilon = RIDGE_EPSILON,
  *                  str metric = 'euclidean',
  *                  bint use_memmap = True,             # <<<<<<<<<<<<<<
+ *                  bint use_incremental_tda = False,
+ *                  **metric_params):
+*/
+      __pyx_v_use_memmap = ((int)1);
+    }
+    if (values[12]) {
+      __pyx_v_use_incremental_tda = __Pyx_PyObject_IsTrue(values[12]); if (unlikely((__pyx_v_use_incremental_tda == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 93, __pyx_L3_error)
+    } else {
+
+      /* "entrap/ebm_engine.pyx":93
+ *                  str metric = 'euclidean',
+ *                  bint use_memmap = True,
+ *                  bint use_incremental_tda = False,             # <<<<<<<<<<<<<<
  *                  **metric_params):
  *         """
 */
-      __pyx_v_use_memmap = ((int)1);
+      __pyx_v_use_incremental_tda = ((int)0);
     }
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("__init__", 0, 0, 12, __pyx_nargs); __PYX_ERR(0, 71, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("__init__", 0, 0, 13, __pyx_nargs); __PYX_ERR(0, 80, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -5743,10 +5882,10 @@ static int __pyx_pw_6entrap_10ebm_engine_23EBM_Reassignment_Engine_1__init__(PyO
   __Pyx_RefNannyFinishContext();
   return -1;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_metric), (&PyUnicode_Type), 1, "metric", 1))) __PYX_ERR(0, 82, __pyx_L1_error)
-  __pyx_r = __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine___init__(((struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *)__pyx_v_self), __pyx_v_alpha, __pyx_v_beta, __pyx_v_eps0, __pyx_v_lambda_T, __pyx_v_lambda_G0, __pyx_v_tau, __pyx_v_max_landmarks, __pyx_v_min_landmarks, __pyx_v_landmark_variance_threshold, __pyx_v_ridge_epsilon, __pyx_v_metric, __pyx_v_use_memmap, __pyx_v_metric_params);
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_metric), (&PyUnicode_Type), 1, "metric", 1))) __PYX_ERR(0, 91, __pyx_L1_error)
+  __pyx_r = __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine___init__(((struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *)__pyx_v_self), __pyx_v_alpha, __pyx_v_beta, __pyx_v_eps0, __pyx_v_lambda_T, __pyx_v_lambda_G0, __pyx_v_tau, __pyx_v_max_landmarks, __pyx_v_min_landmarks, __pyx_v_landmark_variance_threshold, __pyx_v_ridge_epsilon, __pyx_v_metric, __pyx_v_use_memmap, __pyx_v_use_incremental_tda, __pyx_v_metric_params);
 
-  /* "entrap/ebm_engine.pyx":71
+  /* "entrap/ebm_engine.pyx":80
  *     """
  * 
  *     def __init__(self,             # <<<<<<<<<<<<<<
@@ -5772,19 +5911,21 @@ static int __pyx_pw_6entrap_10ebm_engine_23EBM_Reassignment_Engine_1__init__(PyO
   return __pyx_r;
 }
 
-static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine___init__(struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *__pyx_v_self, double __pyx_v_alpha, double __pyx_v_beta, double __pyx_v_eps0, double __pyx_v_lambda_T, double __pyx_v_lambda_G0, double __pyx_v_tau, int __pyx_v_max_landmarks, int __pyx_v_min_landmarks, double __pyx_v_landmark_variance_threshold, double __pyx_v_ridge_epsilon, PyObject *__pyx_v_metric, int __pyx_v_use_memmap, PyObject *__pyx_v_metric_params) {
+static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine___init__(struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *__pyx_v_self, double __pyx_v_alpha, double __pyx_v_beta, double __pyx_v_eps0, double __pyx_v_lambda_T, double __pyx_v_lambda_G0, double __pyx_v_tau, int __pyx_v_max_landmarks, int __pyx_v_min_landmarks, double __pyx_v_landmark_variance_threshold, double __pyx_v_ridge_epsilon, PyObject *__pyx_v_metric, int __pyx_v_use_memmap, int __pyx_v_use_incremental_tda, PyObject *__pyx_v_metric_params) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
   PyObject *__pyx_t_2 = NULL;
   PyObject *__pyx_t_3 = NULL;
   PyObject *__pyx_t_4 = NULL;
+  size_t __pyx_t_5;
+  PyObject *__pyx_t_6 = NULL;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__init__", 0);
 
-  /* "entrap/ebm_engine.pyx":117
+  /* "entrap/ebm_engine.pyx":130
  *             Additional metric parameters.
  *         """
  *         self.alpha = alpha             # <<<<<<<<<<<<<<
@@ -5793,7 +5934,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine___init__(stru
 */
   __pyx_v_self->alpha = __pyx_v_alpha;
 
-  /* "entrap/ebm_engine.pyx":118
+  /* "entrap/ebm_engine.pyx":131
  *         """
  *         self.alpha = alpha
  *         self.beta = beta             # <<<<<<<<<<<<<<
@@ -5802,7 +5943,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine___init__(stru
 */
   __pyx_v_self->beta = __pyx_v_beta;
 
-  /* "entrap/ebm_engine.pyx":119
+  /* "entrap/ebm_engine.pyx":132
  *         self.alpha = alpha
  *         self.beta = beta
  *         self.eps0 = eps0             # <<<<<<<<<<<<<<
@@ -5811,7 +5952,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine___init__(stru
 */
   __pyx_v_self->eps0 = __pyx_v_eps0;
 
-  /* "entrap/ebm_engine.pyx":120
+  /* "entrap/ebm_engine.pyx":133
  *         self.beta = beta
  *         self.eps0 = eps0
  *         self.lambda_T = lambda_T             # <<<<<<<<<<<<<<
@@ -5820,7 +5961,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine___init__(stru
 */
   __pyx_v_self->lambda_T = __pyx_v_lambda_T;
 
-  /* "entrap/ebm_engine.pyx":121
+  /* "entrap/ebm_engine.pyx":134
  *         self.eps0 = eps0
  *         self.lambda_T = lambda_T
  *         self.lambda_G0 = lambda_G0             # <<<<<<<<<<<<<<
@@ -5829,7 +5970,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine___init__(stru
 */
   __pyx_v_self->lambda_G0 = __pyx_v_lambda_G0;
 
-  /* "entrap/ebm_engine.pyx":122
+  /* "entrap/ebm_engine.pyx":135
  *         self.lambda_T = lambda_T
  *         self.lambda_G0 = lambda_G0
  *         self.tau = tau             # <<<<<<<<<<<<<<
@@ -5838,7 +5979,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine___init__(stru
 */
   __pyx_v_self->tau = __pyx_v_tau;
 
-  /* "entrap/ebm_engine.pyx":123
+  /* "entrap/ebm_engine.pyx":136
  *         self.lambda_G0 = lambda_G0
  *         self.tau = tau
  *         self.max_landmarks = max_landmarks             # <<<<<<<<<<<<<<
@@ -5847,7 +5988,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine___init__(stru
 */
   __pyx_v_self->max_landmarks = __pyx_v_max_landmarks;
 
-  /* "entrap/ebm_engine.pyx":124
+  /* "entrap/ebm_engine.pyx":137
  *         self.tau = tau
  *         self.max_landmarks = max_landmarks
  *         self.min_landmarks = min_landmarks             # <<<<<<<<<<<<<<
@@ -5856,7 +5997,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine___init__(stru
 */
   __pyx_v_self->min_landmarks = __pyx_v_min_landmarks;
 
-  /* "entrap/ebm_engine.pyx":125
+  /* "entrap/ebm_engine.pyx":138
  *         self.max_landmarks = max_landmarks
  *         self.min_landmarks = min_landmarks
  *         self.landmark_variance_threshold = landmark_variance_threshold             # <<<<<<<<<<<<<<
@@ -5865,7 +6006,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine___init__(stru
 */
   __pyx_v_self->landmark_variance_threshold = __pyx_v_landmark_variance_threshold;
 
-  /* "entrap/ebm_engine.pyx":126
+  /* "entrap/ebm_engine.pyx":139
  *         self.min_landmarks = min_landmarks
  *         self.landmark_variance_threshold = landmark_variance_threshold
  *         self.ridge_epsilon = ridge_epsilon             # <<<<<<<<<<<<<<
@@ -5874,14 +6015,14 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine___init__(stru
 */
   __pyx_v_self->ridge_epsilon = __pyx_v_ridge_epsilon;
 
-  /* "entrap/ebm_engine.pyx":127
+  /* "entrap/ebm_engine.pyx":140
  *         self.landmark_variance_threshold = landmark_variance_threshold
  *         self.ridge_epsilon = ridge_epsilon
  *         self.metric = validate_metric(metric)             # <<<<<<<<<<<<<<
  *         self.metric_params = metric_params
  *         self.use_memmap = use_memmap
 */
-  __pyx_t_1 = __pyx_f_6entrap_9utilities_validate_metric(__pyx_v_metric, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 127, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_6entrap_9utilities_validate_metric(__pyx_v_metric, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 140, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_1);
   __Pyx_GOTREF(__pyx_v_self->metric);
@@ -5889,7 +6030,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine___init__(stru
   __pyx_v_self->metric = __pyx_t_1;
   __pyx_t_1 = 0;
 
-  /* "entrap/ebm_engine.pyx":128
+  /* "entrap/ebm_engine.pyx":141
  *         self.ridge_epsilon = ridge_epsilon
  *         self.metric = validate_metric(metric)
  *         self.metric_params = metric_params             # <<<<<<<<<<<<<<
@@ -5902,7 +6043,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine___init__(stru
   __Pyx_DECREF(__pyx_v_self->metric_params);
   __pyx_v_self->metric_params = __pyx_v_metric_params;
 
-  /* "entrap/ebm_engine.pyx":129
+  /* "entrap/ebm_engine.pyx":142
  *         self.metric = validate_metric(metric)
  *         self.metric_params = metric_params
  *         self.use_memmap = use_memmap             # <<<<<<<<<<<<<<
@@ -5911,42 +6052,42 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine___init__(stru
 */
   __pyx_v_self->use_memmap = __pyx_v_use_memmap;
 
-  /* "entrap/ebm_engine.pyx":132
+  /* "entrap/ebm_engine.pyx":145
  * 
  *         # Use pure Python Topological Energy Computer
  *         self.energy_computer = Topological_Energy_Computer(             # <<<<<<<<<<<<<<
  *             metric=metric, use_memmap=use_memmap, **metric_params
  *         )
 */
-  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_mstate_global->__pyx_n_u_Topological_Energy_Computer); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 132, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_mstate_global->__pyx_n_u_Topological_Energy_Computer); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 145, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
 
-  /* "entrap/ebm_engine.pyx":133
+  /* "entrap/ebm_engine.pyx":146
  *         # Use pure Python Topological Energy Computer
  *         self.energy_computer = Topological_Energy_Computer(
  *             metric=metric, use_memmap=use_memmap, **metric_params             # <<<<<<<<<<<<<<
  *         )
  * 
 */
-  __pyx_t_3 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 133, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 146, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  if (PyDict_SetItem(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_metric, __pyx_v_metric) < 0) __PYX_ERR(0, 133, __pyx_L1_error)
-  __pyx_t_4 = __Pyx_PyBool_FromLong(__pyx_v_use_memmap); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 133, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_metric, __pyx_v_metric) < 0) __PYX_ERR(0, 146, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyBool_FromLong(__pyx_v_use_memmap); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 146, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  if (PyDict_SetItem(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_use_memmap, __pyx_t_4) < 0) __PYX_ERR(0, 133, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_use_memmap, __pyx_t_4) < 0) __PYX_ERR(0, 146, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __pyx_t_2 = __pyx_t_3;
   __pyx_t_3 = 0;
-  if (__Pyx_MergeKeywords(__pyx_t_2, __pyx_v_metric_params) < 0) __PYX_ERR(0, 133, __pyx_L1_error)
+  if (__Pyx_MergeKeywords(__pyx_t_2, __pyx_v_metric_params) < 0) __PYX_ERR(0, 146, __pyx_L1_error)
 
-  /* "entrap/ebm_engine.pyx":132
+  /* "entrap/ebm_engine.pyx":145
  * 
  *         # Use pure Python Topological Energy Computer
  *         self.energy_computer = Topological_Energy_Computer(             # <<<<<<<<<<<<<<
  *             metric=metric, use_memmap=use_memmap, **metric_params
  *         )
 */
-  __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_mstate_global->__pyx_empty_tuple, __pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 132, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_mstate_global->__pyx_empty_tuple, __pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 145, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
@@ -5956,8 +6097,114 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine___init__(stru
   __pyx_v_self->energy_computer = __pyx_t_3;
   __pyx_t_3 = 0;
 
-  /* "entrap/ebm_engine.pyx":136
- *         )
+  /* "entrap/ebm_engine.pyx":150
+ * 
+ *         # Initialize incremental TDA engine if enabled
+ *         self.use_incremental_tda = use_incremental_tda             # <<<<<<<<<<<<<<
+ *         if use_incremental_tda:
+ *             self.incremental_tda = Incremental_TDA_Engine(
+*/
+  __pyx_v_self->use_incremental_tda = __pyx_v_use_incremental_tda;
+
+  /* "entrap/ebm_engine.pyx":151
+ *         # Initialize incremental TDA engine if enabled
+ *         self.use_incremental_tda = use_incremental_tda
+ *         if use_incremental_tda:             # <<<<<<<<<<<<<<
+ *             self.incremental_tda = Incremental_TDA_Engine(
+ *                 self.energy_computer,
+*/
+  if (__pyx_v_use_incremental_tda) {
+
+    /* "entrap/ebm_engine.pyx":152
+ *         self.use_incremental_tda = use_incremental_tda
+ *         if use_incremental_tda:
+ *             self.incremental_tda = Incremental_TDA_Engine(             # <<<<<<<<<<<<<<
+ *                 self.energy_computer,
+ *                 cache_config={
+*/
+    __pyx_t_2 = NULL;
+    __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_mstate_global->__pyx_n_u_Incremental_TDA_Engine); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 152, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+
+    /* "entrap/ebm_engine.pyx":155
+ *                 self.energy_computer,
+ *                 cache_config={
+ *                     'max_diagrams': 10,             # <<<<<<<<<<<<<<
+ *                     'memory_threshold_mb': 500,
+ *                     'validity_window': 5
+*/
+    __pyx_t_4 = __Pyx_PyDict_NewPresized(3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 155, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_4);
+    if (PyDict_SetItem(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_max_diagrams, __pyx_mstate_global->__pyx_int_10) < 0) __PYX_ERR(0, 155, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_memory_threshold_mb, __pyx_mstate_global->__pyx_int_500) < 0) __PYX_ERR(0, 155, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_validity_window, __pyx_mstate_global->__pyx_int_5) < 0) __PYX_ERR(0, 155, __pyx_L1_error)
+    __pyx_t_5 = 1;
+    #if CYTHON_UNPACK_METHODS
+    if (unlikely(PyMethod_Check(__pyx_t_1))) {
+      __pyx_t_2 = PyMethod_GET_SELF(__pyx_t_1);
+      assert(__pyx_t_2);
+      PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_1);
+      __Pyx_INCREF(__pyx_t_2);
+      __Pyx_INCREF(__pyx__function);
+      __Pyx_DECREF_SET(__pyx_t_1, __pyx__function);
+      __pyx_t_5 = 0;
+    }
+    #endif
+    {
+      PyObject *__pyx_callargs[2 + ((CYTHON_VECTORCALL) ? 1 : 0)] = {__pyx_t_2, __pyx_v_self->energy_computer};
+      __pyx_t_6 = __Pyx_MakeVectorcallBuilderKwds(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 152, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_6);
+      if (__Pyx_VectorcallBuilder_AddArg(__pyx_mstate_global->__pyx_n_u_cache_config, __pyx_t_4, __pyx_t_6, __pyx_callargs+2, 0) < 0) __PYX_ERR(0, 152, __pyx_L1_error)
+      __pyx_t_3 = __Pyx_Object_Vectorcall_CallFromBuilder(__pyx_t_1, __pyx_callargs+__pyx_t_5, (2-__pyx_t_5) | (__pyx_t_5*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET), __pyx_t_6);
+      __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
+      __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+      __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+      if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 152, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_3);
+    }
+
+    /* "entrap/ebm_engine.pyx":152
+ *         self.use_incremental_tda = use_incremental_tda
+ *         if use_incremental_tda:
+ *             self.incremental_tda = Incremental_TDA_Engine(             # <<<<<<<<<<<<<<
+ *                 self.energy_computer,
+ *                 cache_config={
+*/
+    __Pyx_GIVEREF(__pyx_t_3);
+    __Pyx_GOTREF(__pyx_v_self->incremental_tda);
+    __Pyx_DECREF(__pyx_v_self->incremental_tda);
+    __pyx_v_self->incremental_tda = __pyx_t_3;
+    __pyx_t_3 = 0;
+
+    /* "entrap/ebm_engine.pyx":151
+ *         # Initialize incremental TDA engine if enabled
+ *         self.use_incremental_tda = use_incremental_tda
+ *         if use_incremental_tda:             # <<<<<<<<<<<<<<
+ *             self.incremental_tda = Incremental_TDA_Engine(
+ *                 self.energy_computer,
+*/
+    goto __pyx_L3;
+  }
+
+  /* "entrap/ebm_engine.pyx":161
+ *             )
+ *         else:
+ *             self.incremental_tda = None             # <<<<<<<<<<<<<<
+ * 
+ *         self.empirical_noise_energy_ = None
+*/
+  /*else*/ {
+    __Pyx_INCREF(Py_None);
+    __Pyx_GIVEREF(Py_None);
+    __Pyx_GOTREF(__pyx_v_self->incremental_tda);
+    __Pyx_DECREF(__pyx_v_self->incremental_tda);
+    __pyx_v_self->incremental_tda = Py_None;
+  }
+  __pyx_L3:;
+
+  /* "entrap/ebm_engine.pyx":163
+ *             self.incremental_tda = None
  * 
  *         self.empirical_noise_energy_ = None             # <<<<<<<<<<<<<<
  *         self.noise_energy_details_ = None
@@ -5969,7 +6216,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine___init__(stru
   __Pyx_DECREF(__pyx_v_self->empirical_noise_energy_);
   __pyx_v_self->empirical_noise_energy_ = Py_None;
 
-  /* "entrap/ebm_engine.pyx":137
+  /* "entrap/ebm_engine.pyx":164
  * 
  *         self.empirical_noise_energy_ = None
  *         self.noise_energy_details_ = None             # <<<<<<<<<<<<<<
@@ -5982,7 +6229,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine___init__(stru
   __Pyx_DECREF(__pyx_v_self->noise_energy_details_);
   __pyx_v_self->noise_energy_details_ = ((PyObject*)Py_None);
 
-  /* "entrap/ebm_engine.pyx":71
+  /* "entrap/ebm_engine.pyx":80
  *     """
  * 
  *     def __init__(self,             # <<<<<<<<<<<<<<
@@ -5998,6 +6245,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine___init__(stru
   __Pyx_XDECREF(__pyx_t_2);
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_4);
+  __Pyx_XDECREF(__pyx_t_6);
   __Pyx_AddTraceback("entrap.ebm_engine.EBM_Reassignment_Engine.__init__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = -1;
   __pyx_L0:;
@@ -6005,7 +6253,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine___init__(stru
   return __pyx_r;
 }
 
-/* "entrap/ebm_engine.pyx":139
+/* "entrap/ebm_engine.pyx":166
  *         self.noise_energy_details_ = None
  * 
  *     cpdef double geometric_energy(             # <<<<<<<<<<<<<<
@@ -6053,13 +6301,13 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_geometric_e
     if (unlikely(!__Pyx_object_dict_version_matches(((PyObject *)__pyx_v_self), __pyx_tp_dict_version, __pyx_obj_dict_version))) {
       PY_UINT64_T __pyx_typedict_guard = __Pyx_get_tp_dict_version(((PyObject *)__pyx_v_self));
       #endif
-      __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_mstate_global->__pyx_n_u_geometric_energy); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 139, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_mstate_global->__pyx_n_u_geometric_energy); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 166, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
       if (!__Pyx_IsSameCFunction(__pyx_t_1, (void(*)(void)) __pyx_pw_6entrap_10ebm_engine_23EBM_Reassignment_Engine_3geometric_energy)) {
         __pyx_t_3 = NULL;
         __Pyx_INCREF(__pyx_t_1);
         __pyx_t_4 = __pyx_t_1; 
-        __pyx_t_5 = PyFloat_FromDouble(__pyx_v_log_det_Sigma); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 139, __pyx_L1_error)
+        __pyx_t_5 = PyFloat_FromDouble(__pyx_v_log_det_Sigma); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 166, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_5);
         __pyx_t_6 = 1;
         #if CYTHON_UNPACK_METHODS
@@ -6079,10 +6327,10 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_geometric_e
           __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
           __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
           __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-          if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 139, __pyx_L1_error)
+          if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 166, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_2);
         }
-        __pyx_t_7 = __Pyx_PyFloat_AsDouble(__pyx_t_2); if (unlikely((__pyx_t_7 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 139, __pyx_L1_error)
+        __pyx_t_7 = __Pyx_PyFloat_AsDouble(__pyx_t_2); if (unlikely((__pyx_t_7 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 166, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
         __pyx_r = __pyx_t_7;
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
@@ -6101,30 +6349,30 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_geometric_e
     #endif
   }
 
-  /* "entrap/ebm_engine.pyx":167
+  /* "entrap/ebm_engine.pyx":194
  *             Geometric energy.
  *         """
  *         cdef np.ndarray diff = x - mu             # <<<<<<<<<<<<<<
  *         cdef double mahalanobis_sq = compute_mahalanobis_sq(diff, Sigma_inv)
  *         cdef double E_G = 0.5 * mahalanobis_sq + 0.5 * log_det_Sigma
 */
-  __pyx_t_1 = PyNumber_Subtract(((PyObject *)__pyx_v_x), ((PyObject *)__pyx_v_mu)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 167, __pyx_L1_error)
+  __pyx_t_1 = PyNumber_Subtract(((PyObject *)__pyx_v_x), ((PyObject *)__pyx_v_mu)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 194, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 167, __pyx_L1_error)
+  if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 194, __pyx_L1_error)
   __pyx_v_diff = ((PyArrayObject *)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "entrap/ebm_engine.pyx":168
+  /* "entrap/ebm_engine.pyx":195
  *         """
  *         cdef np.ndarray diff = x - mu
  *         cdef double mahalanobis_sq = compute_mahalanobis_sq(diff, Sigma_inv)             # <<<<<<<<<<<<<<
  *         cdef double E_G = 0.5 * mahalanobis_sq + 0.5 * log_det_Sigma
  *         return E_G
 */
-  __pyx_t_7 = __pyx_f_6entrap_7kernels_compute_mahalanobis_sq(((PyArrayObject *)__pyx_v_diff), ((PyArrayObject *)__pyx_v_Sigma_inv), 0); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 168, __pyx_L1_error)
+  __pyx_t_7 = __pyx_f_6entrap_7kernels_compute_mahalanobis_sq(((PyArrayObject *)__pyx_v_diff), ((PyArrayObject *)__pyx_v_Sigma_inv), 0); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 195, __pyx_L1_error)
   __pyx_v_mahalanobis_sq = __pyx_t_7;
 
-  /* "entrap/ebm_engine.pyx":169
+  /* "entrap/ebm_engine.pyx":196
  *         cdef np.ndarray diff = x - mu
  *         cdef double mahalanobis_sq = compute_mahalanobis_sq(diff, Sigma_inv)
  *         cdef double E_G = 0.5 * mahalanobis_sq + 0.5 * log_det_Sigma             # <<<<<<<<<<<<<<
@@ -6133,7 +6381,7 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_geometric_e
 */
   __pyx_v_E_G = ((0.5 * __pyx_v_mahalanobis_sq) + (0.5 * __pyx_v_log_det_Sigma));
 
-  /* "entrap/ebm_engine.pyx":170
+  /* "entrap/ebm_engine.pyx":197
  *         cdef double mahalanobis_sq = compute_mahalanobis_sq(diff, Sigma_inv)
  *         cdef double E_G = 0.5 * mahalanobis_sq + 0.5 * log_det_Sigma
  *         return E_G             # <<<<<<<<<<<<<<
@@ -6143,7 +6391,7 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_geometric_e
   __pyx_r = __pyx_v_E_G;
   goto __pyx_L0;
 
-  /* "entrap/ebm_engine.pyx":139
+  /* "entrap/ebm_engine.pyx":166
  *         self.noise_energy_details_ = None
  * 
  *     cpdef double geometric_energy(             # <<<<<<<<<<<<<<
@@ -6209,53 +6457,53 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   {
     PyObject ** const __pyx_pyargnames[] = {&__pyx_mstate_global->__pyx_n_u_x,&__pyx_mstate_global->__pyx_n_u_mu,&__pyx_mstate_global->__pyx_n_u_Sigma_inv,&__pyx_mstate_global->__pyx_n_u_log_det_Sigma,0};
     const Py_ssize_t __pyx_kwds_len = (__pyx_kwds) ? __Pyx_NumKwargs_FASTCALL(__pyx_kwds) : 0;
-    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 139, __pyx_L3_error)
+    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 166, __pyx_L3_error)
     if (__pyx_kwds_len > 0) {
       switch (__pyx_nargs) {
         case  4:
         values[3] = __Pyx_ArgRef_FASTCALL(__pyx_args, 3);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 139, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 166, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  3:
         values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 139, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 166, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  2:
         values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 139, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 166, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  1:
         values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 139, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 166, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  0: break;
         default: goto __pyx_L5_argtuple_error;
       }
       const Py_ssize_t kwd_pos_args = __pyx_nargs;
-      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "geometric_energy", 0) < 0) __PYX_ERR(0, 139, __pyx_L3_error)
+      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "geometric_energy", 0) < 0) __PYX_ERR(0, 166, __pyx_L3_error)
       for (Py_ssize_t i = __pyx_nargs; i < 4; i++) {
-        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("geometric_energy", 1, 4, 4, i); __PYX_ERR(0, 139, __pyx_L3_error) }
+        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("geometric_energy", 1, 4, 4, i); __PYX_ERR(0, 166, __pyx_L3_error) }
       }
     } else if (unlikely(__pyx_nargs != 4)) {
       goto __pyx_L5_argtuple_error;
     } else {
       values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 139, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 166, __pyx_L3_error)
       values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 139, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 166, __pyx_L3_error)
       values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 139, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 166, __pyx_L3_error)
       values[3] = __Pyx_ArgRef_FASTCALL(__pyx_args, 3);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 139, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 166, __pyx_L3_error)
     }
     __pyx_v_x = ((PyArrayObject *)values[0]);
     __pyx_v_mu = ((PyArrayObject *)values[1]);
     __pyx_v_Sigma_inv = ((PyArrayObject *)values[2]);
-    __pyx_v_log_det_Sigma = __Pyx_PyFloat_AsDouble(values[3]); if (unlikely((__pyx_v_log_det_Sigma == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 144, __pyx_L3_error)
+    __pyx_v_log_det_Sigma = __Pyx_PyFloat_AsDouble(values[3]); if (unlikely((__pyx_v_log_det_Sigma == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 171, __pyx_L3_error)
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("geometric_energy", 1, 4, 4, __pyx_nargs); __PYX_ERR(0, 139, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("geometric_energy", 1, 4, 4, __pyx_nargs); __PYX_ERR(0, 166, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -6266,9 +6514,9 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_x), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "x", 0))) __PYX_ERR(0, 141, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_mu), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "mu", 0))) __PYX_ERR(0, 142, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_Sigma_inv), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "Sigma_inv", 0))) __PYX_ERR(0, 143, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_x), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "x", 0))) __PYX_ERR(0, 168, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_mu), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "mu", 0))) __PYX_ERR(0, 169, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_Sigma_inv), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "Sigma_inv", 0))) __PYX_ERR(0, 170, __pyx_L1_error)
   __pyx_r = __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_2geometric_energy(((struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *)__pyx_v_self), __pyx_v_x, __pyx_v_mu, __pyx_v_Sigma_inv, __pyx_v_log_det_Sigma);
 
   /* function exit code */
@@ -6298,8 +6546,8 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_2geomet
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("geometric_energy", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_geometric_energy(__pyx_v_self, __pyx_v_x, __pyx_v_mu, __pyx_v_Sigma_inv, __pyx_v_log_det_Sigma, 1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 139, __pyx_L1_error)
-  __pyx_t_2 = PyFloat_FromDouble(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 139, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_geometric_energy(__pyx_v_self, __pyx_v_x, __pyx_v_mu, __pyx_v_Sigma_inv, __pyx_v_log_det_Sigma, 1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 166, __pyx_L1_error)
+  __pyx_t_2 = PyFloat_FromDouble(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 166, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_r = __pyx_t_2;
   __pyx_t_2 = 0;
@@ -6316,7 +6564,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_2geomet
   return __pyx_r;
 }
 
-/* "entrap/ebm_engine.pyx":172
+/* "entrap/ebm_engine.pyx":199
  *         return E_G
  * 
  *     cpdef double compute_normalized_topological_energy(             # <<<<<<<<<<<<<<
@@ -6364,13 +6612,13 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_compute_nor
     if (unlikely(!__Pyx_object_dict_version_matches(((PyObject *)__pyx_v_self), __pyx_tp_dict_version, __pyx_obj_dict_version))) {
       PY_UINT64_T __pyx_typedict_guard = __Pyx_get_tp_dict_version(((PyObject *)__pyx_v_self));
       #endif
-      __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_mstate_global->__pyx_n_u_compute_normalized_topological_e); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 172, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_mstate_global->__pyx_n_u_compute_normalized_topological_e); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 199, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
       if (!__Pyx_IsSameCFunction(__pyx_t_1, (void(*)(void)) __pyx_pw_6entrap_10ebm_engine_23EBM_Reassignment_Engine_5compute_normalized_topological_energy)) {
         __pyx_t_3 = NULL;
         __Pyx_INCREF(__pyx_t_1);
         __pyx_t_4 = __pyx_t_1; 
-        __pyx_t_5 = __Pyx_PyLong_From_int(__pyx_v_cluster_size); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 172, __pyx_L1_error)
+        __pyx_t_5 = __Pyx_PyLong_From_int(__pyx_v_cluster_size); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 199, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_5);
         __pyx_t_6 = 1;
         #if CYTHON_UNPACK_METHODS
@@ -6390,10 +6638,10 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_compute_nor
           __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
           __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
           __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-          if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 172, __pyx_L1_error)
+          if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 199, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_2);
         }
-        __pyx_t_7 = __Pyx_PyFloat_AsDouble(__pyx_t_2); if (unlikely((__pyx_t_7 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 172, __pyx_L1_error)
+        __pyx_t_7 = __Pyx_PyFloat_AsDouble(__pyx_t_2); if (unlikely((__pyx_t_7 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 199, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
         __pyx_r = __pyx_t_7;
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
@@ -6412,7 +6660,7 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_compute_nor
     #endif
   }
 
-  /* "entrap/ebm_engine.pyx":195
+  /* "entrap/ebm_engine.pyx":222
  *             Normalized topological energy.
  *         """
  *         cdef dict result = self.energy_computer.compute_raw_topological_energy(points)             # <<<<<<<<<<<<<<
@@ -6426,14 +6674,14 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_compute_nor
     PyObject *__pyx_callargs[2] = {__pyx_t_2, ((PyObject *)__pyx_v_points)};
     __pyx_t_1 = __Pyx_PyObject_FastCallMethod(__pyx_mstate_global->__pyx_n_u_compute_raw_topological_energy, __pyx_callargs+__pyx_t_6, (2-__pyx_t_6) | (1*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
     __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
-    if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 195, __pyx_L1_error)
+    if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 222, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
   }
-  if (!(likely(PyDict_CheckExact(__pyx_t_1))||((__pyx_t_1) == Py_None) || __Pyx_RaiseUnexpectedTypeError("dict", __pyx_t_1))) __PYX_ERR(0, 195, __pyx_L1_error)
+  if (!(likely(PyDict_CheckExact(__pyx_t_1))||((__pyx_t_1) == Py_None) || __Pyx_RaiseUnexpectedTypeError("dict", __pyx_t_1))) __PYX_ERR(0, 222, __pyx_L1_error)
   __pyx_v_result = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "entrap/ebm_engine.pyx":196
+  /* "entrap/ebm_engine.pyx":223
  *         """
  *         cdef dict result = self.energy_computer.compute_raw_topological_energy(points)
  *         cdef double T_raw = result['T_raw']             # <<<<<<<<<<<<<<
@@ -6442,25 +6690,25 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_compute_nor
 */
   if (unlikely(__pyx_v_result == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-    __PYX_ERR(0, 196, __pyx_L1_error)
+    __PYX_ERR(0, 223, __pyx_L1_error)
   }
-  __pyx_t_1 = __Pyx_PyDict_GetItem(__pyx_v_result, __pyx_mstate_global->__pyx_n_u_T_raw); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 196, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyDict_GetItem(__pyx_v_result, __pyx_mstate_global->__pyx_n_u_T_raw); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 223, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_7 = __Pyx_PyFloat_AsDouble(__pyx_t_1); if (unlikely((__pyx_t_7 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 196, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyFloat_AsDouble(__pyx_t_1); if (unlikely((__pyx_t_7 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 223, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_T_raw = __pyx_t_7;
 
-  /* "entrap/ebm_engine.pyx":197
+  /* "entrap/ebm_engine.pyx":224
  *         cdef dict result = self.energy_computer.compute_raw_topological_energy(points)
  *         cdef double T_raw = result['T_raw']
  *         cdef double T_norm = T_raw / (cluster_size ** self.alpha)             # <<<<<<<<<<<<<<
  *         return T_norm
  * 
 */
-  __pyx_t_7 = __Pyx_SoftComplexToDouble(__Pyx_c_quot_double(__pyx_t_double_complex_from_parts(__pyx_v_T_raw, 0), __Pyx_c_pow_double(__pyx_t_double_complex_from_parts(__pyx_v_cluster_size, 0), __pyx_t_double_complex_from_parts(__pyx_v_self->alpha, 0))), 0); if (unlikely(__pyx_t_7 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 197, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_SoftComplexToDouble(__Pyx_c_quot_double(__pyx_t_double_complex_from_parts(__pyx_v_T_raw, 0), __Pyx_c_pow_double(__pyx_t_double_complex_from_parts(__pyx_v_cluster_size, 0), __pyx_t_double_complex_from_parts(__pyx_v_self->alpha, 0))), 0); if (unlikely(__pyx_t_7 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 224, __pyx_L1_error)
   __pyx_v_T_norm = __pyx_t_7;
 
-  /* "entrap/ebm_engine.pyx":198
+  /* "entrap/ebm_engine.pyx":225
  *         cdef double T_raw = result['T_raw']
  *         cdef double T_norm = T_raw / (cluster_size ** self.alpha)
  *         return T_norm             # <<<<<<<<<<<<<<
@@ -6470,7 +6718,7 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_compute_nor
   __pyx_r = __pyx_v_T_norm;
   goto __pyx_L0;
 
-  /* "entrap/ebm_engine.pyx":172
+  /* "entrap/ebm_engine.pyx":199
  *         return E_G
  * 
  *     cpdef double compute_normalized_topological_energy(             # <<<<<<<<<<<<<<
@@ -6534,39 +6782,39 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   {
     PyObject ** const __pyx_pyargnames[] = {&__pyx_mstate_global->__pyx_n_u_points,&__pyx_mstate_global->__pyx_n_u_cluster_size,0};
     const Py_ssize_t __pyx_kwds_len = (__pyx_kwds) ? __Pyx_NumKwargs_FASTCALL(__pyx_kwds) : 0;
-    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 172, __pyx_L3_error)
+    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 199, __pyx_L3_error)
     if (__pyx_kwds_len > 0) {
       switch (__pyx_nargs) {
         case  2:
         values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 172, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 199, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  1:
         values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 172, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 199, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  0: break;
         default: goto __pyx_L5_argtuple_error;
       }
       const Py_ssize_t kwd_pos_args = __pyx_nargs;
-      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "compute_normalized_topological_energy", 0) < 0) __PYX_ERR(0, 172, __pyx_L3_error)
+      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "compute_normalized_topological_energy", 0) < 0) __PYX_ERR(0, 199, __pyx_L3_error)
       for (Py_ssize_t i = __pyx_nargs; i < 2; i++) {
-        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("compute_normalized_topological_energy", 1, 2, 2, i); __PYX_ERR(0, 172, __pyx_L3_error) }
+        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("compute_normalized_topological_energy", 1, 2, 2, i); __PYX_ERR(0, 199, __pyx_L3_error) }
       }
     } else if (unlikely(__pyx_nargs != 2)) {
       goto __pyx_L5_argtuple_error;
     } else {
       values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 172, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 199, __pyx_L3_error)
       values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 172, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 199, __pyx_L3_error)
     }
     __pyx_v_points = ((PyArrayObject *)values[0]);
-    __pyx_v_cluster_size = __Pyx_PyLong_As_int(values[1]); if (unlikely((__pyx_v_cluster_size == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 175, __pyx_L3_error)
+    __pyx_v_cluster_size = __Pyx_PyLong_As_int(values[1]); if (unlikely((__pyx_v_cluster_size == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 202, __pyx_L3_error)
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("compute_normalized_topological_energy", 1, 2, 2, __pyx_nargs); __PYX_ERR(0, 172, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("compute_normalized_topological_energy", 1, 2, 2, __pyx_nargs); __PYX_ERR(0, 199, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -6577,7 +6825,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_points), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "points", 0))) __PYX_ERR(0, 174, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_points), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "points", 0))) __PYX_ERR(0, 201, __pyx_L1_error)
   __pyx_r = __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_4compute_normalized_topological_energy(((struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *)__pyx_v_self), __pyx_v_points, __pyx_v_cluster_size);
 
   /* function exit code */
@@ -6607,8 +6855,8 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_4comput
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("compute_normalized_topological_energy", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_compute_normalized_topological_energy(__pyx_v_self, __pyx_v_points, __pyx_v_cluster_size, 1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 172, __pyx_L1_error)
-  __pyx_t_2 = PyFloat_FromDouble(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 172, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_compute_normalized_topological_energy(__pyx_v_self, __pyx_v_points, __pyx_v_cluster_size, 1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 199, __pyx_L1_error)
+  __pyx_t_2 = PyFloat_FromDouble(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 199, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_r = __pyx_t_2;
   __pyx_t_2 = 0;
@@ -6625,7 +6873,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_4comput
   return __pyx_r;
 }
 
-/* "entrap/ebm_engine.pyx":200
+/* "entrap/ebm_engine.pyx":227
  *         return T_norm
  * 
  *     cpdef double delta_topological_energy(             # <<<<<<<<<<<<<<
@@ -6673,15 +6921,15 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_delta_topol
     if (unlikely(!__Pyx_object_dict_version_matches(((PyObject *)__pyx_v_self), __pyx_tp_dict_version, __pyx_obj_dict_version))) {
       PY_UINT64_T __pyx_typedict_guard = __Pyx_get_tp_dict_version(((PyObject *)__pyx_v_self));
       #endif
-      __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_mstate_global->__pyx_n_u_delta_topological_energy); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 200, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_mstate_global->__pyx_n_u_delta_topological_energy); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 227, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
       if (!__Pyx_IsSameCFunction(__pyx_t_1, (void(*)(void)) __pyx_pw_6entrap_10ebm_engine_23EBM_Reassignment_Engine_7delta_topological_energy)) {
         __pyx_t_3 = NULL;
         __Pyx_INCREF(__pyx_t_1);
         __pyx_t_4 = __pyx_t_1; 
-        __pyx_t_5 = PyFloat_FromDouble(__pyx_v_T_prev_norm); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 200, __pyx_L1_error)
+        __pyx_t_5 = PyFloat_FromDouble(__pyx_v_T_prev_norm); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 227, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_5);
-        __pyx_t_6 = __Pyx_PyLong_From_int(__pyx_v_cluster_size); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 200, __pyx_L1_error)
+        __pyx_t_6 = __Pyx_PyLong_From_int(__pyx_v_cluster_size); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 227, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
         __pyx_t_7 = 1;
         #if CYTHON_UNPACK_METHODS
@@ -6702,10 +6950,10 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_delta_topol
           __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
           __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
           __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-          if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 200, __pyx_L1_error)
+          if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 227, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_2);
         }
-        __pyx_t_8 = __Pyx_PyFloat_AsDouble(__pyx_t_2); if (unlikely((__pyx_t_8 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 200, __pyx_L1_error)
+        __pyx_t_8 = __Pyx_PyFloat_AsDouble(__pyx_t_2); if (unlikely((__pyx_t_8 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 227, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
         __pyx_r = __pyx_t_8;
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
@@ -6724,7 +6972,7 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_delta_topol
     #endif
   }
 
-  /* "entrap/ebm_engine.pyx":228
+  /* "entrap/ebm_engine.pyx":255
  *             Change in normalized topological energy.
  *         """
  *         cdef np.ndarray augmented_cluster = np.vstack([cluster_points, x.reshape(1, -1)])             # <<<<<<<<<<<<<<
@@ -6732,23 +6980,23 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_delta_topol
  *             augmented_cluster, cluster_size + 1
 */
   __pyx_t_2 = NULL;
-  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 228, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 255, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_vstack); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 228, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_vstack); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 255, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_x), __pyx_mstate_global->__pyx_n_u_reshape); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 228, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_x), __pyx_mstate_global->__pyx_n_u_reshape); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 255, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_mstate_global->__pyx_tuple[0], NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 228, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_mstate_global->__pyx_tuple[0], NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 255, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = PyList_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 228, __pyx_L1_error)
+  __pyx_t_4 = PyList_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 255, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_INCREF((PyObject *)__pyx_v_cluster_points);
   __Pyx_GIVEREF((PyObject *)__pyx_v_cluster_points);
-  if (__Pyx_PyList_SET_ITEM(__pyx_t_4, 0, ((PyObject *)__pyx_v_cluster_points)) != (0)) __PYX_ERR(0, 228, __pyx_L1_error);
+  if (__Pyx_PyList_SET_ITEM(__pyx_t_4, 0, ((PyObject *)__pyx_v_cluster_points)) != (0)) __PYX_ERR(0, 255, __pyx_L1_error);
   __Pyx_GIVEREF(__pyx_t_5);
-  if (__Pyx_PyList_SET_ITEM(__pyx_t_4, 1, __pyx_t_5) != (0)) __PYX_ERR(0, 228, __pyx_L1_error);
+  if (__Pyx_PyList_SET_ITEM(__pyx_t_4, 1, __pyx_t_5) != (0)) __PYX_ERR(0, 255, __pyx_L1_error);
   __pyx_t_5 = 0;
   __pyx_t_7 = 1;
   #if CYTHON_UNPACK_METHODS
@@ -6768,24 +7016,24 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_delta_topol
     __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 228, __pyx_L1_error)
+    if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 255, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
   }
-  if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 228, __pyx_L1_error)
+  if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 255, __pyx_L1_error)
   __pyx_v_augmented_cluster = ((PyArrayObject *)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "entrap/ebm_engine.pyx":229
+  /* "entrap/ebm_engine.pyx":256
  *         """
  *         cdef np.ndarray augmented_cluster = np.vstack([cluster_points, x.reshape(1, -1)])
  *         cdef double T_new_norm = self.compute_normalized_topological_energy(             # <<<<<<<<<<<<<<
  *             augmented_cluster, cluster_size + 1
  *         )
 */
-  __pyx_t_8 = ((struct __pyx_vtabstruct_6entrap_10ebm_engine_EBM_Reassignment_Engine *)__pyx_v_self->__pyx_vtab)->compute_normalized_topological_energy(__pyx_v_self, __pyx_v_augmented_cluster, (__pyx_v_cluster_size + 1), 0); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 229, __pyx_L1_error)
+  __pyx_t_8 = ((struct __pyx_vtabstruct_6entrap_10ebm_engine_EBM_Reassignment_Engine *)__pyx_v_self->__pyx_vtab)->compute_normalized_topological_energy(__pyx_v_self, __pyx_v_augmented_cluster, (__pyx_v_cluster_size + 1), 0); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 256, __pyx_L1_error)
   __pyx_v_T_new_norm = __pyx_t_8;
 
-  /* "entrap/ebm_engine.pyx":232
+  /* "entrap/ebm_engine.pyx":259
  *             augmented_cluster, cluster_size + 1
  *         )
  *         return T_new_norm - T_prev_norm             # <<<<<<<<<<<<<<
@@ -6795,7 +7043,7 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_delta_topol
   __pyx_r = (__pyx_v_T_new_norm - __pyx_v_T_prev_norm);
   goto __pyx_L0;
 
-  /* "entrap/ebm_engine.pyx":200
+  /* "entrap/ebm_engine.pyx":227
  *         return T_norm
  * 
  *     cpdef double delta_topological_energy(             # <<<<<<<<<<<<<<
@@ -6862,53 +7110,53 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   {
     PyObject ** const __pyx_pyargnames[] = {&__pyx_mstate_global->__pyx_n_u_x,&__pyx_mstate_global->__pyx_n_u_cluster_points,&__pyx_mstate_global->__pyx_n_u_T_prev_norm,&__pyx_mstate_global->__pyx_n_u_cluster_size,0};
     const Py_ssize_t __pyx_kwds_len = (__pyx_kwds) ? __Pyx_NumKwargs_FASTCALL(__pyx_kwds) : 0;
-    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 200, __pyx_L3_error)
+    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 227, __pyx_L3_error)
     if (__pyx_kwds_len > 0) {
       switch (__pyx_nargs) {
         case  4:
         values[3] = __Pyx_ArgRef_FASTCALL(__pyx_args, 3);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 200, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 227, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  3:
         values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 200, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 227, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  2:
         values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 200, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 227, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  1:
         values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 200, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 227, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  0: break;
         default: goto __pyx_L5_argtuple_error;
       }
       const Py_ssize_t kwd_pos_args = __pyx_nargs;
-      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "delta_topological_energy", 0) < 0) __PYX_ERR(0, 200, __pyx_L3_error)
+      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "delta_topological_energy", 0) < 0) __PYX_ERR(0, 227, __pyx_L3_error)
       for (Py_ssize_t i = __pyx_nargs; i < 4; i++) {
-        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("delta_topological_energy", 1, 4, 4, i); __PYX_ERR(0, 200, __pyx_L3_error) }
+        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("delta_topological_energy", 1, 4, 4, i); __PYX_ERR(0, 227, __pyx_L3_error) }
       }
     } else if (unlikely(__pyx_nargs != 4)) {
       goto __pyx_L5_argtuple_error;
     } else {
       values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 200, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 227, __pyx_L3_error)
       values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 200, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 227, __pyx_L3_error)
       values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 200, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 227, __pyx_L3_error)
       values[3] = __Pyx_ArgRef_FASTCALL(__pyx_args, 3);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 200, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 227, __pyx_L3_error)
     }
     __pyx_v_x = ((PyArrayObject *)values[0]);
     __pyx_v_cluster_points = ((PyArrayObject *)values[1]);
-    __pyx_v_T_prev_norm = __Pyx_PyFloat_AsDouble(values[2]); if (unlikely((__pyx_v_T_prev_norm == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 204, __pyx_L3_error)
-    __pyx_v_cluster_size = __Pyx_PyLong_As_int(values[3]); if (unlikely((__pyx_v_cluster_size == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 205, __pyx_L3_error)
+    __pyx_v_T_prev_norm = __Pyx_PyFloat_AsDouble(values[2]); if (unlikely((__pyx_v_T_prev_norm == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 231, __pyx_L3_error)
+    __pyx_v_cluster_size = __Pyx_PyLong_As_int(values[3]); if (unlikely((__pyx_v_cluster_size == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 232, __pyx_L3_error)
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("delta_topological_energy", 1, 4, 4, __pyx_nargs); __PYX_ERR(0, 200, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("delta_topological_energy", 1, 4, 4, __pyx_nargs); __PYX_ERR(0, 227, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -6919,8 +7167,8 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_x), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "x", 0))) __PYX_ERR(0, 202, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_cluster_points), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "cluster_points", 0))) __PYX_ERR(0, 203, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_x), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "x", 0))) __PYX_ERR(0, 229, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_cluster_points), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "cluster_points", 0))) __PYX_ERR(0, 230, __pyx_L1_error)
   __pyx_r = __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_6delta_topological_energy(((struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *)__pyx_v_self), __pyx_v_x, __pyx_v_cluster_points, __pyx_v_T_prev_norm, __pyx_v_cluster_size);
 
   /* function exit code */
@@ -6950,8 +7198,8 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_6delta_
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("delta_topological_energy", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_delta_topological_energy(__pyx_v_self, __pyx_v_x, __pyx_v_cluster_points, __pyx_v_T_prev_norm, __pyx_v_cluster_size, 1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 200, __pyx_L1_error)
-  __pyx_t_2 = PyFloat_FromDouble(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 200, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_delta_topological_energy(__pyx_v_self, __pyx_v_x, __pyx_v_cluster_points, __pyx_v_T_prev_norm, __pyx_v_cluster_size, 1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 227, __pyx_L1_error)
+  __pyx_t_2 = PyFloat_FromDouble(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 227, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_r = __pyx_t_2;
   __pyx_t_2 = 0;
@@ -6968,7 +7216,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_6delta_
   return __pyx_r;
 }
 
-/* "entrap/ebm_engine.pyx":234
+/* "entrap/ebm_engine.pyx":261
  *         return T_new_norm - T_prev_norm
  * 
  *     cpdef double bounded_delta_energy(self, double delta_T, int cluster_size):             # <<<<<<<<<<<<<<
@@ -7015,15 +7263,15 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_bounded_del
     if (unlikely(!__Pyx_object_dict_version_matches(((PyObject *)__pyx_v_self), __pyx_tp_dict_version, __pyx_obj_dict_version))) {
       PY_UINT64_T __pyx_typedict_guard = __Pyx_get_tp_dict_version(((PyObject *)__pyx_v_self));
       #endif
-      __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_mstate_global->__pyx_n_u_bounded_delta_energy); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 234, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_mstate_global->__pyx_n_u_bounded_delta_energy); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 261, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
       if (!__Pyx_IsSameCFunction(__pyx_t_1, (void(*)(void)) __pyx_pw_6entrap_10ebm_engine_23EBM_Reassignment_Engine_9bounded_delta_energy)) {
         __pyx_t_3 = NULL;
         __Pyx_INCREF(__pyx_t_1);
         __pyx_t_4 = __pyx_t_1; 
-        __pyx_t_5 = PyFloat_FromDouble(__pyx_v_delta_T); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 234, __pyx_L1_error)
+        __pyx_t_5 = PyFloat_FromDouble(__pyx_v_delta_T); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 261, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_5);
-        __pyx_t_6 = __Pyx_PyLong_From_int(__pyx_v_cluster_size); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 234, __pyx_L1_error)
+        __pyx_t_6 = __Pyx_PyLong_From_int(__pyx_v_cluster_size); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 261, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
         __pyx_t_7 = 1;
         #if CYTHON_UNPACK_METHODS
@@ -7044,10 +7292,10 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_bounded_del
           __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
           __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
           __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-          if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 234, __pyx_L1_error)
+          if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 261, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_2);
         }
-        __pyx_t_8 = __Pyx_PyFloat_AsDouble(__pyx_t_2); if (unlikely((__pyx_t_8 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 234, __pyx_L1_error)
+        __pyx_t_8 = __Pyx_PyFloat_AsDouble(__pyx_t_2); if (unlikely((__pyx_t_8 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 261, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
         __pyx_r = __pyx_t_8;
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
@@ -7066,28 +7314,28 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_bounded_del
     #endif
   }
 
-  /* "entrap/ebm_engine.pyx":253
+  /* "entrap/ebm_engine.pyx":280
  *             Bounded topological energy change, magnitude  .
  *         """
  *         cdef double eps = self.eps0 * (cluster_size ** (-self.beta))             # <<<<<<<<<<<<<<
  *         return bounded_delta_energy_cython(delta_T, eps)
  * 
 */
-  __pyx_t_8 = __Pyx_SoftComplexToDouble(__Pyx_c_prod_double(__pyx_t_double_complex_from_parts(__pyx_v_self->eps0, 0), __Pyx_c_pow_double(__pyx_t_double_complex_from_parts(__pyx_v_cluster_size, 0), __pyx_t_double_complex_from_parts((-__pyx_v_self->beta), 0))), 0); if (unlikely(__pyx_t_8 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 253, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_SoftComplexToDouble(__Pyx_c_prod_double(__pyx_t_double_complex_from_parts(__pyx_v_self->eps0, 0), __Pyx_c_pow_double(__pyx_t_double_complex_from_parts(__pyx_v_cluster_size, 0), __pyx_t_double_complex_from_parts((-__pyx_v_self->beta), 0))), 0); if (unlikely(__pyx_t_8 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 280, __pyx_L1_error)
   __pyx_v_eps = __pyx_t_8;
 
-  /* "entrap/ebm_engine.pyx":254
+  /* "entrap/ebm_engine.pyx":281
  *         """
  *         cdef double eps = self.eps0 * (cluster_size ** (-self.beta))
  *         return bounded_delta_energy_cython(delta_T, eps)             # <<<<<<<<<<<<<<
  * 
  *     cpdef double estimate_noise_energy(
 */
-  __pyx_t_8 = __pyx_f_6entrap_7kernels_bounded_delta_energy_cython(__pyx_v_delta_T, __pyx_v_eps, 0); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 254, __pyx_L1_error)
+  __pyx_t_8 = __pyx_f_6entrap_7kernels_bounded_delta_energy_cython(__pyx_v_delta_T, __pyx_v_eps, 0); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 281, __pyx_L1_error)
   __pyx_r = __pyx_t_8;
   goto __pyx_L0;
 
-  /* "entrap/ebm_engine.pyx":234
+  /* "entrap/ebm_engine.pyx":261
  *         return T_new_norm - T_prev_norm
  * 
  *     cpdef double bounded_delta_energy(self, double delta_T, int cluster_size):             # <<<<<<<<<<<<<<
@@ -7151,39 +7399,39 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   {
     PyObject ** const __pyx_pyargnames[] = {&__pyx_mstate_global->__pyx_n_u_delta_T,&__pyx_mstate_global->__pyx_n_u_cluster_size,0};
     const Py_ssize_t __pyx_kwds_len = (__pyx_kwds) ? __Pyx_NumKwargs_FASTCALL(__pyx_kwds) : 0;
-    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 234, __pyx_L3_error)
+    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 261, __pyx_L3_error)
     if (__pyx_kwds_len > 0) {
       switch (__pyx_nargs) {
         case  2:
         values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 234, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 261, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  1:
         values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 234, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 261, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  0: break;
         default: goto __pyx_L5_argtuple_error;
       }
       const Py_ssize_t kwd_pos_args = __pyx_nargs;
-      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "bounded_delta_energy", 0) < 0) __PYX_ERR(0, 234, __pyx_L3_error)
+      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "bounded_delta_energy", 0) < 0) __PYX_ERR(0, 261, __pyx_L3_error)
       for (Py_ssize_t i = __pyx_nargs; i < 2; i++) {
-        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("bounded_delta_energy", 1, 2, 2, i); __PYX_ERR(0, 234, __pyx_L3_error) }
+        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("bounded_delta_energy", 1, 2, 2, i); __PYX_ERR(0, 261, __pyx_L3_error) }
       }
     } else if (unlikely(__pyx_nargs != 2)) {
       goto __pyx_L5_argtuple_error;
     } else {
       values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 234, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 261, __pyx_L3_error)
       values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 234, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 261, __pyx_L3_error)
     }
-    __pyx_v_delta_T = __Pyx_PyFloat_AsDouble(values[0]); if (unlikely((__pyx_v_delta_T == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 234, __pyx_L3_error)
-    __pyx_v_cluster_size = __Pyx_PyLong_As_int(values[1]); if (unlikely((__pyx_v_cluster_size == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 234, __pyx_L3_error)
+    __pyx_v_delta_T = __Pyx_PyFloat_AsDouble(values[0]); if (unlikely((__pyx_v_delta_T == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 261, __pyx_L3_error)
+    __pyx_v_cluster_size = __Pyx_PyLong_As_int(values[1]); if (unlikely((__pyx_v_cluster_size == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 261, __pyx_L3_error)
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("bounded_delta_energy", 1, 2, 2, __pyx_nargs); __PYX_ERR(0, 234, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("bounded_delta_energy", 1, 2, 2, __pyx_nargs); __PYX_ERR(0, 261, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -7214,8 +7462,8 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_8bounde
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("bounded_delta_energy", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_bounded_delta_energy(__pyx_v_self, __pyx_v_delta_T, __pyx_v_cluster_size, 1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 234, __pyx_L1_error)
-  __pyx_t_2 = PyFloat_FromDouble(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 234, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_bounded_delta_energy(__pyx_v_self, __pyx_v_delta_T, __pyx_v_cluster_size, 1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 261, __pyx_L1_error)
+  __pyx_t_2 = PyFloat_FromDouble(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 261, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_r = __pyx_t_2;
   __pyx_t_2 = 0;
@@ -7232,7 +7480,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_8bounde
   return __pyx_r;
 }
 
-/* "entrap/ebm_engine.pyx":256
+/* "entrap/ebm_engine.pyx":283
  *         return bounded_delta_energy_cython(delta_T, eps)
  * 
  *     cpdef double estimate_noise_energy(             # <<<<<<<<<<<<<<
@@ -7308,7 +7556,7 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
     if (unlikely(!__Pyx_object_dict_version_matches(((PyObject *)__pyx_v_self), __pyx_tp_dict_version, __pyx_obj_dict_version))) {
       PY_UINT64_T __pyx_typedict_guard = __Pyx_get_tp_dict_version(((PyObject *)__pyx_v_self));
       #endif
-      __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_mstate_global->__pyx_n_u_estimate_noise_energy); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 256, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_mstate_global->__pyx_n_u_estimate_noise_energy); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 283, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
       if (!__Pyx_IsSameCFunction(__pyx_t_1, (void(*)(void)) __pyx_pw_6entrap_10ebm_engine_23EBM_Reassignment_Engine_11estimate_noise_energy)) {
         __pyx_t_3 = NULL;
@@ -7331,10 +7579,10 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
           __pyx_t_2 = __Pyx_PyObject_FastCall(__pyx_t_4, __pyx_callargs+__pyx_t_5, (3-__pyx_t_5) | (__pyx_t_5*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
           __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
           __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-          if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 256, __pyx_L1_error)
+          if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 283, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_2);
         }
-        __pyx_t_6 = __Pyx_PyFloat_AsDouble(__pyx_t_2); if (unlikely((__pyx_t_6 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 256, __pyx_L1_error)
+        __pyx_t_6 = __Pyx_PyFloat_AsDouble(__pyx_t_2); if (unlikely((__pyx_t_6 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 283, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
         __pyx_r = __pyx_t_6;
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
@@ -7353,17 +7601,17 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
     #endif
   }
 
-  /* "entrap/ebm_engine.pyx":284
+  /* "entrap/ebm_engine.pyx":311
  *         Stores detailed computation metadata in noise_energy_details_.
  *         """
  *         cdef Py_ssize_t N_noise = len(true_noise_indices)             # <<<<<<<<<<<<<<
  * 
  *         if N_noise == 0:
 */
-  __pyx_t_7 = PyObject_Length(((PyObject *)__pyx_v_true_noise_indices)); if (unlikely(__pyx_t_7 == ((Py_ssize_t)-1))) __PYX_ERR(0, 284, __pyx_L1_error)
+  __pyx_t_7 = PyObject_Length(((PyObject *)__pyx_v_true_noise_indices)); if (unlikely(__pyx_t_7 == ((Py_ssize_t)-1))) __PYX_ERR(0, 311, __pyx_L1_error)
   __pyx_v_N_noise = __pyx_t_7;
 
-  /* "entrap/ebm_engine.pyx":286
+  /* "entrap/ebm_engine.pyx":313
  *         cdef Py_ssize_t N_noise = len(true_noise_indices)
  * 
  *         if N_noise == 0:             # <<<<<<<<<<<<<<
@@ -7373,24 +7621,24 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
   __pyx_t_8 = (__pyx_v_N_noise == 0);
   if (__pyx_t_8) {
 
-    /* "entrap/ebm_engine.pyx":287
+    /* "entrap/ebm_engine.pyx":314
  * 
  *         if N_noise == 0:
  *             self.noise_energy_details_ = {'method': 'no_noise', 'E_noise': 1.0}             # <<<<<<<<<<<<<<
  *             return 1.0
  * 
 */
-    __pyx_t_1 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 287, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 314, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    if (PyDict_SetItem(__pyx_t_1, __pyx_mstate_global->__pyx_n_u_method, __pyx_mstate_global->__pyx_n_u_no_noise) < 0) __PYX_ERR(0, 287, __pyx_L1_error)
-    if (PyDict_SetItem(__pyx_t_1, __pyx_mstate_global->__pyx_n_u_E_noise, __pyx_mstate_global->__pyx_float_1_0) < 0) __PYX_ERR(0, 287, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_1, __pyx_mstate_global->__pyx_n_u_method, __pyx_mstate_global->__pyx_n_u_no_noise) < 0) __PYX_ERR(0, 314, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_1, __pyx_mstate_global->__pyx_n_u_E_noise, __pyx_mstate_global->__pyx_float_1_0) < 0) __PYX_ERR(0, 314, __pyx_L1_error)
     __Pyx_GIVEREF(__pyx_t_1);
     __Pyx_GOTREF(__pyx_v_self->noise_energy_details_);
     __Pyx_DECREF(__pyx_v_self->noise_energy_details_);
     __pyx_v_self->noise_energy_details_ = ((PyObject*)__pyx_t_1);
     __pyx_t_1 = 0;
 
-    /* "entrap/ebm_engine.pyx":288
+    /* "entrap/ebm_engine.pyx":315
  *         if N_noise == 0:
  *             self.noise_energy_details_ = {'method': 'no_noise', 'E_noise': 1.0}
  *             return 1.0             # <<<<<<<<<<<<<<
@@ -7400,7 +7648,7 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
     __pyx_r = 1.0;
     goto __pyx_L0;
 
-    /* "entrap/ebm_engine.pyx":286
+    /* "entrap/ebm_engine.pyx":313
  *         cdef Py_ssize_t N_noise = len(true_noise_indices)
  * 
  *         if N_noise == 0:             # <<<<<<<<<<<<<<
@@ -7409,7 +7657,7 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
 */
   }
 
-  /* "entrap/ebm_engine.pyx":294
+  /* "entrap/ebm_engine.pyx":321
  *         cdef double E_noise
  * 
  *         if N_noise < 5:             # <<<<<<<<<<<<<<
@@ -7419,20 +7667,20 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
   __pyx_t_8 = (__pyx_v_N_noise < 5);
   if (__pyx_t_8) {
 
-    /* "entrap/ebm_engine.pyx":295
+    /* "entrap/ebm_engine.pyx":322
  * 
  *         if N_noise < 5:
  *             noise_points = X[true_noise_indices]             # <<<<<<<<<<<<<<
  *             noise_range = np.maximum(np.ptp(noise_points, axis=0), 1e-6)
  *             E_noise = log(np.prod(noise_range) + 1e-12)
 */
-    __pyx_t_1 = __Pyx_PyObject_GetItem(((PyObject *)__pyx_v_X), ((PyObject *)__pyx_v_true_noise_indices)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 295, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetItem(((PyObject *)__pyx_v_X), ((PyObject *)__pyx_v_true_noise_indices)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 322, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 295, __pyx_L1_error)
+    if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 322, __pyx_L1_error)
     __pyx_v_noise_points = ((PyArrayObject *)__pyx_t_1);
     __pyx_t_1 = 0;
 
-    /* "entrap/ebm_engine.pyx":296
+    /* "entrap/ebm_engine.pyx":323
  *         if N_noise < 5:
  *             noise_points = X[true_noise_indices]
  *             noise_range = np.maximum(np.ptp(noise_points, axis=0), 1e-6)             # <<<<<<<<<<<<<<
@@ -7440,15 +7688,15 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
  *             self.noise_energy_details_ = {
 */
     __pyx_t_2 = NULL;
-    __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 296, __pyx_L1_error)
+    __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 323, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_maximum); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 296, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_maximum); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 323, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __pyx_t_9 = NULL;
-    __Pyx_GetModuleGlobalName(__pyx_t_10, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 296, __pyx_L1_error)
+    __Pyx_GetModuleGlobalName(__pyx_t_10, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 323, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_10);
-    __pyx_t_11 = __Pyx_PyObject_GetAttrStr(__pyx_t_10, __pyx_mstate_global->__pyx_n_u_ptp); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 296, __pyx_L1_error)
+    __pyx_t_11 = __Pyx_PyObject_GetAttrStr(__pyx_t_10, __pyx_mstate_global->__pyx_n_u_ptp); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 323, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_11);
     __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
     __pyx_t_5 = 1;
@@ -7465,14 +7713,14 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
     #endif
     {
       PyObject *__pyx_callargs[2 + ((CYTHON_VECTORCALL) ? 1 : 0)] = {__pyx_t_9, ((PyObject *)__pyx_v_noise_points)};
-      __pyx_t_10 = __Pyx_MakeVectorcallBuilderKwds(1); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 296, __pyx_L1_error)
+      __pyx_t_10 = __Pyx_MakeVectorcallBuilderKwds(1); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 323, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_10);
-      if (__Pyx_VectorcallBuilder_AddArg(__pyx_mstate_global->__pyx_n_u_axis, __pyx_mstate_global->__pyx_int_0, __pyx_t_10, __pyx_callargs+2, 0) < 0) __PYX_ERR(0, 296, __pyx_L1_error)
+      if (__Pyx_VectorcallBuilder_AddArg(__pyx_mstate_global->__pyx_n_u_axis, __pyx_mstate_global->__pyx_int_0, __pyx_t_10, __pyx_callargs+2, 0) < 0) __PYX_ERR(0, 323, __pyx_L1_error)
       __pyx_t_4 = __Pyx_Object_Vectorcall_CallFromBuilder(__pyx_t_11, __pyx_callargs+__pyx_t_5, (2-__pyx_t_5) | (__pyx_t_5*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET), __pyx_t_10);
       __Pyx_XDECREF(__pyx_t_9); __pyx_t_9 = 0;
       __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
       __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-      if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 296, __pyx_L1_error)
+      if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 323, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_4);
     }
     __pyx_t_5 = 1;
@@ -7493,14 +7741,14 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
       __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-      if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 296, __pyx_L1_error)
+      if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 323, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
     }
-    if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 296, __pyx_L1_error)
+    if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 323, __pyx_L1_error)
     __pyx_v_noise_range = ((PyArrayObject *)__pyx_t_1);
     __pyx_t_1 = 0;
 
-    /* "entrap/ebm_engine.pyx":297
+    /* "entrap/ebm_engine.pyx":324
  *             noise_points = X[true_noise_indices]
  *             noise_range = np.maximum(np.ptp(noise_points, axis=0), 1e-6)
  *             E_noise = log(np.prod(noise_range) + 1e-12)             # <<<<<<<<<<<<<<
@@ -7508,9 +7756,9 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
  *                 'method': 'volume_fallback',
 */
     __pyx_t_3 = NULL;
-    __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 297, __pyx_L1_error)
+    __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 324, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_prod); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 297, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_prod); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 324, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __pyx_t_5 = 1;
@@ -7530,52 +7778,52 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
       __pyx_t_1 = __Pyx_PyObject_FastCall(__pyx_t_2, __pyx_callargs+__pyx_t_5, (2-__pyx_t_5) | (__pyx_t_5*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
       __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-      if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 297, __pyx_L1_error)
+      if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 324, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
     }
-    __pyx_t_2 = __Pyx_PyFloat_AddObjC(__pyx_t_1, __pyx_mstate_global->__pyx_float_1eneg_12, 1e-12, 0, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 297, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyFloat_AddObjC(__pyx_t_1, __pyx_mstate_global->__pyx_float_1eneg_12, 1e-12, 0, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 324, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_6 = __Pyx_PyFloat_AsDouble(__pyx_t_2); if (unlikely((__pyx_t_6 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 297, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyFloat_AsDouble(__pyx_t_2); if (unlikely((__pyx_t_6 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 324, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     __pyx_v_E_noise = log(__pyx_t_6);
 
-    /* "entrap/ebm_engine.pyx":299
+    /* "entrap/ebm_engine.pyx":326
  *             E_noise = log(np.prod(noise_range) + 1e-12)
  *             self.noise_energy_details_ = {
  *                 'method': 'volume_fallback',             # <<<<<<<<<<<<<<
  *                 'E_noise': E_noise,
  *                 'n_points': N_noise
 */
-    __pyx_t_2 = __Pyx_PyDict_NewPresized(3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 299, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyDict_NewPresized(3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 326, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    if (PyDict_SetItem(__pyx_t_2, __pyx_mstate_global->__pyx_n_u_method, __pyx_mstate_global->__pyx_n_u_volume_fallback) < 0) __PYX_ERR(0, 299, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_2, __pyx_mstate_global->__pyx_n_u_method, __pyx_mstate_global->__pyx_n_u_volume_fallback) < 0) __PYX_ERR(0, 326, __pyx_L1_error)
 
-    /* "entrap/ebm_engine.pyx":300
+    /* "entrap/ebm_engine.pyx":327
  *             self.noise_energy_details_ = {
  *                 'method': 'volume_fallback',
  *                 'E_noise': E_noise,             # <<<<<<<<<<<<<<
  *                 'n_points': N_noise
  *             }
 */
-    __pyx_t_1 = PyFloat_FromDouble(__pyx_v_E_noise); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 300, __pyx_L1_error)
+    __pyx_t_1 = PyFloat_FromDouble(__pyx_v_E_noise); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 327, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    if (PyDict_SetItem(__pyx_t_2, __pyx_mstate_global->__pyx_n_u_E_noise, __pyx_t_1) < 0) __PYX_ERR(0, 299, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_2, __pyx_mstate_global->__pyx_n_u_E_noise, __pyx_t_1) < 0) __PYX_ERR(0, 326, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-    /* "entrap/ebm_engine.pyx":301
+    /* "entrap/ebm_engine.pyx":328
  *                 'method': 'volume_fallback',
  *                 'E_noise': E_noise,
  *                 'n_points': N_noise             # <<<<<<<<<<<<<<
  *             }
  *             return E_noise
 */
-    __pyx_t_1 = PyLong_FromSsize_t(__pyx_v_N_noise); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 301, __pyx_L1_error)
+    __pyx_t_1 = PyLong_FromSsize_t(__pyx_v_N_noise); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 328, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    if (PyDict_SetItem(__pyx_t_2, __pyx_mstate_global->__pyx_n_u_n_points, __pyx_t_1) < 0) __PYX_ERR(0, 299, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_2, __pyx_mstate_global->__pyx_n_u_n_points, __pyx_t_1) < 0) __PYX_ERR(0, 326, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-    /* "entrap/ebm_engine.pyx":298
+    /* "entrap/ebm_engine.pyx":325
  *             noise_range = np.maximum(np.ptp(noise_points, axis=0), 1e-6)
  *             E_noise = log(np.prod(noise_range) + 1e-12)
  *             self.noise_energy_details_ = {             # <<<<<<<<<<<<<<
@@ -7588,7 +7836,7 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
     __pyx_v_self->noise_energy_details_ = ((PyObject*)__pyx_t_2);
     __pyx_t_2 = 0;
 
-    /* "entrap/ebm_engine.pyx":303
+    /* "entrap/ebm_engine.pyx":330
  *                 'n_points': N_noise
  *             }
  *             return E_noise             # <<<<<<<<<<<<<<
@@ -7598,7 +7846,7 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
     __pyx_r = __pyx_v_E_noise;
     goto __pyx_L0;
 
-    /* "entrap/ebm_engine.pyx":294
+    /* "entrap/ebm_engine.pyx":321
  *         cdef double E_noise
  * 
  *         if N_noise < 5:             # <<<<<<<<<<<<<<
@@ -7607,20 +7855,20 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
 */
   }
 
-  /* "entrap/ebm_engine.pyx":305
+  /* "entrap/ebm_engine.pyx":332
  *             return E_noise
  * 
  *         noise_points = X[true_noise_indices]             # <<<<<<<<<<<<<<
  * 
  *         cdef np.ndarray landmarks
 */
-  __pyx_t_2 = __Pyx_PyObject_GetItem(((PyObject *)__pyx_v_X), ((PyObject *)__pyx_v_true_noise_indices)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 305, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetItem(((PyObject *)__pyx_v_X), ((PyObject *)__pyx_v_true_noise_indices)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 332, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 305, __pyx_L1_error)
+  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 332, __pyx_L1_error)
   __pyx_v_noise_points = ((PyArrayObject *)__pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "entrap/ebm_engine.pyx":313
+  /* "entrap/ebm_engine.pyx":340
  *         cdef double T_raw, T_norm
  * 
  *         try:             # <<<<<<<<<<<<<<
@@ -7636,7 +7884,7 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
     __Pyx_XGOTREF(__pyx_t_14);
     /*try:*/ {
 
-      /* "entrap/ebm_engine.pyx":314
+      /* "entrap/ebm_engine.pyx":341
  * 
  *         try:
  *             if N_noise > self.max_landmarks:             # <<<<<<<<<<<<<<
@@ -7646,7 +7894,7 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
       __pyx_t_8 = (__pyx_v_N_noise > __pyx_v_self->max_landmarks);
       if (__pyx_t_8) {
 
-        /* "entrap/ebm_engine.pyx":320
+        /* "entrap/ebm_engine.pyx":347
  *                     self.min_landmarks,
  *                     self.landmark_variance_threshold,
  *                     self.metric if isinstance(self.metric, str) else 'euclidean',             # <<<<<<<<<<<<<<
@@ -7658,7 +7906,7 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
         __pyx_t_8 = PyUnicode_Check(__pyx_t_1); 
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
         if (__pyx_t_8) {
-          if (!(likely(PyUnicode_CheckExact(__pyx_v_self->metric))||((__pyx_v_self->metric) == Py_None) || __Pyx_RaiseUnexpectedTypeError("str", __pyx_v_self->metric))) __PYX_ERR(0, 320, __pyx_L5_error)
+          if (!(likely(PyUnicode_CheckExact(__pyx_v_self->metric))||((__pyx_v_self->metric) == Py_None) || __Pyx_RaiseUnexpectedTypeError("str", __pyx_v_self->metric))) __PYX_ERR(0, 347, __pyx_L5_error)
           __Pyx_INCREF(__pyx_v_self->metric);
           __pyx_t_2 = __pyx_v_self->metric;
         } else {
@@ -7666,7 +7914,7 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
           __pyx_t_2 = __pyx_mstate_global->__pyx_n_u_euclidean;
         }
 
-        /* "entrap/ebm_engine.pyx":321
+        /* "entrap/ebm_engine.pyx":348
  *                     self.landmark_variance_threshold,
  *                     self.metric if isinstance(self.metric, str) else 'euclidean',
  *                     self.metric_params             # <<<<<<<<<<<<<<
@@ -7676,7 +7924,7 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
         __pyx_t_1 = __pyx_v_self->metric_params;
         __Pyx_INCREF(__pyx_t_1);
 
-        /* "entrap/ebm_engine.pyx":315
+        /* "entrap/ebm_engine.pyx":342
  *         try:
  *             if N_noise > self.max_landmarks:
  *                 landmarks, n_actual, variance = select_landmarks_lhs(             # <<<<<<<<<<<<<<
@@ -7689,7 +7937,7 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
         __pyx_t_15.variance_threshold = __pyx_v_self->landmark_variance_threshold;
         __pyx_t_15.metric = ((PyObject*)__pyx_t_2);
         __pyx_t_15.metric_params = ((PyObject*)__pyx_t_1);
-        __pyx_t_3 = __pyx_f_6entrap_9utilities_select_landmarks_lhs(__pyx_v_noise_points, 0, &__pyx_t_15); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 315, __pyx_L5_error)
+        __pyx_t_3 = __pyx_f_6entrap_9utilities_select_landmarks_lhs(__pyx_v_noise_points, 0, &__pyx_t_15); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 342, __pyx_L5_error)
         __Pyx_GOTREF(__pyx_t_3);
         __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
@@ -7699,7 +7947,7 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
           if (unlikely(size != 3)) {
             if (size > 3) __Pyx_RaiseTooManyValuesError(3);
             else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
-            __PYX_ERR(0, 315, __pyx_L5_error)
+            __PYX_ERR(0, 342, __pyx_L5_error)
           }
           #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
           __pyx_t_1 = PyTuple_GET_ITEM(sequence, 0);
@@ -7709,28 +7957,28 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
           __pyx_t_4 = PyTuple_GET_ITEM(sequence, 2);
           __Pyx_INCREF(__pyx_t_4);
           #else
-          __pyx_t_1 = __Pyx_PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 315, __pyx_L5_error)
+          __pyx_t_1 = __Pyx_PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 342, __pyx_L5_error)
           __Pyx_GOTREF(__pyx_t_1);
-          __pyx_t_2 = __Pyx_PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 315, __pyx_L5_error)
+          __pyx_t_2 = __Pyx_PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 342, __pyx_L5_error)
           __Pyx_GOTREF(__pyx_t_2);
-          __pyx_t_4 = __Pyx_PySequence_ITEM(sequence, 2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 315, __pyx_L5_error)
+          __pyx_t_4 = __Pyx_PySequence_ITEM(sequence, 2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 342, __pyx_L5_error)
           __Pyx_GOTREF(__pyx_t_4);
           #endif
           __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
         } else {
-          __Pyx_RaiseNoneNotIterableError(); __PYX_ERR(0, 315, __pyx_L5_error)
+          __Pyx_RaiseNoneNotIterableError(); __PYX_ERR(0, 342, __pyx_L5_error)
         }
-        if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 315, __pyx_L5_error)
-        __pyx_t_16 = __Pyx_PyLong_As_int(__pyx_t_2); if (unlikely((__pyx_t_16 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 315, __pyx_L5_error)
+        if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 342, __pyx_L5_error)
+        __pyx_t_16 = __Pyx_PyLong_As_int(__pyx_t_2); if (unlikely((__pyx_t_16 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 342, __pyx_L5_error)
         __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-        __pyx_t_6 = __Pyx_PyFloat_AsDouble(__pyx_t_4); if (unlikely((__pyx_t_6 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 315, __pyx_L5_error)
+        __pyx_t_6 = __Pyx_PyFloat_AsDouble(__pyx_t_4); if (unlikely((__pyx_t_6 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 342, __pyx_L5_error)
         __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
         __pyx_v_landmarks = ((PyArrayObject *)__pyx_t_1);
         __pyx_t_1 = 0;
         __pyx_v_n_actual = __pyx_t_16;
         __pyx_v_variance = __pyx_t_6;
 
-        /* "entrap/ebm_engine.pyx":323
+        /* "entrap/ebm_engine.pyx":350
  *                     self.metric_params
  *                 )
  *                 energy_result = self.energy_computer.compute_raw_topological_energy(landmarks)             # <<<<<<<<<<<<<<
@@ -7744,14 +7992,14 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
           PyObject *__pyx_callargs[2] = {__pyx_t_4, ((PyObject *)__pyx_v_landmarks)};
           __pyx_t_3 = __Pyx_PyObject_FastCallMethod(__pyx_mstate_global->__pyx_n_u_compute_raw_topological_energy, __pyx_callargs+__pyx_t_5, (2-__pyx_t_5) | (1*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
           __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
-          if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 323, __pyx_L5_error)
+          if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 350, __pyx_L5_error)
           __Pyx_GOTREF(__pyx_t_3);
         }
-        if (!(likely(PyDict_CheckExact(__pyx_t_3))||((__pyx_t_3) == Py_None) || __Pyx_RaiseUnexpectedTypeError("dict", __pyx_t_3))) __PYX_ERR(0, 323, __pyx_L5_error)
+        if (!(likely(PyDict_CheckExact(__pyx_t_3))||((__pyx_t_3) == Py_None) || __Pyx_RaiseUnexpectedTypeError("dict", __pyx_t_3))) __PYX_ERR(0, 350, __pyx_L5_error)
         __pyx_v_energy_result = ((PyObject*)__pyx_t_3);
         __pyx_t_3 = 0;
 
-        /* "entrap/ebm_engine.pyx":314
+        /* "entrap/ebm_engine.pyx":341
  * 
  *         try:
  *             if N_noise > self.max_landmarks:             # <<<<<<<<<<<<<<
@@ -7761,7 +8009,7 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
         goto __pyx_L11;
       }
 
-      /* "entrap/ebm_engine.pyx":325
+      /* "entrap/ebm_engine.pyx":352
  *                 energy_result = self.energy_computer.compute_raw_topological_energy(landmarks)
  *             else:
  *                 energy_result = self.energy_computer.compute_raw_topological_energy(noise_points)             # <<<<<<<<<<<<<<
@@ -7776,14 +8024,14 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
           PyObject *__pyx_callargs[2] = {__pyx_t_4, ((PyObject *)__pyx_v_noise_points)};
           __pyx_t_3 = __Pyx_PyObject_FastCallMethod(__pyx_mstate_global->__pyx_n_u_compute_raw_topological_energy, __pyx_callargs+__pyx_t_5, (2-__pyx_t_5) | (1*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
           __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
-          if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 325, __pyx_L5_error)
+          if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 352, __pyx_L5_error)
           __Pyx_GOTREF(__pyx_t_3);
         }
-        if (!(likely(PyDict_CheckExact(__pyx_t_3))||((__pyx_t_3) == Py_None) || __Pyx_RaiseUnexpectedTypeError("dict", __pyx_t_3))) __PYX_ERR(0, 325, __pyx_L5_error)
+        if (!(likely(PyDict_CheckExact(__pyx_t_3))||((__pyx_t_3) == Py_None) || __Pyx_RaiseUnexpectedTypeError("dict", __pyx_t_3))) __PYX_ERR(0, 352, __pyx_L5_error)
         __pyx_v_energy_result = ((PyObject*)__pyx_t_3);
         __pyx_t_3 = 0;
 
-        /* "entrap/ebm_engine.pyx":326
+        /* "entrap/ebm_engine.pyx":353
  *             else:
  *                 energy_result = self.energy_computer.compute_raw_topological_energy(noise_points)
  *                 n_actual = N_noise             # <<<<<<<<<<<<<<
@@ -7792,7 +8040,7 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
 */
         __pyx_v_n_actual = __pyx_v_N_noise;
 
-        /* "entrap/ebm_engine.pyx":327
+        /* "entrap/ebm_engine.pyx":354
  *                 energy_result = self.energy_computer.compute_raw_topological_energy(noise_points)
  *                 n_actual = N_noise
  *                 variance = 1.0             # <<<<<<<<<<<<<<
@@ -7803,7 +8051,7 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
       }
       __pyx_L11:;
 
-      /* "entrap/ebm_engine.pyx":329
+      /* "entrap/ebm_engine.pyx":356
  *                 variance = 1.0
  * 
  *             T_raw = energy_result['T_raw']             # <<<<<<<<<<<<<<
@@ -7812,60 +8060,60 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
 */
       if (unlikely(__pyx_v_energy_result == Py_None)) {
         PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-        __PYX_ERR(0, 329, __pyx_L5_error)
+        __PYX_ERR(0, 356, __pyx_L5_error)
       }
-      __pyx_t_3 = __Pyx_PyDict_GetItem(__pyx_v_energy_result, __pyx_mstate_global->__pyx_n_u_T_raw); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 329, __pyx_L5_error)
+      __pyx_t_3 = __Pyx_PyDict_GetItem(__pyx_v_energy_result, __pyx_mstate_global->__pyx_n_u_T_raw); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 356, __pyx_L5_error)
       __Pyx_GOTREF(__pyx_t_3);
-      __pyx_t_6 = __Pyx_PyFloat_AsDouble(__pyx_t_3); if (unlikely((__pyx_t_6 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 329, __pyx_L5_error)
+      __pyx_t_6 = __Pyx_PyFloat_AsDouble(__pyx_t_3); if (unlikely((__pyx_t_6 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 356, __pyx_L5_error)
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
       __pyx_v_T_raw = __pyx_t_6;
 
-      /* "entrap/ebm_engine.pyx":330
+      /* "entrap/ebm_engine.pyx":357
  * 
  *             T_raw = energy_result['T_raw']
  *             T_norm = T_raw / (N_noise ** self.alpha)             # <<<<<<<<<<<<<<
  * 
  *             self.noise_energy_details_ = {
 */
-      __pyx_t_6 = __Pyx_SoftComplexToDouble(__Pyx_c_quot_double(__pyx_t_double_complex_from_parts(__pyx_v_T_raw, 0), __Pyx_c_pow_double(__pyx_t_double_complex_from_parts(__pyx_v_N_noise, 0), __pyx_t_double_complex_from_parts(__pyx_v_self->alpha, 0))), 0); if (unlikely(__pyx_t_6 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 330, __pyx_L5_error)
+      __pyx_t_6 = __Pyx_SoftComplexToDouble(__Pyx_c_quot_double(__pyx_t_double_complex_from_parts(__pyx_v_T_raw, 0), __Pyx_c_pow_double(__pyx_t_double_complex_from_parts(__pyx_v_N_noise, 0), __pyx_t_double_complex_from_parts(__pyx_v_self->alpha, 0))), 0); if (unlikely(__pyx_t_6 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 357, __pyx_L5_error)
       __pyx_v_T_norm = __pyx_t_6;
 
-      /* "entrap/ebm_engine.pyx":333
+      /* "entrap/ebm_engine.pyx":360
  * 
  *             self.noise_energy_details_ = {
  *                 'method': 'topological_normalized',             # <<<<<<<<<<<<<<
  *                 'E_noise': T_norm,
  *                 'T_raw': T_raw,
 */
-      __pyx_t_3 = __Pyx_PyDict_NewPresized(13); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 333, __pyx_L5_error)
+      __pyx_t_3 = __Pyx_PyDict_NewPresized(13); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 360, __pyx_L5_error)
       __Pyx_GOTREF(__pyx_t_3);
-      if (PyDict_SetItem(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_method, __pyx_mstate_global->__pyx_n_u_topological_normalized) < 0) __PYX_ERR(0, 333, __pyx_L5_error)
+      if (PyDict_SetItem(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_method, __pyx_mstate_global->__pyx_n_u_topological_normalized) < 0) __PYX_ERR(0, 360, __pyx_L5_error)
 
-      /* "entrap/ebm_engine.pyx":334
+      /* "entrap/ebm_engine.pyx":361
  *             self.noise_energy_details_ = {
  *                 'method': 'topological_normalized',
  *                 'E_noise': T_norm,             # <<<<<<<<<<<<<<
  *                 'T_raw': T_raw,
  *                 'E0': energy_result['E0'],
 */
-      __pyx_t_4 = PyFloat_FromDouble(__pyx_v_T_norm); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 334, __pyx_L5_error)
+      __pyx_t_4 = PyFloat_FromDouble(__pyx_v_T_norm); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 361, __pyx_L5_error)
       __Pyx_GOTREF(__pyx_t_4);
-      if (PyDict_SetItem(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_E_noise, __pyx_t_4) < 0) __PYX_ERR(0, 333, __pyx_L5_error)
+      if (PyDict_SetItem(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_E_noise, __pyx_t_4) < 0) __PYX_ERR(0, 360, __pyx_L5_error)
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-      /* "entrap/ebm_engine.pyx":335
+      /* "entrap/ebm_engine.pyx":362
  *                 'method': 'topological_normalized',
  *                 'E_noise': T_norm,
  *                 'T_raw': T_raw,             # <<<<<<<<<<<<<<
  *                 'E0': energy_result['E0'],
  *                 'E1': energy_result['E1'],
 */
-      __pyx_t_4 = PyFloat_FromDouble(__pyx_v_T_raw); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 335, __pyx_L5_error)
+      __pyx_t_4 = PyFloat_FromDouble(__pyx_v_T_raw); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 362, __pyx_L5_error)
       __Pyx_GOTREF(__pyx_t_4);
-      if (PyDict_SetItem(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_T_raw, __pyx_t_4) < 0) __PYX_ERR(0, 333, __pyx_L5_error)
+      if (PyDict_SetItem(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_T_raw, __pyx_t_4) < 0) __PYX_ERR(0, 360, __pyx_L5_error)
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-      /* "entrap/ebm_engine.pyx":336
+      /* "entrap/ebm_engine.pyx":363
  *                 'E_noise': T_norm,
  *                 'T_raw': T_raw,
  *                 'E0': energy_result['E0'],             # <<<<<<<<<<<<<<
@@ -7874,14 +8122,14 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
 */
       if (unlikely(__pyx_v_energy_result == Py_None)) {
         PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-        __PYX_ERR(0, 336, __pyx_L5_error)
+        __PYX_ERR(0, 363, __pyx_L5_error)
       }
-      __pyx_t_4 = __Pyx_PyDict_GetItem(__pyx_v_energy_result, __pyx_mstate_global->__pyx_n_u_E0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 336, __pyx_L5_error)
+      __pyx_t_4 = __Pyx_PyDict_GetItem(__pyx_v_energy_result, __pyx_mstate_global->__pyx_n_u_E0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 363, __pyx_L5_error)
       __Pyx_GOTREF(__pyx_t_4);
-      if (PyDict_SetItem(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_E0, __pyx_t_4) < 0) __PYX_ERR(0, 333, __pyx_L5_error)
+      if (PyDict_SetItem(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_E0, __pyx_t_4) < 0) __PYX_ERR(0, 360, __pyx_L5_error)
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-      /* "entrap/ebm_engine.pyx":337
+      /* "entrap/ebm_engine.pyx":364
  *                 'T_raw': T_raw,
  *                 'E0': energy_result['E0'],
  *                 'E1': energy_result['E1'],             # <<<<<<<<<<<<<<
@@ -7890,14 +8138,14 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
 */
       if (unlikely(__pyx_v_energy_result == Py_None)) {
         PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-        __PYX_ERR(0, 337, __pyx_L5_error)
+        __PYX_ERR(0, 364, __pyx_L5_error)
       }
-      __pyx_t_4 = __Pyx_PyDict_GetItem(__pyx_v_energy_result, __pyx_mstate_global->__pyx_n_u_E1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 337, __pyx_L5_error)
+      __pyx_t_4 = __Pyx_PyDict_GetItem(__pyx_v_energy_result, __pyx_mstate_global->__pyx_n_u_E1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 364, __pyx_L5_error)
       __Pyx_GOTREF(__pyx_t_4);
-      if (PyDict_SetItem(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_E1, __pyx_t_4) < 0) __PYX_ERR(0, 333, __pyx_L5_error)
+      if (PyDict_SetItem(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_E1, __pyx_t_4) < 0) __PYX_ERR(0, 360, __pyx_L5_error)
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-      /* "entrap/ebm_engine.pyx":338
+      /* "entrap/ebm_engine.pyx":365
  *                 'E0': energy_result['E0'],
  *                 'E1': energy_result['E1'],
  *                 'H0_entropy': energy_result['H0_entropy'],             # <<<<<<<<<<<<<<
@@ -7906,14 +8154,14 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
 */
       if (unlikely(__pyx_v_energy_result == Py_None)) {
         PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-        __PYX_ERR(0, 338, __pyx_L5_error)
+        __PYX_ERR(0, 365, __pyx_L5_error)
       }
-      __pyx_t_4 = __Pyx_PyDict_GetItem(__pyx_v_energy_result, __pyx_mstate_global->__pyx_n_u_H0_entropy); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 338, __pyx_L5_error)
+      __pyx_t_4 = __Pyx_PyDict_GetItem(__pyx_v_energy_result, __pyx_mstate_global->__pyx_n_u_H0_entropy); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 365, __pyx_L5_error)
       __Pyx_GOTREF(__pyx_t_4);
-      if (PyDict_SetItem(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_H0_entropy, __pyx_t_4) < 0) __PYX_ERR(0, 333, __pyx_L5_error)
+      if (PyDict_SetItem(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_H0_entropy, __pyx_t_4) < 0) __PYX_ERR(0, 360, __pyx_L5_error)
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-      /* "entrap/ebm_engine.pyx":339
+      /* "entrap/ebm_engine.pyx":366
  *                 'E1': energy_result['E1'],
  *                 'H0_entropy': energy_result['H0_entropy'],
  *                 'H1_entropy': energy_result['H1_entropy'],             # <<<<<<<<<<<<<<
@@ -7922,14 +8170,14 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
 */
       if (unlikely(__pyx_v_energy_result == Py_None)) {
         PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-        __PYX_ERR(0, 339, __pyx_L5_error)
+        __PYX_ERR(0, 366, __pyx_L5_error)
       }
-      __pyx_t_4 = __Pyx_PyDict_GetItem(__pyx_v_energy_result, __pyx_mstate_global->__pyx_n_u_H1_entropy); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 339, __pyx_L5_error)
+      __pyx_t_4 = __Pyx_PyDict_GetItem(__pyx_v_energy_result, __pyx_mstate_global->__pyx_n_u_H1_entropy); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 366, __pyx_L5_error)
       __Pyx_GOTREF(__pyx_t_4);
-      if (PyDict_SetItem(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_H1_entropy, __pyx_t_4) < 0) __PYX_ERR(0, 333, __pyx_L5_error)
+      if (PyDict_SetItem(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_H1_entropy, __pyx_t_4) < 0) __PYX_ERR(0, 360, __pyx_L5_error)
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-      /* "entrap/ebm_engine.pyx":340
+      /* "entrap/ebm_engine.pyx":367
  *                 'H0_entropy': energy_result['H0_entropy'],
  *                 'H1_entropy': energy_result['H1_entropy'],
  *                 'n_components_h0': energy_result['n_components_h0'],             # <<<<<<<<<<<<<<
@@ -7938,14 +8186,14 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
 */
       if (unlikely(__pyx_v_energy_result == Py_None)) {
         PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-        __PYX_ERR(0, 340, __pyx_L5_error)
+        __PYX_ERR(0, 367, __pyx_L5_error)
       }
-      __pyx_t_4 = __Pyx_PyDict_GetItem(__pyx_v_energy_result, __pyx_mstate_global->__pyx_n_u_n_components_h0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 340, __pyx_L5_error)
+      __pyx_t_4 = __Pyx_PyDict_GetItem(__pyx_v_energy_result, __pyx_mstate_global->__pyx_n_u_n_components_h0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 367, __pyx_L5_error)
       __Pyx_GOTREF(__pyx_t_4);
-      if (PyDict_SetItem(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_n_components_h0, __pyx_t_4) < 0) __PYX_ERR(0, 333, __pyx_L5_error)
+      if (PyDict_SetItem(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_n_components_h0, __pyx_t_4) < 0) __PYX_ERR(0, 360, __pyx_L5_error)
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-      /* "entrap/ebm_engine.pyx":341
+      /* "entrap/ebm_engine.pyx":368
  *                 'H1_entropy': energy_result['H1_entropy'],
  *                 'n_components_h0': energy_result['n_components_h0'],
  *                 'n_loops_h1': energy_result['n_loops_h1'],             # <<<<<<<<<<<<<<
@@ -7954,62 +8202,62 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
 */
       if (unlikely(__pyx_v_energy_result == Py_None)) {
         PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-        __PYX_ERR(0, 341, __pyx_L5_error)
+        __PYX_ERR(0, 368, __pyx_L5_error)
       }
-      __pyx_t_4 = __Pyx_PyDict_GetItem(__pyx_v_energy_result, __pyx_mstate_global->__pyx_n_u_n_loops_h1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 341, __pyx_L5_error)
+      __pyx_t_4 = __Pyx_PyDict_GetItem(__pyx_v_energy_result, __pyx_mstate_global->__pyx_n_u_n_loops_h1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 368, __pyx_L5_error)
       __Pyx_GOTREF(__pyx_t_4);
-      if (PyDict_SetItem(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_n_loops_h1, __pyx_t_4) < 0) __PYX_ERR(0, 333, __pyx_L5_error)
+      if (PyDict_SetItem(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_n_loops_h1, __pyx_t_4) < 0) __PYX_ERR(0, 360, __pyx_L5_error)
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-      /* "entrap/ebm_engine.pyx":342
+      /* "entrap/ebm_engine.pyx":369
  *                 'n_components_h0': energy_result['n_components_h0'],
  *                 'n_loops_h1': energy_result['n_loops_h1'],
  *                 'n_points_original': N_noise,             # <<<<<<<<<<<<<<
  *                 'n_points_final': n_actual,
  *                 'variance_captured': variance,
 */
-      __pyx_t_4 = PyLong_FromSsize_t(__pyx_v_N_noise); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 342, __pyx_L5_error)
+      __pyx_t_4 = PyLong_FromSsize_t(__pyx_v_N_noise); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 369, __pyx_L5_error)
       __Pyx_GOTREF(__pyx_t_4);
-      if (PyDict_SetItem(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_n_points_original, __pyx_t_4) < 0) __PYX_ERR(0, 333, __pyx_L5_error)
+      if (PyDict_SetItem(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_n_points_original, __pyx_t_4) < 0) __PYX_ERR(0, 360, __pyx_L5_error)
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-      /* "entrap/ebm_engine.pyx":343
+      /* "entrap/ebm_engine.pyx":370
  *                 'n_loops_h1': energy_result['n_loops_h1'],
  *                 'n_points_original': N_noise,
  *                 'n_points_final': n_actual,             # <<<<<<<<<<<<<<
  *                 'variance_captured': variance,
  *                 'alpha': self.alpha
 */
-      __pyx_t_4 = __Pyx_PyLong_From_int(__pyx_v_n_actual); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 343, __pyx_L5_error)
+      __pyx_t_4 = __Pyx_PyLong_From_int(__pyx_v_n_actual); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 370, __pyx_L5_error)
       __Pyx_GOTREF(__pyx_t_4);
-      if (PyDict_SetItem(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_n_points_final, __pyx_t_4) < 0) __PYX_ERR(0, 333, __pyx_L5_error)
+      if (PyDict_SetItem(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_n_points_final, __pyx_t_4) < 0) __PYX_ERR(0, 360, __pyx_L5_error)
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-      /* "entrap/ebm_engine.pyx":344
+      /* "entrap/ebm_engine.pyx":371
  *                 'n_points_original': N_noise,
  *                 'n_points_final': n_actual,
  *                 'variance_captured': variance,             # <<<<<<<<<<<<<<
  *                 'alpha': self.alpha
  *             }
 */
-      __pyx_t_4 = PyFloat_FromDouble(__pyx_v_variance); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 344, __pyx_L5_error)
+      __pyx_t_4 = PyFloat_FromDouble(__pyx_v_variance); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 371, __pyx_L5_error)
       __Pyx_GOTREF(__pyx_t_4);
-      if (PyDict_SetItem(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_variance_captured, __pyx_t_4) < 0) __PYX_ERR(0, 333, __pyx_L5_error)
+      if (PyDict_SetItem(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_variance_captured, __pyx_t_4) < 0) __PYX_ERR(0, 360, __pyx_L5_error)
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-      /* "entrap/ebm_engine.pyx":345
+      /* "entrap/ebm_engine.pyx":372
  *                 'n_points_final': n_actual,
  *                 'variance_captured': variance,
  *                 'alpha': self.alpha             # <<<<<<<<<<<<<<
  *             }
  * 
 */
-      __pyx_t_4 = PyFloat_FromDouble(__pyx_v_self->alpha); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 345, __pyx_L5_error)
+      __pyx_t_4 = PyFloat_FromDouble(__pyx_v_self->alpha); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 372, __pyx_L5_error)
       __Pyx_GOTREF(__pyx_t_4);
-      if (PyDict_SetItem(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_alpha, __pyx_t_4) < 0) __PYX_ERR(0, 333, __pyx_L5_error)
+      if (PyDict_SetItem(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_alpha, __pyx_t_4) < 0) __PYX_ERR(0, 360, __pyx_L5_error)
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-      /* "entrap/ebm_engine.pyx":332
+      /* "entrap/ebm_engine.pyx":359
  *             T_norm = T_raw / (N_noise ** self.alpha)
  * 
  *             self.noise_energy_details_ = {             # <<<<<<<<<<<<<<
@@ -8022,7 +8270,7 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
       __pyx_v_self->noise_energy_details_ = ((PyObject*)__pyx_t_3);
       __pyx_t_3 = 0;
 
-      /* "entrap/ebm_engine.pyx":348
+      /* "entrap/ebm_engine.pyx":375
  *             }
  * 
  *             return T_norm             # <<<<<<<<<<<<<<
@@ -8032,7 +8280,7 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
       __pyx_r = __pyx_v_T_norm;
       goto __pyx_L9_try_return;
 
-      /* "entrap/ebm_engine.pyx":313
+      /* "entrap/ebm_engine.pyx":340
  *         cdef double T_raw, T_norm
  * 
  *         try:             # <<<<<<<<<<<<<<
@@ -8049,7 +8297,7 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
     __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_XDECREF(__pyx_t_9); __pyx_t_9 = 0;
 
-    /* "entrap/ebm_engine.pyx":350
+    /* "entrap/ebm_engine.pyx":377
  *             return T_norm
  * 
  *         except Exception as e:             # <<<<<<<<<<<<<<
@@ -8059,7 +8307,7 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
     __pyx_t_16 = __Pyx_PyErr_ExceptionMatches(((PyObject *)(((PyTypeObject*)PyExc_Exception))));
     if (__pyx_t_16) {
       __Pyx_AddTraceback("entrap.ebm_engine.EBM_Reassignment_Engine.estimate_noise_energy", __pyx_clineno, __pyx_lineno, __pyx_filename);
-      if (__Pyx_GetException(&__pyx_t_3, &__pyx_t_4, &__pyx_t_2) < 0) __PYX_ERR(0, 350, __pyx_L7_except_error)
+      if (__Pyx_GetException(&__pyx_t_3, &__pyx_t_4, &__pyx_t_2) < 0) __PYX_ERR(0, 377, __pyx_L7_except_error)
       __Pyx_XGOTREF(__pyx_t_3);
       __Pyx_XGOTREF(__pyx_t_4);
       __Pyx_XGOTREF(__pyx_t_2);
@@ -8067,7 +8315,7 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
       __pyx_v_e = __pyx_t_4;
       /*try:*/ {
 
-        /* "entrap/ebm_engine.pyx":351
+        /* "entrap/ebm_engine.pyx":378
  * 
  *         except Exception as e:
  *             logger.warning(f"Noise topology computation failed: {e}")             # <<<<<<<<<<<<<<
@@ -8075,14 +8323,14 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
  *             E_noise = log(np.prod(noise_range) + 1e-12)
 */
         __pyx_t_11 = NULL;
-        __Pyx_GetModuleGlobalName(__pyx_t_10, __pyx_mstate_global->__pyx_n_u_logger); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 351, __pyx_L17_error)
+        __Pyx_GetModuleGlobalName(__pyx_t_10, __pyx_mstate_global->__pyx_n_u_logger); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 378, __pyx_L17_error)
         __Pyx_GOTREF(__pyx_t_10);
-        __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_10, __pyx_mstate_global->__pyx_n_u_warning); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 351, __pyx_L17_error)
+        __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_10, __pyx_mstate_global->__pyx_n_u_warning); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 378, __pyx_L17_error)
         __Pyx_GOTREF(__pyx_t_9);
         __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-        __pyx_t_10 = __Pyx_PyObject_FormatSimple(__pyx_v_e, __pyx_mstate_global->__pyx_empty_unicode); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 351, __pyx_L17_error)
+        __pyx_t_10 = __Pyx_PyObject_FormatSimple(__pyx_v_e, __pyx_mstate_global->__pyx_empty_unicode); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 378, __pyx_L17_error)
         __Pyx_GOTREF(__pyx_t_10);
-        __pyx_t_17 = __Pyx_PyUnicode_Concat(__pyx_mstate_global->__pyx_kp_u_Noise_topology_computation_faile, __pyx_t_10); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 351, __pyx_L17_error)
+        __pyx_t_17 = __Pyx_PyUnicode_Concat(__pyx_mstate_global->__pyx_kp_u_Noise_topology_computation_faile, __pyx_t_10); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 378, __pyx_L17_error)
         __Pyx_GOTREF(__pyx_t_17);
         __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
         __pyx_t_5 = 1;
@@ -8103,12 +8351,12 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
           __Pyx_XDECREF(__pyx_t_11); __pyx_t_11 = 0;
           __Pyx_DECREF(__pyx_t_17); __pyx_t_17 = 0;
           __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-          if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 351, __pyx_L17_error)
+          if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 378, __pyx_L17_error)
           __Pyx_GOTREF(__pyx_t_1);
         }
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-        /* "entrap/ebm_engine.pyx":352
+        /* "entrap/ebm_engine.pyx":379
  *         except Exception as e:
  *             logger.warning(f"Noise topology computation failed: {e}")
  *             noise_range = np.maximum(np.ptp(noise_points, axis=0), 1e-6)             # <<<<<<<<<<<<<<
@@ -8116,15 +8364,15 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
  *             self.noise_energy_details_ = {
 */
         __pyx_t_9 = NULL;
-        __Pyx_GetModuleGlobalName(__pyx_t_17, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 352, __pyx_L17_error)
+        __Pyx_GetModuleGlobalName(__pyx_t_17, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 379, __pyx_L17_error)
         __Pyx_GOTREF(__pyx_t_17);
-        __pyx_t_11 = __Pyx_PyObject_GetAttrStr(__pyx_t_17, __pyx_mstate_global->__pyx_n_u_maximum); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 352, __pyx_L17_error)
+        __pyx_t_11 = __Pyx_PyObject_GetAttrStr(__pyx_t_17, __pyx_mstate_global->__pyx_n_u_maximum); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 379, __pyx_L17_error)
         __Pyx_GOTREF(__pyx_t_11);
         __Pyx_DECREF(__pyx_t_17); __pyx_t_17 = 0;
         __pyx_t_10 = NULL;
-        __Pyx_GetModuleGlobalName(__pyx_t_18, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_18)) __PYX_ERR(0, 352, __pyx_L17_error)
+        __Pyx_GetModuleGlobalName(__pyx_t_18, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_18)) __PYX_ERR(0, 379, __pyx_L17_error)
         __Pyx_GOTREF(__pyx_t_18);
-        __pyx_t_19 = __Pyx_PyObject_GetAttrStr(__pyx_t_18, __pyx_mstate_global->__pyx_n_u_ptp); if (unlikely(!__pyx_t_19)) __PYX_ERR(0, 352, __pyx_L17_error)
+        __pyx_t_19 = __Pyx_PyObject_GetAttrStr(__pyx_t_18, __pyx_mstate_global->__pyx_n_u_ptp); if (unlikely(!__pyx_t_19)) __PYX_ERR(0, 379, __pyx_L17_error)
         __Pyx_GOTREF(__pyx_t_19);
         __Pyx_DECREF(__pyx_t_18); __pyx_t_18 = 0;
         __pyx_t_5 = 1;
@@ -8141,14 +8389,14 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
         #endif
         {
           PyObject *__pyx_callargs[2 + ((CYTHON_VECTORCALL) ? 1 : 0)] = {__pyx_t_10, ((PyObject *)__pyx_v_noise_points)};
-          __pyx_t_18 = __Pyx_MakeVectorcallBuilderKwds(1); if (unlikely(!__pyx_t_18)) __PYX_ERR(0, 352, __pyx_L17_error)
+          __pyx_t_18 = __Pyx_MakeVectorcallBuilderKwds(1); if (unlikely(!__pyx_t_18)) __PYX_ERR(0, 379, __pyx_L17_error)
           __Pyx_GOTREF(__pyx_t_18);
-          if (__Pyx_VectorcallBuilder_AddArg(__pyx_mstate_global->__pyx_n_u_axis, __pyx_mstate_global->__pyx_int_0, __pyx_t_18, __pyx_callargs+2, 0) < 0) __PYX_ERR(0, 352, __pyx_L17_error)
+          if (__Pyx_VectorcallBuilder_AddArg(__pyx_mstate_global->__pyx_n_u_axis, __pyx_mstate_global->__pyx_int_0, __pyx_t_18, __pyx_callargs+2, 0) < 0) __PYX_ERR(0, 379, __pyx_L17_error)
           __pyx_t_17 = __Pyx_Object_Vectorcall_CallFromBuilder(__pyx_t_19, __pyx_callargs+__pyx_t_5, (2-__pyx_t_5) | (__pyx_t_5*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET), __pyx_t_18);
           __Pyx_XDECREF(__pyx_t_10); __pyx_t_10 = 0;
           __Pyx_DECREF(__pyx_t_18); __pyx_t_18 = 0;
           __Pyx_DECREF(__pyx_t_19); __pyx_t_19 = 0;
-          if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 352, __pyx_L17_error)
+          if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 379, __pyx_L17_error)
           __Pyx_GOTREF(__pyx_t_17);
         }
         __pyx_t_5 = 1;
@@ -8169,14 +8417,14 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
           __Pyx_XDECREF(__pyx_t_9); __pyx_t_9 = 0;
           __Pyx_DECREF(__pyx_t_17); __pyx_t_17 = 0;
           __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-          if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 352, __pyx_L17_error)
+          if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 379, __pyx_L17_error)
           __Pyx_GOTREF(__pyx_t_1);
         }
-        if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 352, __pyx_L17_error)
+        if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 379, __pyx_L17_error)
         __pyx_v_noise_range = ((PyArrayObject *)__pyx_t_1);
         __pyx_t_1 = 0;
 
-        /* "entrap/ebm_engine.pyx":353
+        /* "entrap/ebm_engine.pyx":380
  *             logger.warning(f"Noise topology computation failed: {e}")
  *             noise_range = np.maximum(np.ptp(noise_points, axis=0), 1e-6)
  *             E_noise = log(np.prod(noise_range) + 1e-12)             # <<<<<<<<<<<<<<
@@ -8184,9 +8432,9 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
  *                 'method': 'volume_fallback',
 */
         __pyx_t_11 = NULL;
-        __Pyx_GetModuleGlobalName(__pyx_t_17, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 353, __pyx_L17_error)
+        __Pyx_GetModuleGlobalName(__pyx_t_17, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 380, __pyx_L17_error)
         __Pyx_GOTREF(__pyx_t_17);
-        __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_17, __pyx_mstate_global->__pyx_n_u_prod); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 353, __pyx_L17_error)
+        __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_17, __pyx_mstate_global->__pyx_n_u_prod); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 380, __pyx_L17_error)
         __Pyx_GOTREF(__pyx_t_9);
         __Pyx_DECREF(__pyx_t_17); __pyx_t_17 = 0;
         __pyx_t_5 = 1;
@@ -8206,64 +8454,64 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
           __pyx_t_1 = __Pyx_PyObject_FastCall(__pyx_t_9, __pyx_callargs+__pyx_t_5, (2-__pyx_t_5) | (__pyx_t_5*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
           __Pyx_XDECREF(__pyx_t_11); __pyx_t_11 = 0;
           __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-          if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 353, __pyx_L17_error)
+          if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 380, __pyx_L17_error)
           __Pyx_GOTREF(__pyx_t_1);
         }
-        __pyx_t_9 = __Pyx_PyFloat_AddObjC(__pyx_t_1, __pyx_mstate_global->__pyx_float_1eneg_12, 1e-12, 0, 0); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 353, __pyx_L17_error)
+        __pyx_t_9 = __Pyx_PyFloat_AddObjC(__pyx_t_1, __pyx_mstate_global->__pyx_float_1eneg_12, 1e-12, 0, 0); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 380, __pyx_L17_error)
         __Pyx_GOTREF(__pyx_t_9);
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-        __pyx_t_6 = __Pyx_PyFloat_AsDouble(__pyx_t_9); if (unlikely((__pyx_t_6 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 353, __pyx_L17_error)
+        __pyx_t_6 = __Pyx_PyFloat_AsDouble(__pyx_t_9); if (unlikely((__pyx_t_6 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 380, __pyx_L17_error)
         __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
         __pyx_v_E_noise = log(__pyx_t_6);
 
-        /* "entrap/ebm_engine.pyx":355
+        /* "entrap/ebm_engine.pyx":382
  *             E_noise = log(np.prod(noise_range) + 1e-12)
  *             self.noise_energy_details_ = {
  *                 'method': 'volume_fallback',             # <<<<<<<<<<<<<<
  *                 'E_noise': E_noise,
  *                 'n_points': N_noise,
 */
-        __pyx_t_9 = __Pyx_PyDict_NewPresized(4); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 355, __pyx_L17_error)
+        __pyx_t_9 = __Pyx_PyDict_NewPresized(4); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 382, __pyx_L17_error)
         __Pyx_GOTREF(__pyx_t_9);
-        if (PyDict_SetItem(__pyx_t_9, __pyx_mstate_global->__pyx_n_u_method, __pyx_mstate_global->__pyx_n_u_volume_fallback) < 0) __PYX_ERR(0, 355, __pyx_L17_error)
+        if (PyDict_SetItem(__pyx_t_9, __pyx_mstate_global->__pyx_n_u_method, __pyx_mstate_global->__pyx_n_u_volume_fallback) < 0) __PYX_ERR(0, 382, __pyx_L17_error)
 
-        /* "entrap/ebm_engine.pyx":356
+        /* "entrap/ebm_engine.pyx":383
  *             self.noise_energy_details_ = {
  *                 'method': 'volume_fallback',
  *                 'E_noise': E_noise,             # <<<<<<<<<<<<<<
  *                 'n_points': N_noise,
  *                 'error': str(e)
 */
-        __pyx_t_1 = PyFloat_FromDouble(__pyx_v_E_noise); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 356, __pyx_L17_error)
+        __pyx_t_1 = PyFloat_FromDouble(__pyx_v_E_noise); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 383, __pyx_L17_error)
         __Pyx_GOTREF(__pyx_t_1);
-        if (PyDict_SetItem(__pyx_t_9, __pyx_mstate_global->__pyx_n_u_E_noise, __pyx_t_1) < 0) __PYX_ERR(0, 355, __pyx_L17_error)
+        if (PyDict_SetItem(__pyx_t_9, __pyx_mstate_global->__pyx_n_u_E_noise, __pyx_t_1) < 0) __PYX_ERR(0, 382, __pyx_L17_error)
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-        /* "entrap/ebm_engine.pyx":357
+        /* "entrap/ebm_engine.pyx":384
  *                 'method': 'volume_fallback',
  *                 'E_noise': E_noise,
  *                 'n_points': N_noise,             # <<<<<<<<<<<<<<
  *                 'error': str(e)
  *             }
 */
-        __pyx_t_1 = PyLong_FromSsize_t(__pyx_v_N_noise); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 357, __pyx_L17_error)
+        __pyx_t_1 = PyLong_FromSsize_t(__pyx_v_N_noise); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 384, __pyx_L17_error)
         __Pyx_GOTREF(__pyx_t_1);
-        if (PyDict_SetItem(__pyx_t_9, __pyx_mstate_global->__pyx_n_u_n_points, __pyx_t_1) < 0) __PYX_ERR(0, 355, __pyx_L17_error)
+        if (PyDict_SetItem(__pyx_t_9, __pyx_mstate_global->__pyx_n_u_n_points, __pyx_t_1) < 0) __PYX_ERR(0, 382, __pyx_L17_error)
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-        /* "entrap/ebm_engine.pyx":358
+        /* "entrap/ebm_engine.pyx":385
  *                 'E_noise': E_noise,
  *                 'n_points': N_noise,
  *                 'error': str(e)             # <<<<<<<<<<<<<<
  *             }
  *             return E_noise
 */
-        __pyx_t_1 = __Pyx_PyObject_Unicode(__pyx_v_e); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 358, __pyx_L17_error)
+        __pyx_t_1 = __Pyx_PyObject_Unicode(__pyx_v_e); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 385, __pyx_L17_error)
         __Pyx_GOTREF(__pyx_t_1);
-        if (PyDict_SetItem(__pyx_t_9, __pyx_mstate_global->__pyx_n_u_error, __pyx_t_1) < 0) __PYX_ERR(0, 355, __pyx_L17_error)
+        if (PyDict_SetItem(__pyx_t_9, __pyx_mstate_global->__pyx_n_u_error, __pyx_t_1) < 0) __PYX_ERR(0, 382, __pyx_L17_error)
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-        /* "entrap/ebm_engine.pyx":354
+        /* "entrap/ebm_engine.pyx":381
  *             noise_range = np.maximum(np.ptp(noise_points, axis=0), 1e-6)
  *             E_noise = log(np.prod(noise_range) + 1e-12)
  *             self.noise_energy_details_ = {             # <<<<<<<<<<<<<<
@@ -8276,7 +8524,7 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
         __pyx_v_self->noise_energy_details_ = ((PyObject*)__pyx_t_9);
         __pyx_t_9 = 0;
 
-        /* "entrap/ebm_engine.pyx":360
+        /* "entrap/ebm_engine.pyx":387
  *                 'error': str(e)
  *             }
  *             return E_noise             # <<<<<<<<<<<<<<
@@ -8290,7 +8538,7 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
         goto __pyx_L16_return;
       }
 
-      /* "entrap/ebm_engine.pyx":350
+      /* "entrap/ebm_engine.pyx":377
  *             return T_norm
  * 
  *         except Exception as e:             # <<<<<<<<<<<<<<
@@ -8344,7 +8592,7 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
     }
     goto __pyx_L7_except_error;
 
-    /* "entrap/ebm_engine.pyx":313
+    /* "entrap/ebm_engine.pyx":340
  *         cdef double T_raw, T_norm
  * 
  *         try:             # <<<<<<<<<<<<<<
@@ -8371,7 +8619,7 @@ static double __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_no
     goto __pyx_L0;
   }
 
-  /* "entrap/ebm_engine.pyx":256
+  /* "entrap/ebm_engine.pyx":283
  *         return bounded_delta_energy_cython(delta_T, eps)
  * 
  *     cpdef double estimate_noise_energy(             # <<<<<<<<<<<<<<
@@ -8444,39 +8692,39 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   {
     PyObject ** const __pyx_pyargnames[] = {&__pyx_mstate_global->__pyx_n_u_X,&__pyx_mstate_global->__pyx_n_u_true_noise_indices,0};
     const Py_ssize_t __pyx_kwds_len = (__pyx_kwds) ? __Pyx_NumKwargs_FASTCALL(__pyx_kwds) : 0;
-    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 256, __pyx_L3_error)
+    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 283, __pyx_L3_error)
     if (__pyx_kwds_len > 0) {
       switch (__pyx_nargs) {
         case  2:
         values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 256, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 283, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  1:
         values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 256, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 283, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  0: break;
         default: goto __pyx_L5_argtuple_error;
       }
       const Py_ssize_t kwd_pos_args = __pyx_nargs;
-      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "estimate_noise_energy", 0) < 0) __PYX_ERR(0, 256, __pyx_L3_error)
+      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "estimate_noise_energy", 0) < 0) __PYX_ERR(0, 283, __pyx_L3_error)
       for (Py_ssize_t i = __pyx_nargs; i < 2; i++) {
-        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("estimate_noise_energy", 1, 2, 2, i); __PYX_ERR(0, 256, __pyx_L3_error) }
+        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("estimate_noise_energy", 1, 2, 2, i); __PYX_ERR(0, 283, __pyx_L3_error) }
       }
     } else if (unlikely(__pyx_nargs != 2)) {
       goto __pyx_L5_argtuple_error;
     } else {
       values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 256, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 283, __pyx_L3_error)
       values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 256, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 283, __pyx_L3_error)
     }
     __pyx_v_X = ((PyArrayObject *)values[0]);
     __pyx_v_true_noise_indices = ((PyArrayObject *)values[1]);
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("estimate_noise_energy", 1, 2, 2, __pyx_nargs); __PYX_ERR(0, 256, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("estimate_noise_energy", 1, 2, 2, __pyx_nargs); __PYX_ERR(0, 283, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -8487,8 +8735,8 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_X), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "X", 0))) __PYX_ERR(0, 258, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_true_noise_indices), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "true_noise_indices", 0))) __PYX_ERR(0, 259, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_X), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "X", 0))) __PYX_ERR(0, 285, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_true_noise_indices), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "true_noise_indices", 0))) __PYX_ERR(0, 286, __pyx_L1_error)
   __pyx_r = __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_10estimate_noise_energy(((struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *)__pyx_v_self), __pyx_v_X, __pyx_v_true_noise_indices);
 
   /* function exit code */
@@ -8518,8 +8766,8 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_10estim
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("estimate_noise_energy", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_noise_energy(__pyx_v_self, __pyx_v_X, __pyx_v_true_noise_indices, 1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 256, __pyx_L1_error)
-  __pyx_t_2 = PyFloat_FromDouble(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 256, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_noise_energy(__pyx_v_self, __pyx_v_X, __pyx_v_true_noise_indices, 1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 283, __pyx_L1_error)
+  __pyx_t_2 = PyFloat_FromDouble(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 283, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_r = __pyx_t_2;
   __pyx_t_2 = 0;
@@ -8536,7 +8784,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_10estim
   return __pyx_r;
 }
 
-/* "entrap/ebm_engine.pyx":362
+/* "entrap/ebm_engine.pyx":389
  *             return E_noise
  * 
  *     def reassign(self, X, labels, dek_selector):             # <<<<<<<<<<<<<<
@@ -8552,7 +8800,7 @@ PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 PyObject *__pyx_args, PyObject *__pyx_kwds
 #endif
 ); /*proto*/
-PyDoc_STRVAR(__pyx_doc_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reassign, "EBM_Reassignment_Engine.reassign(self, X, labels, dek_selector)\n\nExecute energy-based noise reassignment.\n\nMain algorithm: builds candidate sets via k-NN, estimates noise energy,\nthen iteratively evaluates each candidate against geometric + topological\nenergy. Uses sorted evaluation and early stopping to minimize expensive\nTDA calls.\n\nNote: This is a regular Python method (def not cpdef) to allow\nflexible Python operations including lambda sorting.\n\nParameters\n----------\nX : ndarray, shape (n_samples, n_features)\n    Data points.\nlabels : ndarray, shape (n_samples,)\n    Initial HDBSCAN labels (-1 = noise).\ndek_selector : Density_Equalization_K, optional\n    Adaptive k selector. If None, uses K_MIN.\n\nReturns\n-------\nrefined_labels : ndarray\n    Updated labels with noise points reassigned.\nn_rescued : int\n    Number of points successfully reassigned.\ncluster_stats : dict\n    Per-cluster statistics: {cluster_id: {iterations, rescued, tda_calls, ...}}");
+PyDoc_STRVAR(__pyx_doc_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reassign, "EBM_Reassignment_Engine.reassign(self, X, labels, dek_selector)\n\nExecute energy-based noise reassignment.\n\nMain algorithm: builds candidate sets via k-NN, estimates noise energy,\nthen iteratively evaluates each candidate against geometric + topological\nenergy. Uses sorted evaluation and early stopping to minimize expensive\nTDA calls.\n\nNote: Uses def (not cpdef) because list comprehensions and lambdas create\nclosures which Cython doesn't support in cpdef. However, extensive type\ndeclarations on internal variables still provide significant performance\nbenefits compared to pure Python.\n\nParameters\n----------\nX : ndarray, shape (n_samples, n_features)\n    Data points.\nlabels : ndarray, shape (n_samples,)\n    Initial HDBSCAN labels (-1 = noise).\ndek_selector : Density_Equalization_K, optional\n    Adaptive k selector. If None, uses K_MIN.\n\nReturns\n-------\ntuple : (refined_labels, n_rescued, cluster_stats)\n    refined_labels : ndarray\n        Updated labels with noise points reassigned.\n    n_rescued : int\n        Number of points successfully reassigned.\n    cluster_stats : dict\n        Per-cluster statistics: {cluster_id: {iterations, rescued, tda_calls, ...}}");
 static PyMethodDef __pyx_mdef_6entrap_10ebm_engine_23EBM_Reassignment_Engine_13reassign = {"reassign", (PyCFunction)(void(*)(void))(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_6entrap_10ebm_engine_23EBM_Reassignment_Engine_13reassign, __Pyx_METH_FASTCALL|METH_KEYWORDS, __pyx_doc_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reassign};
 static PyObject *__pyx_pw_6entrap_10ebm_engine_23EBM_Reassignment_Engine_13reassign(PyObject *__pyx_v_self, 
 #if CYTHON_METH_FASTCALL
@@ -8586,38 +8834,38 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   {
     PyObject ** const __pyx_pyargnames[] = {&__pyx_mstate_global->__pyx_n_u_X,&__pyx_mstate_global->__pyx_n_u_labels,&__pyx_mstate_global->__pyx_n_u_dek_selector,0};
     const Py_ssize_t __pyx_kwds_len = (__pyx_kwds) ? __Pyx_NumKwargs_FASTCALL(__pyx_kwds) : 0;
-    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 362, __pyx_L3_error)
+    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 389, __pyx_L3_error)
     if (__pyx_kwds_len > 0) {
       switch (__pyx_nargs) {
         case  3:
         values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 362, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 389, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  2:
         values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 362, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 389, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  1:
         values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 362, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 389, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  0: break;
         default: goto __pyx_L5_argtuple_error;
       }
       const Py_ssize_t kwd_pos_args = __pyx_nargs;
-      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "reassign", 0) < 0) __PYX_ERR(0, 362, __pyx_L3_error)
+      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "reassign", 0) < 0) __PYX_ERR(0, 389, __pyx_L3_error)
       for (Py_ssize_t i = __pyx_nargs; i < 3; i++) {
-        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("reassign", 1, 3, 3, i); __PYX_ERR(0, 362, __pyx_L3_error) }
+        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("reassign", 1, 3, 3, i); __PYX_ERR(0, 389, __pyx_L3_error) }
       }
     } else if (unlikely(__pyx_nargs != 3)) {
       goto __pyx_L5_argtuple_error;
     } else {
       values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 362, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 389, __pyx_L3_error)
       values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 362, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 389, __pyx_L3_error)
       values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 362, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 389, __pyx_L3_error)
     }
     __pyx_v_X = values[0];
     __pyx_v_labels = values[1];
@@ -8625,7 +8873,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("reassign", 1, 3, 3, __pyx_nargs); __PYX_ERR(0, 362, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("reassign", 1, 3, 3, __pyx_nargs); __PYX_ERR(0, 389, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -8646,7 +8894,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   return __pyx_r;
 }
 
-/* "entrap/ebm_engine.pyx":423
+/* "entrap/ebm_engine.pyx":465
  *         cluster_sizes = [(int(cid), int(np.sum(refined_labels == cid)))
  *                         for cid in unique_labels]
  *         cluster_sizes.sort(key=lambda x: x[1], reverse=True)             # <<<<<<<<<<<<<<
@@ -8693,32 +8941,32 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   {
     PyObject ** const __pyx_pyargnames[] = {&__pyx_mstate_global->__pyx_n_u_x,0};
     const Py_ssize_t __pyx_kwds_len = (__pyx_kwds) ? __Pyx_NumKwargs_FASTCALL(__pyx_kwds) : 0;
-    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 423, __pyx_L3_error)
+    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 465, __pyx_L3_error)
     if (__pyx_kwds_len > 0) {
       switch (__pyx_nargs) {
         case  1:
         values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 423, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 465, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  0: break;
         default: goto __pyx_L5_argtuple_error;
       }
       const Py_ssize_t kwd_pos_args = __pyx_nargs;
-      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "lambda", 0) < 0) __PYX_ERR(0, 423, __pyx_L3_error)
+      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "lambda", 0) < 0) __PYX_ERR(0, 465, __pyx_L3_error)
       for (Py_ssize_t i = __pyx_nargs; i < 1; i++) {
-        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("lambda", 1, 1, 1, i); __PYX_ERR(0, 423, __pyx_L3_error) }
+        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("lambda", 1, 1, 1, i); __PYX_ERR(0, 465, __pyx_L3_error) }
       }
     } else if (unlikely(__pyx_nargs != 1)) {
       goto __pyx_L5_argtuple_error;
     } else {
       values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 423, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 465, __pyx_L3_error)
     }
     __pyx_v_x = values[0];
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("lambda", 1, 1, 1, __pyx_nargs); __PYX_ERR(0, 423, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("lambda", 1, 1, 1, __pyx_nargs); __PYX_ERR(0, 465, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -8748,7 +8996,7 @@ static PyObject *__pyx_lambda_funcdef_lambda(CYTHON_UNUSED PyObject *__pyx_self,
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("lambda", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_x, 1, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 423, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_x, 1, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 465, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -8765,10 +9013,10 @@ static PyObject *__pyx_lambda_funcdef_lambda(CYTHON_UNUSED PyObject *__pyx_self,
   return __pyx_r;
 }
 
-/* "entrap/ebm_engine.pyx":532
- * 
- *                 # Sort by ascending E_G (lambda is OK here since it's def not cpdef)
- *                 candidate_energies.sort(key=lambda item: item[1])             # <<<<<<<<<<<<<<
+/* "entrap/ebm_engine.pyx":577
+ *                 # Sort by ascending E_G using sorted() - cpdef compatible
+ *                 # (no lambda allowed, but sorted() with key param works fine in cpdef)
+ *                 candidate_energies = sorted(candidate_energies, key=lambda t: t[1])             # <<<<<<<<<<<<<<
  * 
  *                 # Early stopping counter
 */
@@ -8789,7 +9037,7 @@ PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 PyObject *__pyx_args, PyObject *__pyx_kwds
 #endif
 ) {
-  PyObject *__pyx_v_item = 0;
+  PyObject *__pyx_v_t = 0;
   #if !CYTHON_METH_FASTCALL
   CYTHON_UNUSED Py_ssize_t __pyx_nargs;
   #endif
@@ -8810,34 +9058,34 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   #endif
   __pyx_kwvalues = __Pyx_KwValues_FASTCALL(__pyx_args, __pyx_nargs);
   {
-    PyObject ** const __pyx_pyargnames[] = {&__pyx_mstate_global->__pyx_n_u_item,0};
+    PyObject ** const __pyx_pyargnames[] = {&__pyx_mstate_global->__pyx_n_u_t,0};
     const Py_ssize_t __pyx_kwds_len = (__pyx_kwds) ? __Pyx_NumKwargs_FASTCALL(__pyx_kwds) : 0;
-    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 532, __pyx_L3_error)
+    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 577, __pyx_L3_error)
     if (__pyx_kwds_len > 0) {
       switch (__pyx_nargs) {
         case  1:
         values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 532, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 577, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  0: break;
         default: goto __pyx_L5_argtuple_error;
       }
       const Py_ssize_t kwd_pos_args = __pyx_nargs;
-      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "lambda1", 0) < 0) __PYX_ERR(0, 532, __pyx_L3_error)
+      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "lambda1", 0) < 0) __PYX_ERR(0, 577, __pyx_L3_error)
       for (Py_ssize_t i = __pyx_nargs; i < 1; i++) {
-        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("lambda1", 1, 1, 1, i); __PYX_ERR(0, 532, __pyx_L3_error) }
+        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("lambda1", 1, 1, 1, i); __PYX_ERR(0, 577, __pyx_L3_error) }
       }
     } else if (unlikely(__pyx_nargs != 1)) {
       goto __pyx_L5_argtuple_error;
     } else {
       values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 532, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 577, __pyx_L3_error)
     }
-    __pyx_v_item = values[0];
+    __pyx_v_t = values[0];
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("lambda1", 1, 1, 1, __pyx_nargs); __PYX_ERR(0, 532, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("lambda1", 1, 1, 1, __pyx_nargs); __PYX_ERR(0, 577, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -8848,7 +9096,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_lambda_funcdef_lambda1(__pyx_self, __pyx_v_item);
+  __pyx_r = __pyx_lambda_funcdef_lambda1(__pyx_self, __pyx_v_t);
 
   /* function exit code */
   for (Py_ssize_t __pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
@@ -8858,7 +9106,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   return __pyx_r;
 }
 
-static PyObject *__pyx_lambda_funcdef_lambda1(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_item) {
+static PyObject *__pyx_lambda_funcdef_lambda1(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_t) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -8867,7 +9115,7 @@ static PyObject *__pyx_lambda_funcdef_lambda1(CYTHON_UNUSED PyObject *__pyx_self
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("lambda1", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_item, 1, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 532, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_t, 1, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 577, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -8884,7 +9132,7 @@ static PyObject *__pyx_lambda_funcdef_lambda1(CYTHON_UNUSED PyObject *__pyx_self
   return __pyx_r;
 }
 
-/* "entrap/ebm_engine.pyx":362
+/* "entrap/ebm_engine.pyx":389
  *             return E_noise
  * 
  *     def reassign(self, X, labels, dek_selector):             # <<<<<<<<<<<<<<
@@ -8912,41 +9160,44 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
   double __pyx_v_lambda_G_t;
   int __pyx_v_cluster_size;
   int __pyx_v_len_candidates_list;
-  PyObject *__pyx_v_refined_labels = NULL;
-  PyObject *__pyx_v_noise_mask = NULL;
-  PyObject *__pyx_v_unique_labels = NULL;
-  PyObject *__pyx_v_cluster_sizes = NULL;
-  PyObject *__pyx_v_sorted_cluster_ids = NULL;
-  PyObject *__pyx_v_cluster_candidate_sets = NULL;
-  PyObject *__pyx_v_all_claimed_candidates = NULL;
-  PyObject *__pyx_v_noise_indices = NULL;
-  PyObject *__pyx_v_noise_points = NULL;
-  PyObject *__pyx_v_noise_tree = NULL;
+  PyArrayObject *__pyx_v_refined_labels = 0;
+  PyArrayObject *__pyx_v_noise_mask = 0;
+  PyArrayObject *__pyx_v_unique_labels = 0;
+  PyObject *__pyx_v_cluster_sizes = 0;
+  PyObject *__pyx_v_sorted_cluster_ids = 0;
+  PyObject *__pyx_v_cluster_candidate_sets = 0;
+  PyObject *__pyx_v_cluster_states = 0;
+  PyObject *__pyx_v_all_claimed_candidates = 0;
+  PyObject *__pyx_v_candidates = 0;
+  PyArrayObject *__pyx_v_noise_indices = 0;
+  PyArrayObject *__pyx_v_noise_points = 0;
+  PyObject *__pyx_v_noise_tree = 0;
+  PyArrayObject *__pyx_v_cluster_points = 0;
+  PyArrayObject *__pyx_v_true_noise_indices_arr = 0;
+  PyArrayObject *__pyx_v_distances = 0;
+  PyArrayObject *__pyx_v_indices = 0;
+  PyObject *__pyx_v_candidate_energies = 0;
+  PyObject *__pyx_v_candidates_list = 0;
   PyObject *__pyx_v_cluster_mask = NULL;
-  PyObject *__pyx_v_cluster_points = NULL;
-  PyObject *__pyx_v_distances = NULL;
-  PyObject *__pyx_v_indices = NULL;
   PyObject *__pyx_v_candidate_local_indices = NULL;
   PyObject *__pyx_v_candidate_global_indices = NULL;
   PyObject *__pyx_v_true_noise_indices = NULL;
-  PyObject *__pyx_v_true_noise_indices_arr = NULL;
-  PyObject *__pyx_v_cluster_states = NULL;
   double __pyx_v_T_norm;
   PyObject *__pyx_v_state = NULL;
-  PyObject *__pyx_v_candidates = NULL;
-  PyObject *__pyx_v_candidates_list = NULL;
   PyObject *__pyx_v_mu = NULL;
   PyObject *__pyx_v_Sigma_reg = NULL;
   PyObject *__pyx_v_Sigma_inv = NULL;
   PyObject *__pyx_v_log_det_Sigma = NULL;
-  PyObject *__pyx_v_candidate_energies = NULL;
   PyObject *__pyx_v_x = NULL;
   PyObject *__pyx_v_cluster_mask_current = NULL;
   PyObject *__pyx_v_cluster_points_current = NULL;
+  PyObject *__pyx_v_cluster_indices_current = NULL;
+  PyObject *__pyx_v_tda_meta = NULL;
   PyObject *__pyx_v_other_cid = NULL;
   PyObject *__pyx_v_cluster_mask_updated = NULL;
   PyObject *__pyx_v_cluster_points_updated = NULL;
   PyObject *__pyx_v_cluster_stats = NULL;
+  PyObject *__pyx_v_cache_stats = NULL;
   int __pyx_7genexpr__pyx_v_cid;
   int __pyx_8genexpr1__pyx_v_cid;
   CYTHON_UNUSED PyObject *__pyx_8genexpr1__pyx_v__ = NULL;
@@ -8971,19 +9222,20 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
   Py_ssize_t __pyx_t_16;
   Py_ssize_t __pyx_t_17;
   double __pyx_t_18;
-  PyObject *__pyx_t_19 = NULL;
+  int __pyx_t_19;
   PyObject *__pyx_t_20 = NULL;
   PyObject *__pyx_t_21 = NULL;
   PyObject *__pyx_t_22 = NULL;
-  double __pyx_t_23;
-  int __pyx_t_24;
-  PyObject *__pyx_t_25 = NULL;
+  PyObject *__pyx_t_23 = NULL;
+  double __pyx_t_24;
+  int __pyx_t_25;
+  PyObject *__pyx_t_26 = NULL;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("reassign", 0);
 
-  /* "entrap/ebm_engine.pyx":393
+  /* "entrap/ebm_engine.pyx":423
  *         """
  * 
  *         cdef int iteration = 0             # <<<<<<<<<<<<<<
@@ -8992,7 +9244,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
 */
   __pyx_v_iteration = 0;
 
-  /* "entrap/ebm_engine.pyx":394
+  /* "entrap/ebm_engine.pyx":424
  * 
  *         cdef int iteration = 0
  *         cdef int total_rescued = 0             # <<<<<<<<<<<<<<
@@ -9001,7 +9253,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
 */
   __pyx_v_total_rescued = 0;
 
-  /* "entrap/ebm_engine.pyx":398
+  /* "entrap/ebm_engine.pyx":428
  *         cdef int candidate_idx
  *         cdef int k_adaptive, k_query, d
  *         cdef bint recruited_this_round = False             # <<<<<<<<<<<<<<
@@ -9010,7 +9262,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
 */
   __pyx_v_recruited_this_round = 0;
 
-  /* "entrap/ebm_engine.pyx":401
+  /* "entrap/ebm_engine.pyx":431
  *         cdef bint noise_mask_any
  *         cdef int consecutive_rejects
  *         cdef int early_stop_threshold = 2             # <<<<<<<<<<<<<<
@@ -9019,8 +9271,8 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
 */
   __pyx_v_early_stop_threshold = 2;
 
-  /* "entrap/ebm_engine.pyx":410
- *         cdef int len_candidates_list
+  /* "entrap/ebm_engine.pyx":452
+ *         cdef list candidate_energies, candidates_list
  * 
  *         refined_labels = labels.copy()             # <<<<<<<<<<<<<<
  *         noise_mask = (refined_labels == -1)
@@ -9033,47 +9285,48 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
     PyObject *__pyx_callargs[2] = {__pyx_t_2, NULL};
     __pyx_t_1 = __Pyx_PyObject_FastCallMethod(__pyx_mstate_global->__pyx_n_u_copy, __pyx_callargs+__pyx_t_3, (1-__pyx_t_3) | (1*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
     __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
-    if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 410, __pyx_L1_error)
+    if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 452, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
   }
-  __pyx_v_refined_labels = __pyx_t_1;
+  if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 452, __pyx_L1_error)
+  __pyx_v_refined_labels = ((PyArrayObject *)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "entrap/ebm_engine.pyx":411
+  /* "entrap/ebm_engine.pyx":453
  * 
  *         refined_labels = labels.copy()
  *         noise_mask = (refined_labels == -1)             # <<<<<<<<<<<<<<
  * 
  *         if not noise_mask.any():
 */
-  __pyx_t_1 = __Pyx_PyLong_EqObjC(__pyx_v_refined_labels, __pyx_mstate_global->__pyx_int_neg_1, -1L, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 411, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_v_noise_mask = __pyx_t_1;
+  __pyx_t_1 = PyObject_RichCompare(((PyObject *)__pyx_v_refined_labels), __pyx_mstate_global->__pyx_int_neg_1, Py_EQ); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 453, __pyx_L1_error)
+  if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 453, __pyx_L1_error)
+  __pyx_v_noise_mask = ((PyArrayObject *)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "entrap/ebm_engine.pyx":413
+  /* "entrap/ebm_engine.pyx":455
  *         noise_mask = (refined_labels == -1)
  * 
  *         if not noise_mask.any():             # <<<<<<<<<<<<<<
  *             return refined_labels, 0, {}
  * 
 */
-  __pyx_t_2 = __pyx_v_noise_mask;
+  __pyx_t_2 = ((PyObject *)__pyx_v_noise_mask);
   __Pyx_INCREF(__pyx_t_2);
   __pyx_t_3 = 0;
   {
     PyObject *__pyx_callargs[2] = {__pyx_t_2, NULL};
     __pyx_t_1 = __Pyx_PyObject_FastCallMethod(__pyx_mstate_global->__pyx_n_u_any, __pyx_callargs+__pyx_t_3, (1-__pyx_t_3) | (1*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
     __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
-    if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 413, __pyx_L1_error)
+    if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 455, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
   }
-  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely((__pyx_t_4 < 0))) __PYX_ERR(0, 413, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely((__pyx_t_4 < 0))) __PYX_ERR(0, 455, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_t_5 = (!__pyx_t_4);
   if (__pyx_t_5) {
 
-    /* "entrap/ebm_engine.pyx":414
+    /* "entrap/ebm_engine.pyx":456
  * 
  *         if not noise_mask.any():
  *             return refined_labels, 0, {}             # <<<<<<<<<<<<<<
@@ -9081,24 +9334,24 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
  *         unique_labels = np.unique(refined_labels[refined_labels >= 0])
 */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_1 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 414, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 456, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_2 = PyTuple_New(3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 414, __pyx_L1_error)
+    __pyx_t_2 = PyTuple_New(3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 456, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __Pyx_INCREF(__pyx_v_refined_labels);
-    __Pyx_GIVEREF(__pyx_v_refined_labels);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_v_refined_labels) != (0)) __PYX_ERR(0, 414, __pyx_L1_error);
+    __Pyx_INCREF((PyObject *)__pyx_v_refined_labels);
+    __Pyx_GIVEREF((PyObject *)__pyx_v_refined_labels);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_2, 0, ((PyObject *)__pyx_v_refined_labels)) != (0)) __PYX_ERR(0, 456, __pyx_L1_error);
     __Pyx_INCREF(__pyx_mstate_global->__pyx_int_0);
     __Pyx_GIVEREF(__pyx_mstate_global->__pyx_int_0);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_2, 1, __pyx_mstate_global->__pyx_int_0) != (0)) __PYX_ERR(0, 414, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_2, 1, __pyx_mstate_global->__pyx_int_0) != (0)) __PYX_ERR(0, 456, __pyx_L1_error);
     __Pyx_GIVEREF(__pyx_t_1);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_2, 2, __pyx_t_1) != (0)) __PYX_ERR(0, 414, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_2, 2, __pyx_t_1) != (0)) __PYX_ERR(0, 456, __pyx_L1_error);
     __pyx_t_1 = 0;
     __pyx_r = __pyx_t_2;
     __pyx_t_2 = 0;
     goto __pyx_L0;
 
-    /* "entrap/ebm_engine.pyx":413
+    /* "entrap/ebm_engine.pyx":455
  *         noise_mask = (refined_labels == -1)
  * 
  *         if not noise_mask.any():             # <<<<<<<<<<<<<<
@@ -9107,7 +9360,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
 */
   }
 
-  /* "entrap/ebm_engine.pyx":416
+  /* "entrap/ebm_engine.pyx":458
  *             return refined_labels, 0, {}
  * 
  *         unique_labels = np.unique(refined_labels[refined_labels >= 0])             # <<<<<<<<<<<<<<
@@ -9115,13 +9368,13 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
  *             return refined_labels, 0, {}
 */
   __pyx_t_1 = NULL;
-  __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 416, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 458, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
-  __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_mstate_global->__pyx_n_u_unique); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 416, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_mstate_global->__pyx_n_u_unique); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 458, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-  __pyx_t_6 = PyObject_RichCompare(__pyx_v_refined_labels, __pyx_mstate_global->__pyx_int_0, Py_GE); __Pyx_XGOTREF(__pyx_t_6); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 416, __pyx_L1_error)
-  __pyx_t_8 = __Pyx_PyObject_GetItem(__pyx_v_refined_labels, __pyx_t_6); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 416, __pyx_L1_error)
+  __pyx_t_6 = PyObject_RichCompare(((PyObject *)__pyx_v_refined_labels), __pyx_mstate_global->__pyx_int_0, Py_GE); __Pyx_XGOTREF(__pyx_t_6); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 458, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_PyObject_GetItem(((PyObject *)__pyx_v_refined_labels), __pyx_t_6); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 458, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_8);
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   __pyx_t_3 = 1;
@@ -9142,24 +9395,25 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
     __Pyx_XDECREF(__pyx_t_1); __pyx_t_1 = 0;
     __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-    if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 416, __pyx_L1_error)
+    if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 458, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
   }
-  __pyx_v_unique_labels = __pyx_t_2;
+  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 458, __pyx_L1_error)
+  __pyx_v_unique_labels = ((PyArrayObject *)__pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "entrap/ebm_engine.pyx":417
+  /* "entrap/ebm_engine.pyx":459
  * 
  *         unique_labels = np.unique(refined_labels[refined_labels >= 0])
  *         if len(unique_labels) == 0:             # <<<<<<<<<<<<<<
  *             return refined_labels, 0, {}
  * 
 */
-  __pyx_t_9 = PyObject_Length(__pyx_v_unique_labels); if (unlikely(__pyx_t_9 == ((Py_ssize_t)-1))) __PYX_ERR(0, 417, __pyx_L1_error)
+  __pyx_t_9 = PyObject_Length(((PyObject *)__pyx_v_unique_labels)); if (unlikely(__pyx_t_9 == ((Py_ssize_t)-1))) __PYX_ERR(0, 459, __pyx_L1_error)
   __pyx_t_5 = (__pyx_t_9 == 0);
   if (__pyx_t_5) {
 
-    /* "entrap/ebm_engine.pyx":418
+    /* "entrap/ebm_engine.pyx":460
  *         unique_labels = np.unique(refined_labels[refined_labels >= 0])
  *         if len(unique_labels) == 0:
  *             return refined_labels, 0, {}             # <<<<<<<<<<<<<<
@@ -9167,24 +9421,24 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
  *         # Sort clusters by size descending
 */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_2 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 418, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 460, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_7 = PyTuple_New(3); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 418, __pyx_L1_error)
+    __pyx_t_7 = PyTuple_New(3); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 460, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
-    __Pyx_INCREF(__pyx_v_refined_labels);
-    __Pyx_GIVEREF(__pyx_v_refined_labels);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_7, 0, __pyx_v_refined_labels) != (0)) __PYX_ERR(0, 418, __pyx_L1_error);
+    __Pyx_INCREF((PyObject *)__pyx_v_refined_labels);
+    __Pyx_GIVEREF((PyObject *)__pyx_v_refined_labels);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_7, 0, ((PyObject *)__pyx_v_refined_labels)) != (0)) __PYX_ERR(0, 460, __pyx_L1_error);
     __Pyx_INCREF(__pyx_mstate_global->__pyx_int_0);
     __Pyx_GIVEREF(__pyx_mstate_global->__pyx_int_0);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_7, 1, __pyx_mstate_global->__pyx_int_0) != (0)) __PYX_ERR(0, 418, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_7, 1, __pyx_mstate_global->__pyx_int_0) != (0)) __PYX_ERR(0, 460, __pyx_L1_error);
     __Pyx_GIVEREF(__pyx_t_2);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_7, 2, __pyx_t_2) != (0)) __PYX_ERR(0, 418, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_7, 2, __pyx_t_2) != (0)) __PYX_ERR(0, 460, __pyx_L1_error);
     __pyx_t_2 = 0;
     __pyx_r = __pyx_t_7;
     __pyx_t_7 = 0;
     goto __pyx_L0;
 
-    /* "entrap/ebm_engine.pyx":417
+    /* "entrap/ebm_engine.pyx":459
  * 
  *         unique_labels = np.unique(refined_labels[refined_labels >= 0])
  *         if len(unique_labels) == 0:             # <<<<<<<<<<<<<<
@@ -9193,7 +9447,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
 */
   }
 
-  /* "entrap/ebm_engine.pyx":421
+  /* "entrap/ebm_engine.pyx":463
  * 
  *         # Sort clusters by size descending
  *         cluster_sizes = [(int(cid), int(np.sum(refined_labels == cid)))             # <<<<<<<<<<<<<<
@@ -9201,24 +9455,24 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
  *         cluster_sizes.sort(key=lambda x: x[1], reverse=True)
 */
   { /* enter inner scope */
-    __pyx_t_7 = PyList_New(0); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 421, __pyx_L1_error)
+    __pyx_t_7 = PyList_New(0); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 463, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
 
-    /* "entrap/ebm_engine.pyx":422
+    /* "entrap/ebm_engine.pyx":464
  *         # Sort clusters by size descending
  *         cluster_sizes = [(int(cid), int(np.sum(refined_labels == cid)))
  *                         for cid in unique_labels]             # <<<<<<<<<<<<<<
  *         cluster_sizes.sort(key=lambda x: x[1], reverse=True)
  *         sorted_cluster_ids = [cid for cid, _ in cluster_sizes]
 */
-    if (likely(PyList_CheckExact(__pyx_v_unique_labels)) || PyTuple_CheckExact(__pyx_v_unique_labels)) {
-      __pyx_t_2 = __pyx_v_unique_labels; __Pyx_INCREF(__pyx_t_2);
+    if (likely(PyList_CheckExact(((PyObject *)__pyx_v_unique_labels))) || PyTuple_CheckExact(((PyObject *)__pyx_v_unique_labels))) {
+      __pyx_t_2 = ((PyObject *)__pyx_v_unique_labels); __Pyx_INCREF(__pyx_t_2);
       __pyx_t_9 = 0;
       __pyx_t_10 = NULL;
     } else {
-      __pyx_t_9 = -1; __pyx_t_2 = PyObject_GetIter(__pyx_v_unique_labels); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 422, __pyx_L1_error)
+      __pyx_t_9 = -1; __pyx_t_2 = PyObject_GetIter(((PyObject *)__pyx_v_unique_labels)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 464, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
-      __pyx_t_10 = (CYTHON_COMPILING_IN_LIMITED_API) ? PyIter_Next : __Pyx_PyObject_GetIterNextFunc(__pyx_t_2); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 422, __pyx_L1_error)
+      __pyx_t_10 = (CYTHON_COMPILING_IN_LIMITED_API) ? PyIter_Next : __Pyx_PyObject_GetIterNextFunc(__pyx_t_2); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 464, __pyx_L1_error)
     }
     for (;;) {
       if (likely(!__pyx_t_10)) {
@@ -9226,7 +9480,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
           {
             Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_2);
             #if !CYTHON_ASSUME_SAFE_SIZE
-            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 422, __pyx_L1_error)
+            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 464, __pyx_L1_error)
             #endif
             if (__pyx_t_9 >= __pyx_temp) break;
           }
@@ -9236,7 +9490,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
           {
             Py_ssize_t __pyx_temp = __Pyx_PyTuple_GET_SIZE(__pyx_t_2);
             #if !CYTHON_ASSUME_SAFE_SIZE
-            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 422, __pyx_L1_error)
+            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 464, __pyx_L1_error)
             #endif
             if (__pyx_t_9 >= __pyx_temp) break;
           }
@@ -9247,24 +9501,24 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
           #endif
           ++__pyx_t_9;
         }
-        if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 422, __pyx_L1_error)
+        if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 464, __pyx_L1_error)
       } else {
         __pyx_t_8 = __pyx_t_10(__pyx_t_2);
         if (unlikely(!__pyx_t_8)) {
           PyObject* exc_type = PyErr_Occurred();
           if (exc_type) {
-            if (unlikely(!__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) __PYX_ERR(0, 422, __pyx_L1_error)
+            if (unlikely(!__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) __PYX_ERR(0, 464, __pyx_L1_error)
             PyErr_Clear();
           }
           break;
         }
       }
       __Pyx_GOTREF(__pyx_t_8);
-      __pyx_t_11 = __Pyx_PyLong_As_int(__pyx_t_8); if (unlikely((__pyx_t_11 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 422, __pyx_L1_error)
+      __pyx_t_11 = __Pyx_PyLong_As_int(__pyx_t_8); if (unlikely((__pyx_t_11 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 464, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
       __pyx_7genexpr__pyx_v_cid = __pyx_t_11;
 
-      /* "entrap/ebm_engine.pyx":421
+      /* "entrap/ebm_engine.pyx":463
  * 
  *         # Sort clusters by size descending
  *         cluster_sizes = [(int(cid), int(np.sum(refined_labels == cid)))             # <<<<<<<<<<<<<<
@@ -9274,7 +9528,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
       __pyx_t_1 = NULL;
       __Pyx_INCREF((PyObject *)(&PyLong_Type));
       __pyx_t_6 = ((PyObject *)(&PyLong_Type)); 
-      __pyx_t_12 = __Pyx_PyLong_From_int(__pyx_7genexpr__pyx_v_cid); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 421, __pyx_L1_error)
+      __pyx_t_12 = __Pyx_PyLong_From_int(__pyx_7genexpr__pyx_v_cid); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 463, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_12);
       __pyx_t_3 = 1;
       {
@@ -9283,18 +9537,18 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
         __Pyx_XDECREF(__pyx_t_1); __pyx_t_1 = 0;
         __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
         __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-        if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 421, __pyx_L1_error)
+        if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 463, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_8);
       }
       __pyx_t_12 = NULL;
-      __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 421, __pyx_L1_error)
+      __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 463, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
-      __pyx_t_13 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_mstate_global->__pyx_n_u_sum); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 421, __pyx_L1_error)
+      __pyx_t_13 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_mstate_global->__pyx_n_u_sum); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 463, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_13);
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-      __pyx_t_1 = __Pyx_PyLong_From_int(__pyx_7genexpr__pyx_v_cid); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 421, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyLong_From_int(__pyx_7genexpr__pyx_v_cid); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 463, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
-      __pyx_t_14 = PyObject_RichCompare(__pyx_v_refined_labels, __pyx_t_1, Py_EQ); __Pyx_XGOTREF(__pyx_t_14); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 421, __pyx_L1_error)
+      __pyx_t_14 = PyObject_RichCompare(((PyObject *)__pyx_v_refined_labels), __pyx_t_1, Py_EQ); __Pyx_XGOTREF(__pyx_t_14); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 463, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
       __pyx_t_3 = 1;
       #if CYTHON_UNPACK_METHODS
@@ -9314,24 +9568,24 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
         __Pyx_XDECREF(__pyx_t_12); __pyx_t_12 = 0;
         __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
         __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
-        if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 421, __pyx_L1_error)
+        if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 463, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
       }
-      __pyx_t_13 = __Pyx_PyNumber_Int(__pyx_t_6); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 421, __pyx_L1_error)
+      __pyx_t_13 = __Pyx_PyNumber_Int(__pyx_t_6); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 463, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_13);
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-      __pyx_t_6 = PyTuple_New(2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 421, __pyx_L1_error)
+      __pyx_t_6 = PyTuple_New(2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 463, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
       __Pyx_GIVEREF(__pyx_t_8);
-      if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_8) != (0)) __PYX_ERR(0, 421, __pyx_L1_error);
+      if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_8) != (0)) __PYX_ERR(0, 463, __pyx_L1_error);
       __Pyx_GIVEREF(__pyx_t_13);
-      if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 1, __pyx_t_13) != (0)) __PYX_ERR(0, 421, __pyx_L1_error);
+      if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 1, __pyx_t_13) != (0)) __PYX_ERR(0, 463, __pyx_L1_error);
       __pyx_t_8 = 0;
       __pyx_t_13 = 0;
-      if (unlikely(__Pyx_ListComp_Append(__pyx_t_7, (PyObject*)__pyx_t_6))) __PYX_ERR(0, 421, __pyx_L1_error)
+      if (unlikely(__Pyx_ListComp_Append(__pyx_t_7, (PyObject*)__pyx_t_6))) __PYX_ERR(0, 463, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
-      /* "entrap/ebm_engine.pyx":422
+      /* "entrap/ebm_engine.pyx":464
  *         # Sort clusters by size descending
  *         cluster_sizes = [(int(cid), int(np.sum(refined_labels == cid)))
  *                         for cid in unique_labels]             # <<<<<<<<<<<<<<
@@ -9344,7 +9598,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
   __pyx_v_cluster_sizes = ((PyObject*)__pyx_t_7);
   __pyx_t_7 = 0;
 
-  /* "entrap/ebm_engine.pyx":423
+  /* "entrap/ebm_engine.pyx":465
  *         cluster_sizes = [(int(cid), int(np.sum(refined_labels == cid)))
  *                         for cid in unique_labels]
  *         cluster_sizes.sort(key=lambda x: x[1], reverse=True)             # <<<<<<<<<<<<<<
@@ -9353,25 +9607,25 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
 */
   __pyx_t_2 = __pyx_v_cluster_sizes;
   __Pyx_INCREF(__pyx_t_2);
-  __pyx_t_6 = __Pyx_CyFunction_New(&__pyx_mdef_6entrap_10ebm_engine_23EBM_Reassignment_Engine_8reassign_lambda, 0, __pyx_mstate_global->__pyx_n_u_reassign_locals_lambda, NULL, __pyx_mstate_global->__pyx_n_u_entrap_ebm_engine, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[0])); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 423, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_CyFunction_New(&__pyx_mdef_6entrap_10ebm_engine_23EBM_Reassignment_Engine_8reassign_lambda, 0, __pyx_mstate_global->__pyx_n_u_reassign_locals_lambda, NULL, __pyx_mstate_global->__pyx_n_u_entrap_ebm_engine, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[0])); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 465, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
   __pyx_t_3 = 0;
   {
     PyObject *__pyx_callargs[2 + ((CYTHON_VECTORCALL) ? 2 : 0)] = {__pyx_t_2, NULL};
-    __pyx_t_13 = __Pyx_MakeVectorcallBuilderKwds(2); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 423, __pyx_L1_error)
+    __pyx_t_13 = __Pyx_MakeVectorcallBuilderKwds(2); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 465, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_13);
-    if (__Pyx_VectorcallBuilder_AddArg(__pyx_mstate_global->__pyx_n_u_key, __pyx_t_6, __pyx_t_13, __pyx_callargs+1, 0) < 0) __PYX_ERR(0, 423, __pyx_L1_error)
-    if (__Pyx_VectorcallBuilder_AddArg(__pyx_mstate_global->__pyx_n_u_reverse, Py_True, __pyx_t_13, __pyx_callargs+1, 1) < 0) __PYX_ERR(0, 423, __pyx_L1_error)
+    if (__Pyx_VectorcallBuilder_AddArg(__pyx_mstate_global->__pyx_n_u_key, __pyx_t_6, __pyx_t_13, __pyx_callargs+1, 0) < 0) __PYX_ERR(0, 465, __pyx_L1_error)
+    if (__Pyx_VectorcallBuilder_AddArg(__pyx_mstate_global->__pyx_n_u_reverse, Py_True, __pyx_t_13, __pyx_callargs+1, 1) < 0) __PYX_ERR(0, 465, __pyx_L1_error)
     __pyx_t_7 = __Pyx_Object_VectorcallMethod_CallFromBuilder(__pyx_mstate_global->__pyx_n_u_sort, __pyx_callargs+__pyx_t_3, (1-__pyx_t_3) | (1*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET), __pyx_t_13);
     __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
-    if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 423, __pyx_L1_error)
+    if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 465, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
   }
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
-  /* "entrap/ebm_engine.pyx":424
+  /* "entrap/ebm_engine.pyx":466
  *                         for cid in unique_labels]
  *         cluster_sizes.sort(key=lambda x: x[1], reverse=True)
  *         sorted_cluster_ids = [cid for cid, _ in cluster_sizes]             # <<<<<<<<<<<<<<
@@ -9379,7 +9633,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
  *         # Build candidate sets via k-NN
 */
   { /* enter inner scope */
-    __pyx_t_7 = PyList_New(0); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 424, __pyx_L10_error)
+    __pyx_t_7 = PyList_New(0); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 466, __pyx_L10_error)
     __Pyx_GOTREF(__pyx_t_7);
     __pyx_t_13 = __pyx_v_cluster_sizes; __Pyx_INCREF(__pyx_t_13);
     __pyx_t_9 = 0;
@@ -9387,13 +9641,13 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
       {
         Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_13);
         #if !CYTHON_ASSUME_SAFE_SIZE
-        if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 424, __pyx_L10_error)
+        if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 466, __pyx_L10_error)
         #endif
         if (__pyx_t_9 >= __pyx_temp) break;
       }
       __pyx_t_6 = __Pyx_PyList_GetItemRef(__pyx_t_13, __pyx_t_9);
       ++__pyx_t_9;
-      if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 424, __pyx_L10_error)
+      if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 466, __pyx_L10_error)
       __Pyx_GOTREF(__pyx_t_6);
       if ((likely(PyTuple_CheckExact(__pyx_t_6))) || (PyList_CheckExact(__pyx_t_6))) {
         PyObject* sequence = __pyx_t_6;
@@ -9401,7 +9655,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
         if (unlikely(size != 2)) {
           if (size > 2) __Pyx_RaiseTooManyValuesError(2);
           else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
-          __PYX_ERR(0, 424, __pyx_L10_error)
+          __PYX_ERR(0, 466, __pyx_L10_error)
         }
         #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
         if (likely(PyTuple_CheckExact(sequence))) {
@@ -9411,22 +9665,22 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
           __Pyx_INCREF(__pyx_t_8);
         } else {
           __pyx_t_2 = __Pyx_PyList_GetItemRef(sequence, 0);
-          if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 424, __pyx_L10_error)
+          if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 466, __pyx_L10_error)
           __Pyx_XGOTREF(__pyx_t_2);
           __pyx_t_8 = __Pyx_PyList_GetItemRef(sequence, 1);
-          if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 424, __pyx_L10_error)
+          if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 466, __pyx_L10_error)
           __Pyx_XGOTREF(__pyx_t_8);
         }
         #else
-        __pyx_t_2 = __Pyx_PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 424, __pyx_L10_error)
+        __pyx_t_2 = __Pyx_PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 466, __pyx_L10_error)
         __Pyx_GOTREF(__pyx_t_2);
-        __pyx_t_8 = __Pyx_PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 424, __pyx_L10_error)
+        __pyx_t_8 = __Pyx_PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 466, __pyx_L10_error)
         __Pyx_GOTREF(__pyx_t_8);
         #endif
         __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
       } else {
         Py_ssize_t index = -1;
-        __pyx_t_14 = PyObject_GetIter(__pyx_t_6); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 424, __pyx_L10_error)
+        __pyx_t_14 = PyObject_GetIter(__pyx_t_6); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 466, __pyx_L10_error)
         __Pyx_GOTREF(__pyx_t_14);
         __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
         __pyx_t_15 = (CYTHON_COMPILING_IN_LIMITED_API) ? PyIter_Next : __Pyx_PyObject_GetIterNextFunc(__pyx_t_14);
@@ -9434,7 +9688,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
         __Pyx_GOTREF(__pyx_t_2);
         index = 1; __pyx_t_8 = __pyx_t_15(__pyx_t_14); if (unlikely(!__pyx_t_8)) goto __pyx_L13_unpacking_failed;
         __Pyx_GOTREF(__pyx_t_8);
-        if (__Pyx_IternextUnpackEndCheck(__pyx_t_15(__pyx_t_14), 2) < 0) __PYX_ERR(0, 424, __pyx_L10_error)
+        if (__Pyx_IternextUnpackEndCheck(__pyx_t_15(__pyx_t_14), 2) < 0) __PYX_ERR(0, 466, __pyx_L10_error)
         __pyx_t_15 = NULL;
         __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
         goto __pyx_L14_unpacking_done;
@@ -9442,17 +9696,17 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
         __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
         __pyx_t_15 = NULL;
         if (__Pyx_IterFinish() == 0) __Pyx_RaiseNeedMoreValuesError(index);
-        __PYX_ERR(0, 424, __pyx_L10_error)
+        __PYX_ERR(0, 466, __pyx_L10_error)
         __pyx_L14_unpacking_done:;
       }
-      __pyx_t_11 = __Pyx_PyLong_As_int(__pyx_t_2); if (unlikely((__pyx_t_11 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 424, __pyx_L10_error)
+      __pyx_t_11 = __Pyx_PyLong_As_int(__pyx_t_2); if (unlikely((__pyx_t_11 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 466, __pyx_L10_error)
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
       __pyx_8genexpr1__pyx_v_cid = __pyx_t_11;
       __Pyx_XDECREF_SET(__pyx_8genexpr1__pyx_v__, __pyx_t_8);
       __pyx_t_8 = 0;
-      __pyx_t_6 = __Pyx_PyLong_From_int(__pyx_8genexpr1__pyx_v_cid); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 424, __pyx_L10_error)
+      __pyx_t_6 = __Pyx_PyLong_From_int(__pyx_8genexpr1__pyx_v_cid); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 466, __pyx_L10_error)
       __Pyx_GOTREF(__pyx_t_6);
-      if (unlikely(__Pyx_ListComp_Append(__pyx_t_7, (PyObject*)__pyx_t_6))) __PYX_ERR(0, 424, __pyx_L10_error)
+      if (unlikely(__Pyx_ListComp_Append(__pyx_t_7, (PyObject*)__pyx_t_6))) __PYX_ERR(0, 466, __pyx_L10_error)
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     }
     __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
@@ -9466,31 +9720,31 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
   __pyx_v_sorted_cluster_ids = ((PyObject*)__pyx_t_7);
   __pyx_t_7 = 0;
 
-  /* "entrap/ebm_engine.pyx":427
+  /* "entrap/ebm_engine.pyx":469
  * 
  *         # Build candidate sets via k-NN
  *         cluster_candidate_sets = {}             # <<<<<<<<<<<<<<
  *         all_claimed_candidates = set()
  * 
 */
-  __pyx_t_7 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 427, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 469, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   __pyx_v_cluster_candidate_sets = ((PyObject*)__pyx_t_7);
   __pyx_t_7 = 0;
 
-  /* "entrap/ebm_engine.pyx":428
+  /* "entrap/ebm_engine.pyx":470
  *         # Build candidate sets via k-NN
  *         cluster_candidate_sets = {}
  *         all_claimed_candidates = set()             # <<<<<<<<<<<<<<
  * 
  *         noise_indices = np.where(noise_mask)[0]
 */
-  __pyx_t_7 = PySet_New(0); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 428, __pyx_L1_error)
+  __pyx_t_7 = PySet_New(0); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 470, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   __pyx_v_all_claimed_candidates = ((PyObject*)__pyx_t_7);
   __pyx_t_7 = 0;
 
-  /* "entrap/ebm_engine.pyx":430
+  /* "entrap/ebm_engine.pyx":472
  *         all_claimed_candidates = set()
  * 
  *         noise_indices = np.where(noise_mask)[0]             # <<<<<<<<<<<<<<
@@ -9498,9 +9752,9 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
  *         noise_tree = cKDTree(noise_points, compact_nodes=True, balanced_tree=True)
 */
   __pyx_t_13 = NULL;
-  __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 430, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 472, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
-  __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_mstate_global->__pyx_n_u_where); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 430, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_mstate_global->__pyx_n_u_where); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 472, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_8);
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   __pyx_t_3 = 1;
@@ -9516,32 +9770,34 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
   }
   #endif
   {
-    PyObject *__pyx_callargs[2] = {__pyx_t_13, __pyx_v_noise_mask};
+    PyObject *__pyx_callargs[2] = {__pyx_t_13, ((PyObject *)__pyx_v_noise_mask)};
     __pyx_t_7 = __Pyx_PyObject_FastCall(__pyx_t_8, __pyx_callargs+__pyx_t_3, (2-__pyx_t_3) | (__pyx_t_3*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
     __Pyx_XDECREF(__pyx_t_13); __pyx_t_13 = 0;
     __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-    if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 430, __pyx_L1_error)
+    if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 472, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
   }
-  __pyx_t_8 = __Pyx_GetItemInt(__pyx_t_7, 0, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 430, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_GetItemInt(__pyx_t_7, 0, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 472, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_8);
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-  __pyx_v_noise_indices = __pyx_t_8;
+  if (!(likely(((__pyx_t_8) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_8, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 472, __pyx_L1_error)
+  __pyx_v_noise_indices = ((PyArrayObject *)__pyx_t_8);
   __pyx_t_8 = 0;
 
-  /* "entrap/ebm_engine.pyx":431
+  /* "entrap/ebm_engine.pyx":473
  * 
  *         noise_indices = np.where(noise_mask)[0]
  *         noise_points = X[noise_indices]             # <<<<<<<<<<<<<<
  *         noise_tree = cKDTree(noise_points, compact_nodes=True, balanced_tree=True)
  * 
 */
-  __pyx_t_8 = __Pyx_PyObject_GetItem(__pyx_v_X, __pyx_v_noise_indices); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 431, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_PyObject_GetItem(__pyx_v_X, ((PyObject *)__pyx_v_noise_indices)); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 473, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_8);
-  __pyx_v_noise_points = __pyx_t_8;
+  if (!(likely(((__pyx_t_8) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_8, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 473, __pyx_L1_error)
+  __pyx_v_noise_points = ((PyArrayObject *)__pyx_t_8);
   __pyx_t_8 = 0;
 
-  /* "entrap/ebm_engine.pyx":432
+  /* "entrap/ebm_engine.pyx":474
  *         noise_indices = np.where(noise_mask)[0]
  *         noise_points = X[noise_indices]
  *         noise_tree = cKDTree(noise_points, compact_nodes=True, balanced_tree=True)             # <<<<<<<<<<<<<<
@@ -9549,7 +9805,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
  *         for cid in sorted_cluster_ids:
 */
   __pyx_t_7 = NULL;
-  __Pyx_GetModuleGlobalName(__pyx_t_13, __pyx_mstate_global->__pyx_n_u_cKDTree); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 432, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_13, __pyx_mstate_global->__pyx_n_u_cKDTree); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 474, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_13);
   __pyx_t_3 = 1;
   #if CYTHON_UNPACK_METHODS
@@ -9564,22 +9820,22 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
   }
   #endif
   {
-    PyObject *__pyx_callargs[2 + ((CYTHON_VECTORCALL) ? 2 : 0)] = {__pyx_t_7, __pyx_v_noise_points};
-    __pyx_t_6 = __Pyx_MakeVectorcallBuilderKwds(2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 432, __pyx_L1_error)
+    PyObject *__pyx_callargs[2 + ((CYTHON_VECTORCALL) ? 2 : 0)] = {__pyx_t_7, ((PyObject *)__pyx_v_noise_points)};
+    __pyx_t_6 = __Pyx_MakeVectorcallBuilderKwds(2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 474, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
-    if (__Pyx_VectorcallBuilder_AddArg(__pyx_mstate_global->__pyx_n_u_compact_nodes, Py_True, __pyx_t_6, __pyx_callargs+2, 0) < 0) __PYX_ERR(0, 432, __pyx_L1_error)
-    if (__Pyx_VectorcallBuilder_AddArg(__pyx_mstate_global->__pyx_n_u_balanced_tree, Py_True, __pyx_t_6, __pyx_callargs+2, 1) < 0) __PYX_ERR(0, 432, __pyx_L1_error)
+    if (__Pyx_VectorcallBuilder_AddArg(__pyx_mstate_global->__pyx_n_u_compact_nodes, Py_True, __pyx_t_6, __pyx_callargs+2, 0) < 0) __PYX_ERR(0, 474, __pyx_L1_error)
+    if (__Pyx_VectorcallBuilder_AddArg(__pyx_mstate_global->__pyx_n_u_balanced_tree, Py_True, __pyx_t_6, __pyx_callargs+2, 1) < 0) __PYX_ERR(0, 474, __pyx_L1_error)
     __pyx_t_8 = __Pyx_Object_Vectorcall_CallFromBuilder(__pyx_t_13, __pyx_callargs+__pyx_t_3, (2-__pyx_t_3) | (__pyx_t_3*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET), __pyx_t_6);
     __Pyx_XDECREF(__pyx_t_7); __pyx_t_7 = 0;
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
-    if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 432, __pyx_L1_error)
+    if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 474, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_8);
   }
   __pyx_v_noise_tree = __pyx_t_8;
   __pyx_t_8 = 0;
 
-  /* "entrap/ebm_engine.pyx":434
+  /* "entrap/ebm_engine.pyx":476
  *         noise_tree = cKDTree(noise_points, compact_nodes=True, balanced_tree=True)
  * 
  *         for cid in sorted_cluster_ids:             # <<<<<<<<<<<<<<
@@ -9592,45 +9848,46 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
     {
       Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_8);
       #if !CYTHON_ASSUME_SAFE_SIZE
-      if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 434, __pyx_L1_error)
+      if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 476, __pyx_L1_error)
       #endif
       if (__pyx_t_9 >= __pyx_temp) break;
     }
     __pyx_t_13 = __Pyx_PyList_GetItemRef(__pyx_t_8, __pyx_t_9);
     ++__pyx_t_9;
-    if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 434, __pyx_L1_error)
+    if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 476, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_13);
-    __pyx_t_11 = __Pyx_PyLong_As_int(__pyx_t_13); if (unlikely((__pyx_t_11 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 434, __pyx_L1_error)
+    __pyx_t_11 = __Pyx_PyLong_As_int(__pyx_t_13); if (unlikely((__pyx_t_11 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 476, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
     __pyx_v_cid = __pyx_t_11;
 
-    /* "entrap/ebm_engine.pyx":435
+    /* "entrap/ebm_engine.pyx":477
  * 
  *         for cid in sorted_cluster_ids:
  *             cluster_mask = (refined_labels == cid)             # <<<<<<<<<<<<<<
  *             cluster_points = X[cluster_mask]
  * 
 */
-    __pyx_t_13 = __Pyx_PyLong_From_int(__pyx_v_cid); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 435, __pyx_L1_error)
+    __pyx_t_13 = __Pyx_PyLong_From_int(__pyx_v_cid); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 477, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_13);
-    __pyx_t_6 = PyObject_RichCompare(__pyx_v_refined_labels, __pyx_t_13, Py_EQ); __Pyx_XGOTREF(__pyx_t_6); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 435, __pyx_L1_error)
+    __pyx_t_6 = PyObject_RichCompare(((PyObject *)__pyx_v_refined_labels), __pyx_t_13, Py_EQ); __Pyx_XGOTREF(__pyx_t_6); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 477, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
     __Pyx_XDECREF_SET(__pyx_v_cluster_mask, __pyx_t_6);
     __pyx_t_6 = 0;
 
-    /* "entrap/ebm_engine.pyx":436
+    /* "entrap/ebm_engine.pyx":478
  *         for cid in sorted_cluster_ids:
  *             cluster_mask = (refined_labels == cid)
  *             cluster_points = X[cluster_mask]             # <<<<<<<<<<<<<<
  * 
  *             if dek_selector is not None:
 */
-    __pyx_t_6 = __Pyx_PyObject_GetItem(__pyx_v_X, __pyx_v_cluster_mask); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 436, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_GetItem(__pyx_v_X, __pyx_v_cluster_mask); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 478, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
-    __Pyx_XDECREF_SET(__pyx_v_cluster_points, __pyx_t_6);
+    if (!(likely(((__pyx_t_6) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_6, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 478, __pyx_L1_error)
+    __Pyx_XDECREF_SET(__pyx_v_cluster_points, ((PyArrayObject *)__pyx_t_6));
     __pyx_t_6 = 0;
 
-    /* "entrap/ebm_engine.pyx":438
+    /* "entrap/ebm_engine.pyx":480
  *             cluster_points = X[cluster_mask]
  * 
  *             if dek_selector is not None:             # <<<<<<<<<<<<<<
@@ -9640,7 +9897,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
     __pyx_t_5 = (__pyx_v_dek_selector != Py_None);
     if (__pyx_t_5) {
 
-      /* "entrap/ebm_engine.pyx":439
+      /* "entrap/ebm_engine.pyx":481
  * 
  *             if dek_selector is not None:
  *                 k_adaptive = dek_selector.get_k_percentile(cid)             # <<<<<<<<<<<<<<
@@ -9649,7 +9906,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
 */
       __pyx_t_13 = __pyx_v_dek_selector;
       __Pyx_INCREF(__pyx_t_13);
-      __pyx_t_7 = __Pyx_PyLong_From_int(__pyx_v_cid); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 439, __pyx_L1_error)
+      __pyx_t_7 = __Pyx_PyLong_From_int(__pyx_v_cid); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 481, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_7);
       __pyx_t_3 = 0;
       {
@@ -9657,14 +9914,14 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
         __pyx_t_6 = __Pyx_PyObject_FastCallMethod(__pyx_mstate_global->__pyx_n_u_get_k_percentile, __pyx_callargs+__pyx_t_3, (2-__pyx_t_3) | (1*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
         __Pyx_XDECREF(__pyx_t_13); __pyx_t_13 = 0;
         __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-        if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 439, __pyx_L1_error)
+        if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 481, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
       }
-      __pyx_t_11 = __Pyx_PyLong_As_int(__pyx_t_6); if (unlikely((__pyx_t_11 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 439, __pyx_L1_error)
+      __pyx_t_11 = __Pyx_PyLong_As_int(__pyx_t_6); if (unlikely((__pyx_t_11 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 481, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
       __pyx_v_k_adaptive = __pyx_t_11;
 
-      /* "entrap/ebm_engine.pyx":438
+      /* "entrap/ebm_engine.pyx":480
  *             cluster_points = X[cluster_mask]
  * 
  *             if dek_selector is not None:             # <<<<<<<<<<<<<<
@@ -9674,7 +9931,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
       goto __pyx_L19;
     }
 
-    /* "entrap/ebm_engine.pyx":441
+    /* "entrap/ebm_engine.pyx":483
  *                 k_adaptive = dek_selector.get_k_percentile(cid)
  *             else:
  *                 k_adaptive = int(K_MIN)             # <<<<<<<<<<<<<<
@@ -9682,22 +9939,22 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
  * 
 */
     /*else*/ {
-      __pyx_t_6 = __Pyx_PyNumber_Int(__pyx_mstate_global->__pyx_float_10_0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 441, __pyx_L1_error)
+      __pyx_t_6 = __Pyx_PyNumber_Int(__pyx_mstate_global->__pyx_float_10_0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 483, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
-      __pyx_t_11 = __Pyx_PyLong_As_int(__pyx_t_6); if (unlikely((__pyx_t_11 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 441, __pyx_L1_error)
+      __pyx_t_11 = __Pyx_PyLong_As_int(__pyx_t_6); if (unlikely((__pyx_t_11 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 483, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
       __pyx_v_k_adaptive = __pyx_t_11;
     }
     __pyx_L19:;
 
-    /* "entrap/ebm_engine.pyx":442
+    /* "entrap/ebm_engine.pyx":484
  *             else:
  *                 k_adaptive = int(K_MIN)
  *             k_query = min(k_adaptive, len(cluster_points))             # <<<<<<<<<<<<<<
  * 
  *             distances, indices = noise_tree.query(cluster_points, k=k_query, workers=-1)
 */
-    __pyx_t_16 = PyObject_Length(__pyx_v_cluster_points); if (unlikely(__pyx_t_16 == ((Py_ssize_t)-1))) __PYX_ERR(0, 442, __pyx_L1_error)
+    __pyx_t_16 = PyObject_Length(((PyObject *)__pyx_v_cluster_points)); if (unlikely(__pyx_t_16 == ((Py_ssize_t)-1))) __PYX_ERR(0, 484, __pyx_L1_error)
     __pyx_t_11 = __pyx_v_k_adaptive;
     __pyx_t_5 = (__pyx_t_16 < __pyx_t_11);
     if (__pyx_t_5) {
@@ -9707,7 +9964,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
     }
     __pyx_v_k_query = __pyx_t_17;
 
-    /* "entrap/ebm_engine.pyx":444
+    /* "entrap/ebm_engine.pyx":486
  *             k_query = min(k_adaptive, len(cluster_points))
  * 
  *             distances, indices = noise_tree.query(cluster_points, k=k_query, workers=-1)             # <<<<<<<<<<<<<<
@@ -9716,20 +9973,20 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
 */
     __pyx_t_7 = __pyx_v_noise_tree;
     __Pyx_INCREF(__pyx_t_7);
-    __pyx_t_13 = __Pyx_PyLong_From_int(__pyx_v_k_query); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 444, __pyx_L1_error)
+    __pyx_t_13 = __Pyx_PyLong_From_int(__pyx_v_k_query); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 486, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_13);
     __pyx_t_3 = 0;
     {
-      PyObject *__pyx_callargs[2 + ((CYTHON_VECTORCALL) ? 2 : 0)] = {__pyx_t_7, __pyx_v_cluster_points};
-      __pyx_t_2 = __Pyx_MakeVectorcallBuilderKwds(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 444, __pyx_L1_error)
+      PyObject *__pyx_callargs[2 + ((CYTHON_VECTORCALL) ? 2 : 0)] = {__pyx_t_7, ((PyObject *)__pyx_v_cluster_points)};
+      __pyx_t_2 = __Pyx_MakeVectorcallBuilderKwds(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 486, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
-      if (__Pyx_VectorcallBuilder_AddArg(__pyx_mstate_global->__pyx_n_u_k, __pyx_t_13, __pyx_t_2, __pyx_callargs+2, 0) < 0) __PYX_ERR(0, 444, __pyx_L1_error)
-      if (__Pyx_VectorcallBuilder_AddArg(__pyx_mstate_global->__pyx_n_u_workers, __pyx_mstate_global->__pyx_int_neg_1, __pyx_t_2, __pyx_callargs+2, 1) < 0) __PYX_ERR(0, 444, __pyx_L1_error)
+      if (__Pyx_VectorcallBuilder_AddArg(__pyx_mstate_global->__pyx_n_u_k, __pyx_t_13, __pyx_t_2, __pyx_callargs+2, 0) < 0) __PYX_ERR(0, 486, __pyx_L1_error)
+      if (__Pyx_VectorcallBuilder_AddArg(__pyx_mstate_global->__pyx_n_u_workers, __pyx_mstate_global->__pyx_int_neg_1, __pyx_t_2, __pyx_callargs+2, 1) < 0) __PYX_ERR(0, 486, __pyx_L1_error)
       __pyx_t_6 = __Pyx_Object_VectorcallMethod_CallFromBuilder(__pyx_mstate_global->__pyx_n_u_query, __pyx_callargs+__pyx_t_3, (2-__pyx_t_3) | (1*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET), __pyx_t_2);
       __Pyx_XDECREF(__pyx_t_7); __pyx_t_7 = 0;
       __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-      if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 444, __pyx_L1_error)
+      if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 486, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
     }
     if ((likely(PyTuple_CheckExact(__pyx_t_6))) || (PyList_CheckExact(__pyx_t_6))) {
@@ -9738,7 +9995,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
       if (unlikely(size != 2)) {
         if (size > 2) __Pyx_RaiseTooManyValuesError(2);
         else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
-        __PYX_ERR(0, 444, __pyx_L1_error)
+        __PYX_ERR(0, 486, __pyx_L1_error)
       }
       #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
       if (likely(PyTuple_CheckExact(sequence))) {
@@ -9748,22 +10005,22 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
         __Pyx_INCREF(__pyx_t_13);
       } else {
         __pyx_t_2 = __Pyx_PyList_GetItemRef(sequence, 0);
-        if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 444, __pyx_L1_error)
+        if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 486, __pyx_L1_error)
         __Pyx_XGOTREF(__pyx_t_2);
         __pyx_t_13 = __Pyx_PyList_GetItemRef(sequence, 1);
-        if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 444, __pyx_L1_error)
+        if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 486, __pyx_L1_error)
         __Pyx_XGOTREF(__pyx_t_13);
       }
       #else
-      __pyx_t_2 = __Pyx_PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 444, __pyx_L1_error)
+      __pyx_t_2 = __Pyx_PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 486, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
-      __pyx_t_13 = __Pyx_PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 444, __pyx_L1_error)
+      __pyx_t_13 = __Pyx_PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 486, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_13);
       #endif
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     } else {
       Py_ssize_t index = -1;
-      __pyx_t_7 = PyObject_GetIter(__pyx_t_6); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 444, __pyx_L1_error)
+      __pyx_t_7 = PyObject_GetIter(__pyx_t_6); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 486, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_7);
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
       __pyx_t_15 = (CYTHON_COMPILING_IN_LIMITED_API) ? PyIter_Next : __Pyx_PyObject_GetIterNextFunc(__pyx_t_7);
@@ -9771,7 +10028,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
       __Pyx_GOTREF(__pyx_t_2);
       index = 1; __pyx_t_13 = __pyx_t_15(__pyx_t_7); if (unlikely(!__pyx_t_13)) goto __pyx_L20_unpacking_failed;
       __Pyx_GOTREF(__pyx_t_13);
-      if (__Pyx_IternextUnpackEndCheck(__pyx_t_15(__pyx_t_7), 2) < 0) __PYX_ERR(0, 444, __pyx_L1_error)
+      if (__Pyx_IternextUnpackEndCheck(__pyx_t_15(__pyx_t_7), 2) < 0) __PYX_ERR(0, 486, __pyx_L1_error)
       __pyx_t_15 = NULL;
       __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
       goto __pyx_L21_unpacking_done;
@@ -9779,61 +10036,59 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
       __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
       __pyx_t_15 = NULL;
       if (__Pyx_IterFinish() == 0) __Pyx_RaiseNeedMoreValuesError(index);
-      __PYX_ERR(0, 444, __pyx_L1_error)
+      __PYX_ERR(0, 486, __pyx_L1_error)
       __pyx_L21_unpacking_done:;
     }
-    __Pyx_XDECREF_SET(__pyx_v_distances, __pyx_t_2);
+    if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 486, __pyx_L1_error)
+    if (!(likely(((__pyx_t_13) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_13, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 486, __pyx_L1_error)
+    __Pyx_XDECREF_SET(__pyx_v_distances, ((PyArrayObject *)__pyx_t_2));
     __pyx_t_2 = 0;
-    __Pyx_XDECREF_SET(__pyx_v_indices, __pyx_t_13);
+    __Pyx_XDECREF_SET(__pyx_v_indices, ((PyArrayObject *)__pyx_t_13));
     __pyx_t_13 = 0;
 
-    /* "entrap/ebm_engine.pyx":446
+    /* "entrap/ebm_engine.pyx":488
  *             distances, indices = noise_tree.query(cluster_points, k=k_query, workers=-1)
  * 
  *             if cluster_points.shape[0] == 1:             # <<<<<<<<<<<<<<
  *                 distances = distances.reshape(1, -1)
  *                 indices = indices.reshape(1, -1)
 */
-    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_cluster_points, __pyx_mstate_global->__pyx_n_u_shape); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 446, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_6);
-    __pyx_t_13 = __Pyx_GetItemInt(__pyx_t_6, 0, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 446, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_13);
-    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __pyx_t_5 = (__Pyx_PyLong_BoolEqObjC(__pyx_t_13, __pyx_mstate_global->__pyx_int_1, 1, 0)); if (unlikely((__pyx_t_5 < 0))) __PYX_ERR(0, 446, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+    __pyx_t_5 = ((__pyx_f_5numpy_7ndarray_5shape_shape(__pyx_v_cluster_points)[0]) == 1);
     if (__pyx_t_5) {
 
-      /* "entrap/ebm_engine.pyx":447
+      /* "entrap/ebm_engine.pyx":489
  * 
  *             if cluster_points.shape[0] == 1:
  *                 distances = distances.reshape(1, -1)             # <<<<<<<<<<<<<<
  *                 indices = indices.reshape(1, -1)
  * 
 */
-      __pyx_t_13 = __Pyx_PyObject_GetAttrStr(__pyx_v_distances, __pyx_mstate_global->__pyx_n_u_reshape); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 447, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_13);
-      __pyx_t_6 = __Pyx_PyObject_Call(__pyx_t_13, __pyx_mstate_global->__pyx_tuple[0], NULL); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 447, __pyx_L1_error)
+      __pyx_t_6 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_distances), __pyx_mstate_global->__pyx_n_u_reshape); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 489, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
-      __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
-      __Pyx_DECREF_SET(__pyx_v_distances, __pyx_t_6);
-      __pyx_t_6 = 0;
+      __pyx_t_13 = __Pyx_PyObject_Call(__pyx_t_6, __pyx_mstate_global->__pyx_tuple[0], NULL); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 489, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_13);
+      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+      if (!(likely(((__pyx_t_13) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_13, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 489, __pyx_L1_error)
+      __Pyx_DECREF_SET(__pyx_v_distances, ((PyArrayObject *)__pyx_t_13));
+      __pyx_t_13 = 0;
 
-      /* "entrap/ebm_engine.pyx":448
+      /* "entrap/ebm_engine.pyx":490
  *             if cluster_points.shape[0] == 1:
  *                 distances = distances.reshape(1, -1)
  *                 indices = indices.reshape(1, -1)             # <<<<<<<<<<<<<<
  * 
  *             candidate_local_indices = np.unique(indices.ravel())
 */
-      __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_indices, __pyx_mstate_global->__pyx_n_u_reshape); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 448, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_6);
-      __pyx_t_13 = __Pyx_PyObject_Call(__pyx_t_6, __pyx_mstate_global->__pyx_tuple[0], NULL); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 448, __pyx_L1_error)
+      __pyx_t_13 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_indices), __pyx_mstate_global->__pyx_n_u_reshape); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 490, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_13);
-      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-      __Pyx_DECREF_SET(__pyx_v_indices, __pyx_t_13);
-      __pyx_t_13 = 0;
+      __pyx_t_6 = __Pyx_PyObject_Call(__pyx_t_13, __pyx_mstate_global->__pyx_tuple[0], NULL); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 490, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_6);
+      __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+      if (!(likely(((__pyx_t_6) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_6, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 490, __pyx_L1_error)
+      __Pyx_DECREF_SET(__pyx_v_indices, ((PyArrayObject *)__pyx_t_6));
+      __pyx_t_6 = 0;
 
-      /* "entrap/ebm_engine.pyx":446
+      /* "entrap/ebm_engine.pyx":488
  *             distances, indices = noise_tree.query(cluster_points, k=k_query, workers=-1)
  * 
  *             if cluster_points.shape[0] == 1:             # <<<<<<<<<<<<<<
@@ -9842,129 +10097,129 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
 */
     }
 
-    /* "entrap/ebm_engine.pyx":450
+    /* "entrap/ebm_engine.pyx":492
  *                 indices = indices.reshape(1, -1)
  * 
  *             candidate_local_indices = np.unique(indices.ravel())             # <<<<<<<<<<<<<<
  *             candidate_local_indices = candidate_local_indices[
  *                 candidate_local_indices < len(noise_points)
 */
-    __pyx_t_6 = NULL;
-    __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 450, __pyx_L1_error)
+    __pyx_t_13 = NULL;
+    __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 492, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_mstate_global->__pyx_n_u_unique); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 450, __pyx_L1_error)
+    __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_mstate_global->__pyx_n_u_unique); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 492, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_14 = __pyx_v_indices;
+    __pyx_t_14 = ((PyObject *)__pyx_v_indices);
     __Pyx_INCREF(__pyx_t_14);
     __pyx_t_3 = 0;
     {
       PyObject *__pyx_callargs[2] = {__pyx_t_14, NULL};
       __pyx_t_2 = __Pyx_PyObject_FastCallMethod(__pyx_mstate_global->__pyx_n_u_ravel, __pyx_callargs+__pyx_t_3, (1-__pyx_t_3) | (1*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
       __Pyx_XDECREF(__pyx_t_14); __pyx_t_14 = 0;
-      if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 450, __pyx_L1_error)
+      if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 492, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
     }
     __pyx_t_3 = 1;
     #if CYTHON_UNPACK_METHODS
     if (unlikely(PyMethod_Check(__pyx_t_7))) {
-      __pyx_t_6 = PyMethod_GET_SELF(__pyx_t_7);
-      assert(__pyx_t_6);
+      __pyx_t_13 = PyMethod_GET_SELF(__pyx_t_7);
+      assert(__pyx_t_13);
       PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_7);
-      __Pyx_INCREF(__pyx_t_6);
+      __Pyx_INCREF(__pyx_t_13);
       __Pyx_INCREF(__pyx__function);
       __Pyx_DECREF_SET(__pyx_t_7, __pyx__function);
       __pyx_t_3 = 0;
     }
     #endif
     {
-      PyObject *__pyx_callargs[2] = {__pyx_t_6, __pyx_t_2};
-      __pyx_t_13 = __Pyx_PyObject_FastCall(__pyx_t_7, __pyx_callargs+__pyx_t_3, (2-__pyx_t_3) | (__pyx_t_3*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
-      __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
+      PyObject *__pyx_callargs[2] = {__pyx_t_13, __pyx_t_2};
+      __pyx_t_6 = __Pyx_PyObject_FastCall(__pyx_t_7, __pyx_callargs+__pyx_t_3, (2-__pyx_t_3) | (__pyx_t_3*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
+      __Pyx_XDECREF(__pyx_t_13); __pyx_t_13 = 0;
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
       __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-      if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 450, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_13);
+      if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 492, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_6);
     }
-    __Pyx_XDECREF_SET(__pyx_v_candidate_local_indices, __pyx_t_13);
-    __pyx_t_13 = 0;
+    __Pyx_XDECREF_SET(__pyx_v_candidate_local_indices, __pyx_t_6);
+    __pyx_t_6 = 0;
 
-    /* "entrap/ebm_engine.pyx":452
+    /* "entrap/ebm_engine.pyx":494
  *             candidate_local_indices = np.unique(indices.ravel())
  *             candidate_local_indices = candidate_local_indices[
  *                 candidate_local_indices < len(noise_points)             # <<<<<<<<<<<<<<
  *             ]
  * 
 */
-    __pyx_t_17 = PyObject_Length(__pyx_v_noise_points); if (unlikely(__pyx_t_17 == ((Py_ssize_t)-1))) __PYX_ERR(0, 452, __pyx_L1_error)
-    __pyx_t_13 = PyLong_FromSsize_t(__pyx_t_17); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 452, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_13);
-    __pyx_t_7 = PyObject_RichCompare(__pyx_v_candidate_local_indices, __pyx_t_13, Py_LT); __Pyx_XGOTREF(__pyx_t_7); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 452, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+    __pyx_t_17 = PyObject_Length(((PyObject *)__pyx_v_noise_points)); if (unlikely(__pyx_t_17 == ((Py_ssize_t)-1))) __PYX_ERR(0, 494, __pyx_L1_error)
+    __pyx_t_6 = PyLong_FromSsize_t(__pyx_t_17); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 494, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_6);
+    __pyx_t_7 = PyObject_RichCompare(__pyx_v_candidate_local_indices, __pyx_t_6, Py_LT); __Pyx_XGOTREF(__pyx_t_7); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 494, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
-    /* "entrap/ebm_engine.pyx":451
+    /* "entrap/ebm_engine.pyx":493
  * 
  *             candidate_local_indices = np.unique(indices.ravel())
  *             candidate_local_indices = candidate_local_indices[             # <<<<<<<<<<<<<<
  *                 candidate_local_indices < len(noise_points)
  *             ]
 */
-    __pyx_t_13 = __Pyx_PyObject_GetItem(__pyx_v_candidate_local_indices, __pyx_t_7); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 451, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_13);
+    __pyx_t_6 = __Pyx_PyObject_GetItem(__pyx_v_candidate_local_indices, __pyx_t_7); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 493, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-    __Pyx_DECREF_SET(__pyx_v_candidate_local_indices, __pyx_t_13);
-    __pyx_t_13 = 0;
+    __Pyx_DECREF_SET(__pyx_v_candidate_local_indices, __pyx_t_6);
+    __pyx_t_6 = 0;
 
-    /* "entrap/ebm_engine.pyx":455
+    /* "entrap/ebm_engine.pyx":497
  *             ]
  * 
  *             if len(candidate_local_indices) > 0:             # <<<<<<<<<<<<<<
  *                 candidate_global_indices = noise_indices[candidate_local_indices]
  *                 cluster_candidate_sets[cid] = set(candidate_global_indices)
 */
-    __pyx_t_17 = PyObject_Length(__pyx_v_candidate_local_indices); if (unlikely(__pyx_t_17 == ((Py_ssize_t)-1))) __PYX_ERR(0, 455, __pyx_L1_error)
+    __pyx_t_17 = PyObject_Length(__pyx_v_candidate_local_indices); if (unlikely(__pyx_t_17 == ((Py_ssize_t)-1))) __PYX_ERR(0, 497, __pyx_L1_error)
     __pyx_t_5 = (__pyx_t_17 > 0);
     if (__pyx_t_5) {
 
-      /* "entrap/ebm_engine.pyx":456
+      /* "entrap/ebm_engine.pyx":498
  * 
  *             if len(candidate_local_indices) > 0:
  *                 candidate_global_indices = noise_indices[candidate_local_indices]             # <<<<<<<<<<<<<<
  *                 cluster_candidate_sets[cid] = set(candidate_global_indices)
  *                 all_claimed_candidates.update(candidate_global_indices)
 */
-      __pyx_t_13 = __Pyx_PyObject_GetItem(__pyx_v_noise_indices, __pyx_v_candidate_local_indices); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 456, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_13);
-      __Pyx_XDECREF_SET(__pyx_v_candidate_global_indices, __pyx_t_13);
-      __pyx_t_13 = 0;
+      __pyx_t_6 = __Pyx_PyObject_GetItem(((PyObject *)__pyx_v_noise_indices), __pyx_v_candidate_local_indices); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 498, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_6);
+      __Pyx_XDECREF_SET(__pyx_v_candidate_global_indices, __pyx_t_6);
+      __pyx_t_6 = 0;
 
-      /* "entrap/ebm_engine.pyx":457
+      /* "entrap/ebm_engine.pyx":499
  *             if len(candidate_local_indices) > 0:
  *                 candidate_global_indices = noise_indices[candidate_local_indices]
  *                 cluster_candidate_sets[cid] = set(candidate_global_indices)             # <<<<<<<<<<<<<<
  *                 all_claimed_candidates.update(candidate_global_indices)
  *             else:
 */
-      __pyx_t_13 = PySet_New(__pyx_v_candidate_global_indices); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 457, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_13);
-      __pyx_t_7 = __Pyx_PyLong_From_int(__pyx_v_cid); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 457, __pyx_L1_error)
+      __pyx_t_6 = PySet_New(__pyx_v_candidate_global_indices); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 499, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_6);
+      __pyx_t_7 = __Pyx_PyLong_From_int(__pyx_v_cid); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 499, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_7);
-      if (unlikely((PyDict_SetItem(__pyx_v_cluster_candidate_sets, __pyx_t_7, __pyx_t_13) < 0))) __PYX_ERR(0, 457, __pyx_L1_error)
+      if (unlikely((PyDict_SetItem(__pyx_v_cluster_candidate_sets, __pyx_t_7, __pyx_t_6) < 0))) __PYX_ERR(0, 499, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-      __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
-      /* "entrap/ebm_engine.pyx":458
+      /* "entrap/ebm_engine.pyx":500
  *                 candidate_global_indices = noise_indices[candidate_local_indices]
  *                 cluster_candidate_sets[cid] = set(candidate_global_indices)
  *                 all_claimed_candidates.update(candidate_global_indices)             # <<<<<<<<<<<<<<
  *             else:
  *                 cluster_candidate_sets[cid] = set()
 */
-      __pyx_t_13 = __Pyx_CallUnboundCMethod1(&__pyx_mstate_global->__pyx_umethod_PySet_Type__update, __pyx_v_all_claimed_candidates, __pyx_v_candidate_global_indices); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 458, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_13);
-      __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+      __pyx_t_6 = __Pyx_CallUnboundCMethod1(&__pyx_mstate_global->__pyx_umethod_PySet_Type__update, __pyx_v_all_claimed_candidates, __pyx_v_candidate_global_indices); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 500, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_6);
+      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
-      /* "entrap/ebm_engine.pyx":455
+      /* "entrap/ebm_engine.pyx":497
  *             ]
  * 
  *             if len(candidate_local_indices) > 0:             # <<<<<<<<<<<<<<
@@ -9974,7 +10229,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
       goto __pyx_L23;
     }
 
-    /* "entrap/ebm_engine.pyx":460
+    /* "entrap/ebm_engine.pyx":502
  *                 all_claimed_candidates.update(candidate_global_indices)
  *             else:
  *                 cluster_candidate_sets[cid] = set()             # <<<<<<<<<<<<<<
@@ -9982,17 +10237,17 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
  *         # Estimate noise energy baseline
 */
     /*else*/ {
-      __pyx_t_13 = PySet_New(0); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 460, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_13);
-      __pyx_t_7 = __Pyx_PyLong_From_int(__pyx_v_cid); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 460, __pyx_L1_error)
+      __pyx_t_6 = PySet_New(0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 502, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_6);
+      __pyx_t_7 = __Pyx_PyLong_From_int(__pyx_v_cid); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 502, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_7);
-      if (unlikely((PyDict_SetItem(__pyx_v_cluster_candidate_sets, __pyx_t_7, __pyx_t_13) < 0))) __PYX_ERR(0, 460, __pyx_L1_error)
+      if (unlikely((PyDict_SetItem(__pyx_v_cluster_candidate_sets, __pyx_t_7, __pyx_t_6) < 0))) __PYX_ERR(0, 502, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-      __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     }
     __pyx_L23:;
 
-    /* "entrap/ebm_engine.pyx":434
+    /* "entrap/ebm_engine.pyx":476
  *         noise_tree = cKDTree(noise_points, compact_nodes=True, balanced_tree=True)
  * 
  *         for cid in sorted_cluster_ids:             # <<<<<<<<<<<<<<
@@ -10002,90 +10257,90 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
   }
   __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
 
-  /* "entrap/ebm_engine.pyx":463
+  /* "entrap/ebm_engine.pyx":505
  * 
  *         # Estimate noise energy baseline
  *         true_noise_indices = list(set(noise_indices) - all_claimed_candidates)             # <<<<<<<<<<<<<<
  *         true_noise_indices_arr = np.array(true_noise_indices, dtype=np.int64)
  *         E_noise = self.estimate_noise_energy(X, true_noise_indices_arr)
 */
-  __pyx_t_8 = PySet_New(__pyx_v_noise_indices); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 463, __pyx_L1_error)
+  __pyx_t_8 = PySet_New(((PyObject *)__pyx_v_noise_indices)); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 505, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_8);
-  __pyx_t_13 = PyNumber_Subtract(__pyx_t_8, __pyx_v_all_claimed_candidates); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 463, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_13);
+  __pyx_t_6 = PyNumber_Subtract(__pyx_t_8, __pyx_v_all_claimed_candidates); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 505, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_6);
   __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-  __pyx_t_8 = __Pyx_PySequence_ListKeepNew(__pyx_t_13); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 463, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_PySequence_ListKeepNew(__pyx_t_6); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 505, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_8);
-  __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   __pyx_v_true_noise_indices = ((PyObject*)__pyx_t_8);
   __pyx_t_8 = 0;
 
-  /* "entrap/ebm_engine.pyx":464
+  /* "entrap/ebm_engine.pyx":506
  *         # Estimate noise energy baseline
  *         true_noise_indices = list(set(noise_indices) - all_claimed_candidates)
  *         true_noise_indices_arr = np.array(true_noise_indices, dtype=np.int64)             # <<<<<<<<<<<<<<
  *         E_noise = self.estimate_noise_energy(X, true_noise_indices_arr)
  *         self.empirical_noise_energy_ = E_noise
 */
-  __pyx_t_13 = NULL;
-  __Pyx_GetModuleGlobalName(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 464, __pyx_L1_error)
+  __pyx_t_6 = NULL;
+  __Pyx_GetModuleGlobalName(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 506, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_array); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 464, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_array); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 506, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-  __Pyx_GetModuleGlobalName(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 464, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 506, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
-  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_int64); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 464, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_6);
+  __pyx_t_13 = __Pyx_PyObject_GetAttrStr(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_int64); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 506, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_13);
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
   __pyx_t_3 = 1;
   #if CYTHON_UNPACK_METHODS
   if (unlikely(PyMethod_Check(__pyx_t_2))) {
-    __pyx_t_13 = PyMethod_GET_SELF(__pyx_t_2);
-    assert(__pyx_t_13);
+    __pyx_t_6 = PyMethod_GET_SELF(__pyx_t_2);
+    assert(__pyx_t_6);
     PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_2);
-    __Pyx_INCREF(__pyx_t_13);
+    __Pyx_INCREF(__pyx_t_6);
     __Pyx_INCREF(__pyx__function);
     __Pyx_DECREF_SET(__pyx_t_2, __pyx__function);
     __pyx_t_3 = 0;
   }
   #endif
   {
-    PyObject *__pyx_callargs[2 + ((CYTHON_VECTORCALL) ? 1 : 0)] = {__pyx_t_13, __pyx_v_true_noise_indices};
-    __pyx_t_7 = __Pyx_MakeVectorcallBuilderKwds(1); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 464, __pyx_L1_error)
+    PyObject *__pyx_callargs[2 + ((CYTHON_VECTORCALL) ? 1 : 0)] = {__pyx_t_6, __pyx_v_true_noise_indices};
+    __pyx_t_7 = __Pyx_MakeVectorcallBuilderKwds(1); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 506, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
-    if (__Pyx_VectorcallBuilder_AddArg(__pyx_mstate_global->__pyx_n_u_dtype, __pyx_t_6, __pyx_t_7, __pyx_callargs+2, 0) < 0) __PYX_ERR(0, 464, __pyx_L1_error)
+    if (__Pyx_VectorcallBuilder_AddArg(__pyx_mstate_global->__pyx_n_u_dtype, __pyx_t_13, __pyx_t_7, __pyx_callargs+2, 0) < 0) __PYX_ERR(0, 506, __pyx_L1_error)
     __pyx_t_8 = __Pyx_Object_Vectorcall_CallFromBuilder(__pyx_t_2, __pyx_callargs+__pyx_t_3, (2-__pyx_t_3) | (__pyx_t_3*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET), __pyx_t_7);
-    __Pyx_XDECREF(__pyx_t_13); __pyx_t_13 = 0;
-    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+    __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
+    __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 464, __pyx_L1_error)
+    if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 506, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_8);
   }
-  __pyx_v_true_noise_indices_arr = __pyx_t_8;
+  if (!(likely(((__pyx_t_8) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_8, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 506, __pyx_L1_error)
+  __pyx_v_true_noise_indices_arr = ((PyArrayObject *)__pyx_t_8);
   __pyx_t_8 = 0;
 
-  /* "entrap/ebm_engine.pyx":465
+  /* "entrap/ebm_engine.pyx":507
  *         true_noise_indices = list(set(noise_indices) - all_claimed_candidates)
  *         true_noise_indices_arr = np.array(true_noise_indices, dtype=np.int64)
  *         E_noise = self.estimate_noise_energy(X, true_noise_indices_arr)             # <<<<<<<<<<<<<<
  *         self.empirical_noise_energy_ = E_noise
  * 
 */
-  if (!(likely(((__pyx_v_X) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_X, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 465, __pyx_L1_error)
-  if (!(likely(((__pyx_v_true_noise_indices_arr) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_true_noise_indices_arr, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 465, __pyx_L1_error)
-  __pyx_t_18 = ((struct __pyx_vtabstruct_6entrap_10ebm_engine_EBM_Reassignment_Engine *)__pyx_v_self->__pyx_vtab)->estimate_noise_energy(__pyx_v_self, ((PyArrayObject *)__pyx_v_X), ((PyArrayObject *)__pyx_v_true_noise_indices_arr), 0); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 465, __pyx_L1_error)
+  if (!(likely(((__pyx_v_X) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_X, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 507, __pyx_L1_error)
+  __pyx_t_18 = ((struct __pyx_vtabstruct_6entrap_10ebm_engine_EBM_Reassignment_Engine *)__pyx_v_self->__pyx_vtab)->estimate_noise_energy(__pyx_v_self, ((PyArrayObject *)__pyx_v_X), __pyx_v_true_noise_indices_arr, 0); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 507, __pyx_L1_error)
   __pyx_v_E_noise = __pyx_t_18;
 
-  /* "entrap/ebm_engine.pyx":466
+  /* "entrap/ebm_engine.pyx":508
  *         true_noise_indices_arr = np.array(true_noise_indices, dtype=np.int64)
  *         E_noise = self.estimate_noise_energy(X, true_noise_indices_arr)
  *         self.empirical_noise_energy_ = E_noise             # <<<<<<<<<<<<<<
  * 
  *         # Initialize cluster states
 */
-  __pyx_t_8 = PyFloat_FromDouble(__pyx_v_E_noise); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 466, __pyx_L1_error)
+  __pyx_t_8 = PyFloat_FromDouble(__pyx_v_E_noise); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 508, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_8);
   __Pyx_GIVEREF(__pyx_t_8);
   __Pyx_GOTREF(__pyx_v_self->empirical_noise_energy_);
@@ -10093,19 +10348,19 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
   __pyx_v_self->empirical_noise_energy_ = __pyx_t_8;
   __pyx_t_8 = 0;
 
-  /* "entrap/ebm_engine.pyx":469
+  /* "entrap/ebm_engine.pyx":511
  * 
  *         # Initialize cluster states
  *         cluster_states = {}             # <<<<<<<<<<<<<<
  *         for cid in sorted_cluster_ids:
  *             cluster_mask = (refined_labels == cid)
 */
-  __pyx_t_8 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 469, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 511, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_8);
   __pyx_v_cluster_states = ((PyObject*)__pyx_t_8);
   __pyx_t_8 = 0;
 
-  /* "entrap/ebm_engine.pyx":470
+  /* "entrap/ebm_engine.pyx":512
  *         # Initialize cluster states
  *         cluster_states = {}
  *         for cid in sorted_cluster_ids:             # <<<<<<<<<<<<<<
@@ -10118,142 +10373,193 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
     {
       Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_8);
       #if !CYTHON_ASSUME_SAFE_SIZE
-      if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 470, __pyx_L1_error)
+      if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 512, __pyx_L1_error)
       #endif
       if (__pyx_t_9 >= __pyx_temp) break;
     }
     __pyx_t_2 = __Pyx_PyList_GetItemRef(__pyx_t_8, __pyx_t_9);
     ++__pyx_t_9;
-    if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 470, __pyx_L1_error)
+    if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 512, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_11 = __Pyx_PyLong_As_int(__pyx_t_2); if (unlikely((__pyx_t_11 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 470, __pyx_L1_error)
+    __pyx_t_11 = __Pyx_PyLong_As_int(__pyx_t_2); if (unlikely((__pyx_t_11 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 512, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     __pyx_v_cid = __pyx_t_11;
 
-    /* "entrap/ebm_engine.pyx":471
+    /* "entrap/ebm_engine.pyx":513
  *         cluster_states = {}
  *         for cid in sorted_cluster_ids:
  *             cluster_mask = (refined_labels == cid)             # <<<<<<<<<<<<<<
  *             cluster_points = X[cluster_mask]
  *             cluster_size = len(cluster_points)
 */
-    __pyx_t_2 = __Pyx_PyLong_From_int(__pyx_v_cid); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 471, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyLong_From_int(__pyx_v_cid); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 513, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_7 = PyObject_RichCompare(__pyx_v_refined_labels, __pyx_t_2, Py_EQ); __Pyx_XGOTREF(__pyx_t_7); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 471, __pyx_L1_error)
+    __pyx_t_7 = PyObject_RichCompare(((PyObject *)__pyx_v_refined_labels), __pyx_t_2, Py_EQ); __Pyx_XGOTREF(__pyx_t_7); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 513, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     __Pyx_XDECREF_SET(__pyx_v_cluster_mask, __pyx_t_7);
     __pyx_t_7 = 0;
 
-    /* "entrap/ebm_engine.pyx":472
+    /* "entrap/ebm_engine.pyx":514
  *         for cid in sorted_cluster_ids:
  *             cluster_mask = (refined_labels == cid)
  *             cluster_points = X[cluster_mask]             # <<<<<<<<<<<<<<
  *             cluster_size = len(cluster_points)
  * 
 */
-    __pyx_t_7 = __Pyx_PyObject_GetItem(__pyx_v_X, __pyx_v_cluster_mask); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 472, __pyx_L1_error)
+    __pyx_t_7 = __Pyx_PyObject_GetItem(__pyx_v_X, __pyx_v_cluster_mask); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 514, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
-    __Pyx_XDECREF_SET(__pyx_v_cluster_points, __pyx_t_7);
+    if (!(likely(((__pyx_t_7) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_7, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 514, __pyx_L1_error)
+    __Pyx_XDECREF_SET(__pyx_v_cluster_points, ((PyArrayObject *)__pyx_t_7));
     __pyx_t_7 = 0;
 
-    /* "entrap/ebm_engine.pyx":473
+    /* "entrap/ebm_engine.pyx":515
  *             cluster_mask = (refined_labels == cid)
  *             cluster_points = X[cluster_mask]
  *             cluster_size = len(cluster_points)             # <<<<<<<<<<<<<<
  * 
  *             T_norm = self.compute_normalized_topological_energy(cluster_points, cluster_size)
 */
-    __pyx_t_17 = PyObject_Length(__pyx_v_cluster_points); if (unlikely(__pyx_t_17 == ((Py_ssize_t)-1))) __PYX_ERR(0, 473, __pyx_L1_error)
+    __pyx_t_17 = PyObject_Length(((PyObject *)__pyx_v_cluster_points)); if (unlikely(__pyx_t_17 == ((Py_ssize_t)-1))) __PYX_ERR(0, 515, __pyx_L1_error)
     __pyx_v_cluster_size = __pyx_t_17;
 
-    /* "entrap/ebm_engine.pyx":475
+    /* "entrap/ebm_engine.pyx":517
  *             cluster_size = len(cluster_points)
  * 
  *             T_norm = self.compute_normalized_topological_energy(cluster_points, cluster_size)             # <<<<<<<<<<<<<<
  * 
  *             cluster_states[cid] = {
 */
-    if (!(likely(((__pyx_v_cluster_points) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_cluster_points, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 475, __pyx_L1_error)
-    __pyx_t_18 = ((struct __pyx_vtabstruct_6entrap_10ebm_engine_EBM_Reassignment_Engine *)__pyx_v_self->__pyx_vtab)->compute_normalized_topological_energy(__pyx_v_self, ((PyArrayObject *)__pyx_v_cluster_points), __pyx_v_cluster_size, 0); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 475, __pyx_L1_error)
+    __pyx_t_18 = ((struct __pyx_vtabstruct_6entrap_10ebm_engine_EBM_Reassignment_Engine *)__pyx_v_self->__pyx_vtab)->compute_normalized_topological_energy(__pyx_v_self, __pyx_v_cluster_points, __pyx_v_cluster_size, 0); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 517, __pyx_L1_error)
     __pyx_v_T_norm = __pyx_t_18;
 
-    /* "entrap/ebm_engine.pyx":478
+    /* "entrap/ebm_engine.pyx":520
  * 
  *             cluster_states[cid] = {
  *                 'T_norm': T_norm,             # <<<<<<<<<<<<<<
  *                 'size': cluster_size,
  *                 'candidates': cluster_candidate_sets[cid].copy(),
 */
-    __pyx_t_7 = __Pyx_PyDict_NewPresized(6); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 478, __pyx_L1_error)
+    __pyx_t_7 = __Pyx_PyDict_NewPresized(8); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 520, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
-    __pyx_t_2 = PyFloat_FromDouble(__pyx_v_T_norm); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 478, __pyx_L1_error)
+    __pyx_t_2 = PyFloat_FromDouble(__pyx_v_T_norm); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 520, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    if (PyDict_SetItem(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_T_norm, __pyx_t_2) < 0) __PYX_ERR(0, 478, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_T_norm, __pyx_t_2) < 0) __PYX_ERR(0, 520, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-    /* "entrap/ebm_engine.pyx":479
+    /* "entrap/ebm_engine.pyx":521
  *             cluster_states[cid] = {
  *                 'T_norm': T_norm,
  *                 'size': cluster_size,             # <<<<<<<<<<<<<<
  *                 'candidates': cluster_candidate_sets[cid].copy(),
- *                 'rescued_count': 0,
+ *                 'cluster_indices': np.where(cluster_mask)[0].tolist(),  # Track indices for caching
 */
-    __pyx_t_2 = __Pyx_PyLong_From_int(__pyx_v_cluster_size); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 479, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyLong_From_int(__pyx_v_cluster_size); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 521, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    if (PyDict_SetItem(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_size, __pyx_t_2) < 0) __PYX_ERR(0, 478, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_size, __pyx_t_2) < 0) __PYX_ERR(0, 520, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-    /* "entrap/ebm_engine.pyx":480
+    /* "entrap/ebm_engine.pyx":522
  *                 'T_norm': T_norm,
  *                 'size': cluster_size,
  *                 'candidates': cluster_candidate_sets[cid].copy(),             # <<<<<<<<<<<<<<
+ *                 'cluster_indices': np.where(cluster_mask)[0].tolist(),  # Track indices for caching
+ *                 'rescued_count': 0,
+*/
+    __pyx_t_6 = __Pyx_PyLong_From_int(__pyx_v_cid); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 522, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_6);
+    __pyx_t_14 = __Pyx_PyDict_GetItem(__pyx_v_cluster_candidate_sets, __pyx_t_6); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 522, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_14);
+    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+    __pyx_t_13 = __pyx_t_14;
+    __Pyx_INCREF(__pyx_t_13);
+    __pyx_t_3 = 0;
+    {
+      PyObject *__pyx_callargs[2] = {__pyx_t_13, NULL};
+      __pyx_t_2 = __Pyx_PyObject_FastCallMethod(__pyx_mstate_global->__pyx_n_u_copy, __pyx_callargs+__pyx_t_3, (1-__pyx_t_3) | (1*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
+      __Pyx_XDECREF(__pyx_t_13); __pyx_t_13 = 0;
+      __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
+      if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 522, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_2);
+    }
+    if (PyDict_SetItem(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_candidates, __pyx_t_2) < 0) __PYX_ERR(0, 520, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+    /* "entrap/ebm_engine.pyx":523
+ *                 'size': cluster_size,
+ *                 'candidates': cluster_candidate_sets[cid].copy(),
+ *                 'cluster_indices': np.where(cluster_mask)[0].tolist(),  # Track indices for caching             # <<<<<<<<<<<<<<
  *                 'rescued_count': 0,
  *                 'tda_calls': 0,
 */
-    __pyx_t_13 = __Pyx_PyLong_From_int(__pyx_v_cid); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 480, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_13);
-    __pyx_t_14 = __Pyx_PyDict_GetItem(__pyx_v_cluster_candidate_sets, __pyx_t_13); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 480, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_14);
+    __pyx_t_6 = NULL;
+    __Pyx_GetModuleGlobalName(__pyx_t_12, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 523, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_12);
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_12, __pyx_mstate_global->__pyx_n_u_where); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 523, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
+    __pyx_t_3 = 1;
+    #if CYTHON_UNPACK_METHODS
+    if (unlikely(PyMethod_Check(__pyx_t_1))) {
+      __pyx_t_6 = PyMethod_GET_SELF(__pyx_t_1);
+      assert(__pyx_t_6);
+      PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_1);
+      __Pyx_INCREF(__pyx_t_6);
+      __Pyx_INCREF(__pyx__function);
+      __Pyx_DECREF_SET(__pyx_t_1, __pyx__function);
+      __pyx_t_3 = 0;
+    }
+    #endif
+    {
+      PyObject *__pyx_callargs[2] = {__pyx_t_6, __pyx_v_cluster_mask};
+      __pyx_t_13 = __Pyx_PyObject_FastCall(__pyx_t_1, __pyx_callargs+__pyx_t_3, (2-__pyx_t_3) | (__pyx_t_3*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
+      __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
+      __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+      if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 523, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_13);
+    }
+    __pyx_t_1 = __Pyx_GetItemInt(__pyx_t_13, 0, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 523, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
-    __pyx_t_6 = __pyx_t_14;
-    __Pyx_INCREF(__pyx_t_6);
+    __pyx_t_14 = __pyx_t_1;
+    __Pyx_INCREF(__pyx_t_14);
     __pyx_t_3 = 0;
     {
-      PyObject *__pyx_callargs[2] = {__pyx_t_6, NULL};
-      __pyx_t_2 = __Pyx_PyObject_FastCallMethod(__pyx_mstate_global->__pyx_n_u_copy, __pyx_callargs+__pyx_t_3, (1-__pyx_t_3) | (1*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
-      __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
-      __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
-      if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 480, __pyx_L1_error)
+      PyObject *__pyx_callargs[2] = {__pyx_t_14, NULL};
+      __pyx_t_2 = __Pyx_PyObject_FastCallMethod(__pyx_mstate_global->__pyx_n_u_tolist, __pyx_callargs+__pyx_t_3, (1-__pyx_t_3) | (1*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
+      __Pyx_XDECREF(__pyx_t_14); __pyx_t_14 = 0;
+      __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+      if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 523, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
     }
-    if (PyDict_SetItem(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_candidates, __pyx_t_2) < 0) __PYX_ERR(0, 478, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_cluster_indices, __pyx_t_2) < 0) __PYX_ERR(0, 520, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    if (PyDict_SetItem(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_rescued_count, __pyx_mstate_global->__pyx_int_0) < 0) __PYX_ERR(0, 478, __pyx_L1_error)
-    if (PyDict_SetItem(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_tda_calls, __pyx_mstate_global->__pyx_int_0) < 0) __PYX_ERR(0, 478, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_rescued_count, __pyx_mstate_global->__pyx_int_0) < 0) __PYX_ERR(0, 520, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_tda_calls, __pyx_mstate_global->__pyx_int_0) < 0) __PYX_ERR(0, 520, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_cache_hits, __pyx_mstate_global->__pyx_int_0) < 0) __PYX_ERR(0, 520, __pyx_L1_error)
 
-    /* "entrap/ebm_engine.pyx":483
- *                 'rescued_count': 0,
+    /* "entrap/ebm_engine.pyx":527
  *                 'tda_calls': 0,
+ *                 'cache_hits': 0,
  *                 'needs_T_update': False             # <<<<<<<<<<<<<<
  *             }
  * 
 */
-    if (PyDict_SetItem(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_needs_T_update, Py_False) < 0) __PYX_ERR(0, 478, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_needs_T_update, Py_False) < 0) __PYX_ERR(0, 520, __pyx_L1_error)
 
-    /* "entrap/ebm_engine.pyx":477
+    /* "entrap/ebm_engine.pyx":519
  *             T_norm = self.compute_normalized_topological_energy(cluster_points, cluster_size)
  * 
  *             cluster_states[cid] = {             # <<<<<<<<<<<<<<
  *                 'T_norm': T_norm,
  *                 'size': cluster_size,
 */
-    __pyx_t_2 = __Pyx_PyLong_From_int(__pyx_v_cid); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 477, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyLong_From_int(__pyx_v_cid); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 519, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    if (unlikely((PyDict_SetItem(__pyx_v_cluster_states, __pyx_t_2, __pyx_t_7) < 0))) __PYX_ERR(0, 477, __pyx_L1_error)
+    if (unlikely((PyDict_SetItem(__pyx_v_cluster_states, __pyx_t_2, __pyx_t_7) < 0))) __PYX_ERR(0, 519, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
-    /* "entrap/ebm_engine.pyx":470
+    /* "entrap/ebm_engine.pyx":512
  *         # Initialize cluster states
  *         cluster_states = {}
  *         for cid in sorted_cluster_ids:             # <<<<<<<<<<<<<<
@@ -10263,7 +10569,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
   }
   __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
 
-  /* "entrap/ebm_engine.pyx":487
+  /* "entrap/ebm_engine.pyx":531
  * 
  *         # Fixed-point iteration
  *         iteration = 0             # <<<<<<<<<<<<<<
@@ -10272,7 +10578,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
 */
   __pyx_v_iteration = 0;
 
-  /* "entrap/ebm_engine.pyx":488
+  /* "entrap/ebm_engine.pyx":532
  *         # Fixed-point iteration
  *         iteration = 0
  *         total_rescued = 0             # <<<<<<<<<<<<<<
@@ -10281,7 +10587,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
 */
   __pyx_v_total_rescued = 0;
 
-  /* "entrap/ebm_engine.pyx":490
+  /* "entrap/ebm_engine.pyx":534
  *         total_rescued = 0
  * 
  *         while True:             # <<<<<<<<<<<<<<
@@ -10290,7 +10596,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
 */
   while (1) {
 
-    /* "entrap/ebm_engine.pyx":491
+    /* "entrap/ebm_engine.pyx":535
  * 
  *         while True:
  *             recruited_this_round = False             # <<<<<<<<<<<<<<
@@ -10299,7 +10605,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
 */
     __pyx_v_recruited_this_round = 0;
 
-    /* "entrap/ebm_engine.pyx":493
+    /* "entrap/ebm_engine.pyx":537
  *             recruited_this_round = False
  * 
  *             for cid in sorted_cluster_ids:             # <<<<<<<<<<<<<<
@@ -10312,57 +10618,62 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
       {
         Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_8);
         #if !CYTHON_ASSUME_SAFE_SIZE
-        if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 493, __pyx_L1_error)
+        if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 537, __pyx_L1_error)
         #endif
         if (__pyx_t_9 >= __pyx_temp) break;
       }
       __pyx_t_7 = __Pyx_PyList_GetItemRef(__pyx_t_8, __pyx_t_9);
       ++__pyx_t_9;
-      if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 493, __pyx_L1_error)
+      if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 537, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_7);
-      __pyx_t_11 = __Pyx_PyLong_As_int(__pyx_t_7); if (unlikely((__pyx_t_11 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 493, __pyx_L1_error)
+      __pyx_t_11 = __Pyx_PyLong_As_int(__pyx_t_7); if (unlikely((__pyx_t_11 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 537, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
       __pyx_v_cid = __pyx_t_11;
 
-      /* "entrap/ebm_engine.pyx":494
+      /* "entrap/ebm_engine.pyx":538
  * 
  *             for cid in sorted_cluster_ids:
  *                 state = cluster_states[cid]             # <<<<<<<<<<<<<<
  *                 candidates = state['candidates']
  * 
 */
-      __pyx_t_7 = __Pyx_PyLong_From_int(__pyx_v_cid); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 494, __pyx_L1_error)
+      __pyx_t_7 = __Pyx_PyLong_From_int(__pyx_v_cid); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 538, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_7);
-      __pyx_t_2 = __Pyx_PyDict_GetItem(__pyx_v_cluster_states, __pyx_t_7); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 494, __pyx_L1_error)
+      __pyx_t_2 = __Pyx_PyDict_GetItem(__pyx_v_cluster_states, __pyx_t_7); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 538, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
       __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
       __Pyx_XDECREF_SET(__pyx_v_state, __pyx_t_2);
       __pyx_t_2 = 0;
 
-      /* "entrap/ebm_engine.pyx":495
+      /* "entrap/ebm_engine.pyx":539
  *             for cid in sorted_cluster_ids:
  *                 state = cluster_states[cid]
  *                 candidates = state['candidates']             # <<<<<<<<<<<<<<
  * 
  *                 if len(candidates) == 0:
 */
-      __pyx_t_2 = __Pyx_PyObject_Dict_GetItem(__pyx_v_state, __pyx_mstate_global->__pyx_n_u_candidates); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 495, __pyx_L1_error)
+      __pyx_t_2 = __Pyx_PyObject_Dict_GetItem(__pyx_v_state, __pyx_mstate_global->__pyx_n_u_candidates); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 539, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
-      __Pyx_XDECREF_SET(__pyx_v_candidates, __pyx_t_2);
+      if (!(likely(PySet_CheckExact(__pyx_t_2))||((__pyx_t_2) == Py_None) || __Pyx_RaiseUnexpectedTypeError("set", __pyx_t_2))) __PYX_ERR(0, 539, __pyx_L1_error)
+      __Pyx_XDECREF_SET(__pyx_v_candidates, ((PyObject*)__pyx_t_2));
       __pyx_t_2 = 0;
 
-      /* "entrap/ebm_engine.pyx":497
+      /* "entrap/ebm_engine.pyx":541
  *                 candidates = state['candidates']
  * 
  *                 if len(candidates) == 0:             # <<<<<<<<<<<<<<
  *                     continue
  * 
 */
-      __pyx_t_17 = PyObject_Length(__pyx_v_candidates); if (unlikely(__pyx_t_17 == ((Py_ssize_t)-1))) __PYX_ERR(0, 497, __pyx_L1_error)
+      if (unlikely(__pyx_v_candidates == Py_None)) {
+        PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
+        __PYX_ERR(0, 541, __pyx_L1_error)
+      }
+      __pyx_t_17 = __Pyx_PySet_GET_SIZE(__pyx_v_candidates); if (unlikely(__pyx_t_17 == ((Py_ssize_t)-1))) __PYX_ERR(0, 541, __pyx_L1_error)
       __pyx_t_5 = (__pyx_t_17 == 0);
       if (__pyx_t_5) {
 
-        /* "entrap/ebm_engine.pyx":498
+        /* "entrap/ebm_engine.pyx":542
  * 
  *                 if len(candidates) == 0:
  *                     continue             # <<<<<<<<<<<<<<
@@ -10371,7 +10682,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
 */
         goto __pyx_L30_continue;
 
-        /* "entrap/ebm_engine.pyx":497
+        /* "entrap/ebm_engine.pyx":541
  *                 candidates = state['candidates']
  * 
  *                 if len(candidates) == 0:             # <<<<<<<<<<<<<<
@@ -10380,7 +10691,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
 */
       }
 
-      /* "entrap/ebm_engine.pyx":500
+      /* "entrap/ebm_engine.pyx":544
  *                     continue
  * 
  *                 candidates_list = [idx for idx in candidates if refined_labels[idx] == -1]             # <<<<<<<<<<<<<<
@@ -10388,89 +10699,51 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
  *                 if len_candidates_list == 0:
 */
       { /* enter inner scope */
-        __pyx_t_2 = PyList_New(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 500, __pyx_L35_error)
+        __pyx_t_2 = PyList_New(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 544, __pyx_L35_error)
         __Pyx_GOTREF(__pyx_t_2);
-        if (likely(PyList_CheckExact(__pyx_v_candidates)) || PyTuple_CheckExact(__pyx_v_candidates)) {
-          __pyx_t_7 = __pyx_v_candidates; __Pyx_INCREF(__pyx_t_7);
-          __pyx_t_17 = 0;
-          __pyx_t_10 = NULL;
-        } else {
-          __pyx_t_17 = -1; __pyx_t_7 = PyObject_GetIter(__pyx_v_candidates); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 500, __pyx_L35_error)
-          __Pyx_GOTREF(__pyx_t_7);
-          __pyx_t_10 = (CYTHON_COMPILING_IN_LIMITED_API) ? PyIter_Next : __Pyx_PyObject_GetIterNextFunc(__pyx_t_7); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 500, __pyx_L35_error)
-        }
-        for (;;) {
-          if (likely(!__pyx_t_10)) {
-            if (likely(PyList_CheckExact(__pyx_t_7))) {
-              {
-                Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_7);
-                #if !CYTHON_ASSUME_SAFE_SIZE
-                if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 500, __pyx_L35_error)
-                #endif
-                if (__pyx_t_17 >= __pyx_temp) break;
-              }
-              __pyx_t_14 = __Pyx_PyList_GetItemRef(__pyx_t_7, __pyx_t_17);
-              ++__pyx_t_17;
-            } else {
-              {
-                Py_ssize_t __pyx_temp = __Pyx_PyTuple_GET_SIZE(__pyx_t_7);
-                #if !CYTHON_ASSUME_SAFE_SIZE
-                if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 500, __pyx_L35_error)
-                #endif
-                if (__pyx_t_17 >= __pyx_temp) break;
-              }
-              #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-              __pyx_t_14 = __Pyx_NewRef(PyTuple_GET_ITEM(__pyx_t_7, __pyx_t_17));
-              #else
-              __pyx_t_14 = __Pyx_PySequence_ITEM(__pyx_t_7, __pyx_t_17);
-              #endif
-              ++__pyx_t_17;
-            }
-            if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 500, __pyx_L35_error)
-          } else {
-            __pyx_t_14 = __pyx_t_10(__pyx_t_7);
-            if (unlikely(!__pyx_t_14)) {
-              PyObject* exc_type = PyErr_Occurred();
-              if (exc_type) {
-                if (unlikely(!__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) __PYX_ERR(0, 500, __pyx_L35_error)
-                PyErr_Clear();
-              }
-              break;
-            }
-          }
-          __Pyx_GOTREF(__pyx_t_14);
-          __Pyx_XDECREF_SET(__pyx_8genexpr2__pyx_v_idx, __pyx_t_14);
-          __pyx_t_14 = 0;
-          __pyx_t_14 = __Pyx_PyObject_GetItem(__pyx_v_refined_labels, __pyx_8genexpr2__pyx_v_idx); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 500, __pyx_L35_error)
-          __Pyx_GOTREF(__pyx_t_14);
-          __pyx_t_5 = (__Pyx_PyLong_BoolEqObjC(__pyx_t_14, __pyx_mstate_global->__pyx_int_neg_1, -1L, 0)); if (unlikely((__pyx_t_5 < 0))) __PYX_ERR(0, 500, __pyx_L35_error)
-          __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
+        __pyx_t_17 = 0;
+        __pyx_t_1 = __Pyx_set_iterator(__pyx_v_candidates, 1, (&__pyx_t_16), (&__pyx_t_11)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 544, __pyx_L35_error)
+        __Pyx_GOTREF(__pyx_t_1);
+        __Pyx_XDECREF(__pyx_t_7);
+        __pyx_t_7 = __pyx_t_1;
+        __pyx_t_1 = 0;
+        while (1) {
+          __pyx_t_19 = __Pyx_set_iter_next(__pyx_t_7, __pyx_t_16, &__pyx_t_17, &__pyx_t_1, __pyx_t_11);
+          if (unlikely(__pyx_t_19 == 0)) break;
+          if (unlikely(__pyx_t_19 == -1)) __PYX_ERR(0, 544, __pyx_L35_error)
+          __Pyx_GOTREF(__pyx_t_1);
+          __Pyx_XDECREF_SET(__pyx_8genexpr2__pyx_v_idx, __pyx_t_1);
+          __pyx_t_1 = 0;
+          __pyx_t_1 = __Pyx_PyObject_GetItem(((PyObject *)__pyx_v_refined_labels), __pyx_8genexpr2__pyx_v_idx); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 544, __pyx_L35_error)
+          __Pyx_GOTREF(__pyx_t_1);
+          __pyx_t_5 = (__Pyx_PyLong_BoolEqObjC(__pyx_t_1, __pyx_mstate_global->__pyx_int_neg_1, -1L, 0)); if (unlikely((__pyx_t_5 < 0))) __PYX_ERR(0, 544, __pyx_L35_error)
+          __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
           if (__pyx_t_5) {
-            if (unlikely(__Pyx_ListComp_Append(__pyx_t_2, (PyObject*)__pyx_8genexpr2__pyx_v_idx))) __PYX_ERR(0, 500, __pyx_L35_error)
+            if (unlikely(__Pyx_ListComp_Append(__pyx_t_2, (PyObject*)__pyx_8genexpr2__pyx_v_idx))) __PYX_ERR(0, 544, __pyx_L35_error)
           }
         }
         __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
         __Pyx_XDECREF(__pyx_8genexpr2__pyx_v_idx); __pyx_8genexpr2__pyx_v_idx = 0;
-        goto __pyx_L40_exit_scope;
+        goto __pyx_L39_exit_scope;
         __pyx_L35_error:;
         __Pyx_XDECREF(__pyx_8genexpr2__pyx_v_idx); __pyx_8genexpr2__pyx_v_idx = 0;
         goto __pyx_L1_error;
-        __pyx_L40_exit_scope:;
+        __pyx_L39_exit_scope:;
       } /* exit inner scope */
       __Pyx_XDECREF_SET(__pyx_v_candidates_list, ((PyObject*)__pyx_t_2));
       __pyx_t_2 = 0;
 
-      /* "entrap/ebm_engine.pyx":501
+      /* "entrap/ebm_engine.pyx":545
  * 
  *                 candidates_list = [idx for idx in candidates if refined_labels[idx] == -1]
  *                 len_candidates_list = len(candidates_list)             # <<<<<<<<<<<<<<
  *                 if len_candidates_list == 0:
  *                     continue
 */
-      __pyx_t_17 = __Pyx_PyList_GET_SIZE(__pyx_v_candidates_list); if (unlikely(__pyx_t_17 == ((Py_ssize_t)-1))) __PYX_ERR(0, 501, __pyx_L1_error)
-      __pyx_v_len_candidates_list = __pyx_t_17;
+      __pyx_t_16 = __Pyx_PyList_GET_SIZE(__pyx_v_candidates_list); if (unlikely(__pyx_t_16 == ((Py_ssize_t)-1))) __PYX_ERR(0, 545, __pyx_L1_error)
+      __pyx_v_len_candidates_list = __pyx_t_16;
 
-      /* "entrap/ebm_engine.pyx":502
+      /* "entrap/ebm_engine.pyx":546
  *                 candidates_list = [idx for idx in candidates if refined_labels[idx] == -1]
  *                 len_candidates_list = len(candidates_list)
  *                 if len_candidates_list == 0:             # <<<<<<<<<<<<<<
@@ -10480,7 +10753,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
       __pyx_t_5 = (__pyx_v_len_candidates_list == 0);
       if (__pyx_t_5) {
 
-        /* "entrap/ebm_engine.pyx":503
+        /* "entrap/ebm_engine.pyx":547
  *                 len_candidates_list = len(candidates_list)
  *                 if len_candidates_list == 0:
  *                     continue             # <<<<<<<<<<<<<<
@@ -10489,7 +10762,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
 */
         goto __pyx_L30_continue;
 
-        /* "entrap/ebm_engine.pyx":502
+        /* "entrap/ebm_engine.pyx":546
  *                 candidates_list = [idx for idx in candidates if refined_labels[idx] == -1]
  *                 len_candidates_list = len(candidates_list)
  *                 if len_candidates_list == 0:             # <<<<<<<<<<<<<<
@@ -10498,49 +10771,162 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
 */
       }
 
-      /* "entrap/ebm_engine.pyx":506
+      /* "entrap/ebm_engine.pyx":550
  * 
  *                 # Get current cluster points
  *                 cluster_mask = (refined_labels == cid)             # <<<<<<<<<<<<<<
  *                 cluster_points = X[cluster_mask]
  *                 lambda_G_t = self.lambda_G0 * (1.0 - np.exp(-iteration / self.tau))
 */
-      __pyx_t_2 = __Pyx_PyLong_From_int(__pyx_v_cid); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 506, __pyx_L1_error)
+      __pyx_t_2 = __Pyx_PyLong_From_int(__pyx_v_cid); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 550, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
-      __pyx_t_7 = PyObject_RichCompare(__pyx_v_refined_labels, __pyx_t_2, Py_EQ); __Pyx_XGOTREF(__pyx_t_7); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 506, __pyx_L1_error)
+      __pyx_t_7 = PyObject_RichCompare(((PyObject *)__pyx_v_refined_labels), __pyx_t_2, Py_EQ); __Pyx_XGOTREF(__pyx_t_7); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 550, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
       __Pyx_XDECREF_SET(__pyx_v_cluster_mask, __pyx_t_7);
       __pyx_t_7 = 0;
 
-      /* "entrap/ebm_engine.pyx":507
+      /* "entrap/ebm_engine.pyx":551
  *                 # Get current cluster points
  *                 cluster_mask = (refined_labels == cid)
  *                 cluster_points = X[cluster_mask]             # <<<<<<<<<<<<<<
  *                 lambda_G_t = self.lambda_G0 * (1.0 - np.exp(-iteration / self.tau))
  * 
 */
-      __pyx_t_7 = __Pyx_PyObject_GetItem(__pyx_v_X, __pyx_v_cluster_mask); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 507, __pyx_L1_error)
+      __pyx_t_7 = __Pyx_PyObject_GetItem(__pyx_v_X, __pyx_v_cluster_mask); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 551, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_7);
-      __Pyx_XDECREF_SET(__pyx_v_cluster_points, __pyx_t_7);
+      if (!(likely(((__pyx_t_7) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_7, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 551, __pyx_L1_error)
+      __Pyx_XDECREF_SET(__pyx_v_cluster_points, ((PyArrayObject *)__pyx_t_7));
       __pyx_t_7 = 0;
 
-      /* "entrap/ebm_engine.pyx":508
+      /* "entrap/ebm_engine.pyx":552
  *                 cluster_mask = (refined_labels == cid)
  *                 cluster_points = X[cluster_mask]
  *                 lambda_G_t = self.lambda_G0 * (1.0 - np.exp(-iteration / self.tau))             # <<<<<<<<<<<<<<
  * 
  *                  # Precompute cluster statistics
 */
-      __pyx_t_7 = PyFloat_FromDouble(__pyx_v_self->lambda_G0); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 508, __pyx_L1_error)
+      __pyx_t_7 = PyFloat_FromDouble(__pyx_v_self->lambda_G0); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 552, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_7);
-      __pyx_t_14 = NULL;
-      __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 508, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_6);
-      __pyx_t_13 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_mstate_global->__pyx_n_u_exp); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 508, __pyx_L1_error)
+      __pyx_t_1 = NULL;
+      __Pyx_GetModuleGlobalName(__pyx_t_14, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 552, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_14);
+      __pyx_t_13 = __Pyx_PyObject_GetAttrStr(__pyx_t_14, __pyx_mstate_global->__pyx_n_u_exp); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 552, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_13);
-      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-      __pyx_t_6 = PyFloat_FromDouble((((double)(-__pyx_v_iteration)) / __pyx_v_self->tau)); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 508, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_6);
+      __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
+      __pyx_t_14 = PyFloat_FromDouble((((double)(-__pyx_v_iteration)) / __pyx_v_self->tau)); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 552, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_14);
+      __pyx_t_3 = 1;
+      #if CYTHON_UNPACK_METHODS
+      if (unlikely(PyMethod_Check(__pyx_t_13))) {
+        __pyx_t_1 = PyMethod_GET_SELF(__pyx_t_13);
+        assert(__pyx_t_1);
+        PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_13);
+        __Pyx_INCREF(__pyx_t_1);
+        __Pyx_INCREF(__pyx__function);
+        __Pyx_DECREF_SET(__pyx_t_13, __pyx__function);
+        __pyx_t_3 = 0;
+      }
+      #endif
+      {
+        PyObject *__pyx_callargs[2] = {__pyx_t_1, __pyx_t_14};
+        __pyx_t_2 = __Pyx_PyObject_FastCall(__pyx_t_13, __pyx_callargs+__pyx_t_3, (2-__pyx_t_3) | (__pyx_t_3*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
+        __Pyx_XDECREF(__pyx_t_1); __pyx_t_1 = 0;
+        __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
+        __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+        if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 552, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_2);
+      }
+      __pyx_t_13 = __Pyx_PyFloat_SubtractCObj(__pyx_mstate_global->__pyx_float_1_0, __pyx_t_2, 1.0, 0, 0); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 552, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_13);
+      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+      __pyx_t_2 = PyNumber_Multiply(__pyx_t_7, __pyx_t_13); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 552, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_2);
+      __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+      __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+      __pyx_t_18 = __Pyx_PyFloat_AsDouble(__pyx_t_2); if (unlikely((__pyx_t_18 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 552, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+      __pyx_v_lambda_G_t = __pyx_t_18;
+
+      /* "entrap/ebm_engine.pyx":555
+ * 
+ *                  # Precompute cluster statistics
+ *                 d = cluster_points.shape[1]             # <<<<<<<<<<<<<<
+ *                 mu = np.asarray(compute_cluster_mean(cluster_points))
+ *                 Sigma_reg = np.asarray(compute_cluster_covariance(
+*/
+      __pyx_v_d = (__pyx_f_5numpy_7ndarray_5shape_shape(__pyx_v_cluster_points)[1]);
+
+      /* "entrap/ebm_engine.pyx":556
+ *                  # Precompute cluster statistics
+ *                 d = cluster_points.shape[1]
+ *                 mu = np.asarray(compute_cluster_mean(cluster_points))             # <<<<<<<<<<<<<<
+ *                 Sigma_reg = np.asarray(compute_cluster_covariance(
+ *                     cluster_points, mu, self.ridge_epsilon
+*/
+      __pyx_t_13 = NULL;
+      __Pyx_GetModuleGlobalName(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 556, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_7);
+      __pyx_t_14 = __Pyx_PyObject_GetAttrStr(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_asarray); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 556, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_14);
+      __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+      __pyx_t_7 = ((PyObject *)__pyx_f_6entrap_7kernels_compute_cluster_mean(((PyArrayObject *)__pyx_v_cluster_points), 0)); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 556, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_7);
+      __pyx_t_3 = 1;
+      #if CYTHON_UNPACK_METHODS
+      if (unlikely(PyMethod_Check(__pyx_t_14))) {
+        __pyx_t_13 = PyMethod_GET_SELF(__pyx_t_14);
+        assert(__pyx_t_13);
+        PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_14);
+        __Pyx_INCREF(__pyx_t_13);
+        __Pyx_INCREF(__pyx__function);
+        __Pyx_DECREF_SET(__pyx_t_14, __pyx__function);
+        __pyx_t_3 = 0;
+      }
+      #endif
+      {
+        PyObject *__pyx_callargs[2] = {__pyx_t_13, __pyx_t_7};
+        __pyx_t_2 = __Pyx_PyObject_FastCall(__pyx_t_14, __pyx_callargs+__pyx_t_3, (2-__pyx_t_3) | (__pyx_t_3*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
+        __Pyx_XDECREF(__pyx_t_13); __pyx_t_13 = 0;
+        __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+        __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
+        if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 556, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_2);
+      }
+      __Pyx_XDECREF_SET(__pyx_v_mu, __pyx_t_2);
+      __pyx_t_2 = 0;
+
+      /* "entrap/ebm_engine.pyx":557
+ *                 d = cluster_points.shape[1]
+ *                 mu = np.asarray(compute_cluster_mean(cluster_points))
+ *                 Sigma_reg = np.asarray(compute_cluster_covariance(             # <<<<<<<<<<<<<<
+ *                     cluster_points, mu, self.ridge_epsilon
+ *                 ))
+*/
+      __pyx_t_14 = NULL;
+      __Pyx_GetModuleGlobalName(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 557, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_7);
+      __pyx_t_13 = __Pyx_PyObject_GetAttrStr(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_asarray); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 557, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_13);
+      __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+
+      /* "entrap/ebm_engine.pyx":558
+ *                 mu = np.asarray(compute_cluster_mean(cluster_points))
+ *                 Sigma_reg = np.asarray(compute_cluster_covariance(
+ *                     cluster_points, mu, self.ridge_epsilon             # <<<<<<<<<<<<<<
+ *                 ))
+ * 
+*/
+      if (!(likely(((__pyx_v_mu) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_mu, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 558, __pyx_L1_error)
+
+      /* "entrap/ebm_engine.pyx":557
+ *                 d = cluster_points.shape[1]
+ *                 mu = np.asarray(compute_cluster_mean(cluster_points))
+ *                 Sigma_reg = np.asarray(compute_cluster_covariance(             # <<<<<<<<<<<<<<
+ *                     cluster_points, mu, self.ridge_epsilon
+ *                 ))
+*/
+      __pyx_t_7 = ((PyObject *)__pyx_f_6entrap_7kernels_compute_cluster_covariance(((PyArrayObject *)__pyx_v_cluster_points), ((PyArrayObject *)__pyx_v_mu), __pyx_v_self->ridge_epsilon, 0)); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 557, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_7);
       __pyx_t_3 = 1;
       #if CYTHON_UNPACK_METHODS
       if (unlikely(PyMethod_Check(__pyx_t_13))) {
@@ -10554,139 +10940,18 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
       }
       #endif
       {
-        PyObject *__pyx_callargs[2] = {__pyx_t_14, __pyx_t_6};
+        PyObject *__pyx_callargs[2] = {__pyx_t_14, __pyx_t_7};
         __pyx_t_2 = __Pyx_PyObject_FastCall(__pyx_t_13, __pyx_callargs+__pyx_t_3, (2-__pyx_t_3) | (__pyx_t_3*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
         __Pyx_XDECREF(__pyx_t_14); __pyx_t_14 = 0;
-        __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+        __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
         __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
-        if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 508, __pyx_L1_error)
+        if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 557, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
       }
-      __pyx_t_13 = __Pyx_PyFloat_SubtractCObj(__pyx_mstate_global->__pyx_float_1_0, __pyx_t_2, 1.0, 0, 0); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 508, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_13);
-      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-      __pyx_t_2 = PyNumber_Multiply(__pyx_t_7, __pyx_t_13); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 508, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_2);
-      __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-      __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
-      __pyx_t_18 = __Pyx_PyFloat_AsDouble(__pyx_t_2); if (unlikely((__pyx_t_18 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 508, __pyx_L1_error)
-      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-      __pyx_v_lambda_G_t = __pyx_t_18;
+      __Pyx_XDECREF_SET(__pyx_v_Sigma_reg, __pyx_t_2);
+      __pyx_t_2 = 0;
 
-      /* "entrap/ebm_engine.pyx":511
- * 
- *                  # Precompute cluster statistics
- *                 d = cluster_points.shape[1]             # <<<<<<<<<<<<<<
- *                 mu = np.asarray(compute_cluster_mean(cluster_points))
- *                 Sigma_reg = np.asarray(compute_cluster_covariance(
-*/
-      __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_cluster_points, __pyx_mstate_global->__pyx_n_u_shape); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 511, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_2);
-      __pyx_t_13 = __Pyx_GetItemInt(__pyx_t_2, 1, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 511, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_13);
-      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-      __pyx_t_11 = __Pyx_PyLong_As_int(__pyx_t_13); if (unlikely((__pyx_t_11 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 511, __pyx_L1_error)
-      __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
-      __pyx_v_d = __pyx_t_11;
-
-      /* "entrap/ebm_engine.pyx":512
- *                  # Precompute cluster statistics
- *                 d = cluster_points.shape[1]
- *                 mu = np.asarray(compute_cluster_mean(cluster_points))             # <<<<<<<<<<<<<<
- *                 Sigma_reg = np.asarray(compute_cluster_covariance(
- *                     cluster_points, mu, self.ridge_epsilon
-*/
-      __pyx_t_2 = NULL;
-      __Pyx_GetModuleGlobalName(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 512, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_7);
-      __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_asarray); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 512, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_6);
-      __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-      if (!(likely(((__pyx_v_cluster_points) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_cluster_points, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 512, __pyx_L1_error)
-      __pyx_t_7 = ((PyObject *)__pyx_f_6entrap_7kernels_compute_cluster_mean(((PyArrayObject *)__pyx_v_cluster_points), 0)); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 512, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_7);
-      __pyx_t_3 = 1;
-      #if CYTHON_UNPACK_METHODS
-      if (unlikely(PyMethod_Check(__pyx_t_6))) {
-        __pyx_t_2 = PyMethod_GET_SELF(__pyx_t_6);
-        assert(__pyx_t_2);
-        PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_6);
-        __Pyx_INCREF(__pyx_t_2);
-        __Pyx_INCREF(__pyx__function);
-        __Pyx_DECREF_SET(__pyx_t_6, __pyx__function);
-        __pyx_t_3 = 0;
-      }
-      #endif
-      {
-        PyObject *__pyx_callargs[2] = {__pyx_t_2, __pyx_t_7};
-        __pyx_t_13 = __Pyx_PyObject_FastCall(__pyx_t_6, __pyx_callargs+__pyx_t_3, (2-__pyx_t_3) | (__pyx_t_3*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
-        __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
-        __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-        __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-        if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 512, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_13);
-      }
-      __Pyx_XDECREF_SET(__pyx_v_mu, __pyx_t_13);
-      __pyx_t_13 = 0;
-
-      /* "entrap/ebm_engine.pyx":513
- *                 d = cluster_points.shape[1]
- *                 mu = np.asarray(compute_cluster_mean(cluster_points))
- *                 Sigma_reg = np.asarray(compute_cluster_covariance(             # <<<<<<<<<<<<<<
- *                     cluster_points, mu, self.ridge_epsilon
- *                 ))
-*/
-      __pyx_t_6 = NULL;
-      __Pyx_GetModuleGlobalName(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 513, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_7);
-      __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_asarray); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 513, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_2);
-      __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-
-      /* "entrap/ebm_engine.pyx":514
- *                 mu = np.asarray(compute_cluster_mean(cluster_points))
- *                 Sigma_reg = np.asarray(compute_cluster_covariance(
- *                     cluster_points, mu, self.ridge_epsilon             # <<<<<<<<<<<<<<
- *                 ))
- * 
-*/
-      if (!(likely(((__pyx_v_cluster_points) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_cluster_points, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 514, __pyx_L1_error)
-      if (!(likely(((__pyx_v_mu) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_mu, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 514, __pyx_L1_error)
-
-      /* "entrap/ebm_engine.pyx":513
- *                 d = cluster_points.shape[1]
- *                 mu = np.asarray(compute_cluster_mean(cluster_points))
- *                 Sigma_reg = np.asarray(compute_cluster_covariance(             # <<<<<<<<<<<<<<
- *                     cluster_points, mu, self.ridge_epsilon
- *                 ))
-*/
-      __pyx_t_7 = ((PyObject *)__pyx_f_6entrap_7kernels_compute_cluster_covariance(((PyArrayObject *)__pyx_v_cluster_points), ((PyArrayObject *)__pyx_v_mu), __pyx_v_self->ridge_epsilon, 0)); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 513, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_7);
-      __pyx_t_3 = 1;
-      #if CYTHON_UNPACK_METHODS
-      if (unlikely(PyMethod_Check(__pyx_t_2))) {
-        __pyx_t_6 = PyMethod_GET_SELF(__pyx_t_2);
-        assert(__pyx_t_6);
-        PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_2);
-        __Pyx_INCREF(__pyx_t_6);
-        __Pyx_INCREF(__pyx__function);
-        __Pyx_DECREF_SET(__pyx_t_2, __pyx__function);
-        __pyx_t_3 = 0;
-      }
-      #endif
-      {
-        PyObject *__pyx_callargs[2] = {__pyx_t_6, __pyx_t_7};
-        __pyx_t_13 = __Pyx_PyObject_FastCall(__pyx_t_2, __pyx_callargs+__pyx_t_3, (2-__pyx_t_3) | (__pyx_t_3*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
-        __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
-        __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-        __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-        if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 513, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_13);
-      }
-      __Pyx_XDECREF_SET(__pyx_v_Sigma_reg, __pyx_t_13);
-      __pyx_t_13 = 0;
-
-      /* "entrap/ebm_engine.pyx":517
+      /* "entrap/ebm_engine.pyx":561
  *                 ))
  * 
  *                 try:             # <<<<<<<<<<<<<<
@@ -10696,46 +10961,46 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
       {
         __Pyx_PyThreadState_declare
         __Pyx_PyThreadState_assign
-        __Pyx_ExceptionSave(&__pyx_t_19, &__pyx_t_20, &__pyx_t_21);
-        __Pyx_XGOTREF(__pyx_t_19);
+        __Pyx_ExceptionSave(&__pyx_t_20, &__pyx_t_21, &__pyx_t_22);
         __Pyx_XGOTREF(__pyx_t_20);
         __Pyx_XGOTREF(__pyx_t_21);
+        __Pyx_XGOTREF(__pyx_t_22);
         /*try:*/ {
 
-          /* "entrap/ebm_engine.pyx":518
+          /* "entrap/ebm_engine.pyx":562
  * 
  *                 try:
  *                     Sigma_inv = inv(Sigma_reg)             # <<<<<<<<<<<<<<
  *                     log_det_Sigma = slogdet(Sigma_reg)[1]
  *                 except:
 */
-          __pyx_t_2 = NULL;
-          __Pyx_GetModuleGlobalName(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_inv); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 518, __pyx_L42_error)
+          __pyx_t_13 = NULL;
+          __Pyx_GetModuleGlobalName(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_inv); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 562, __pyx_L41_error)
           __Pyx_GOTREF(__pyx_t_7);
           __pyx_t_3 = 1;
           #if CYTHON_UNPACK_METHODS
           if (unlikely(PyMethod_Check(__pyx_t_7))) {
-            __pyx_t_2 = PyMethod_GET_SELF(__pyx_t_7);
-            assert(__pyx_t_2);
+            __pyx_t_13 = PyMethod_GET_SELF(__pyx_t_7);
+            assert(__pyx_t_13);
             PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_7);
-            __Pyx_INCREF(__pyx_t_2);
+            __Pyx_INCREF(__pyx_t_13);
             __Pyx_INCREF(__pyx__function);
             __Pyx_DECREF_SET(__pyx_t_7, __pyx__function);
             __pyx_t_3 = 0;
           }
           #endif
           {
-            PyObject *__pyx_callargs[2] = {__pyx_t_2, __pyx_v_Sigma_reg};
-            __pyx_t_13 = __Pyx_PyObject_FastCall(__pyx_t_7, __pyx_callargs+__pyx_t_3, (2-__pyx_t_3) | (__pyx_t_3*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
-            __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
+            PyObject *__pyx_callargs[2] = {__pyx_t_13, __pyx_v_Sigma_reg};
+            __pyx_t_2 = __Pyx_PyObject_FastCall(__pyx_t_7, __pyx_callargs+__pyx_t_3, (2-__pyx_t_3) | (__pyx_t_3*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
+            __Pyx_XDECREF(__pyx_t_13); __pyx_t_13 = 0;
             __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-            if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 518, __pyx_L42_error)
-            __Pyx_GOTREF(__pyx_t_13);
+            if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 562, __pyx_L41_error)
+            __Pyx_GOTREF(__pyx_t_2);
           }
-          __Pyx_XDECREF_SET(__pyx_v_Sigma_inv, __pyx_t_13);
-          __pyx_t_13 = 0;
+          __Pyx_XDECREF_SET(__pyx_v_Sigma_inv, __pyx_t_2);
+          __pyx_t_2 = 0;
 
-          /* "entrap/ebm_engine.pyx":519
+          /* "entrap/ebm_engine.pyx":563
  *                 try:
  *                     Sigma_inv = inv(Sigma_reg)
  *                     log_det_Sigma = slogdet(Sigma_reg)[1]             # <<<<<<<<<<<<<<
@@ -10743,35 +11008,35 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
  *                     Sigma_inv = np.eye(d) / (np.trace(Sigma_reg) / d + 1e-6)
 */
           __pyx_t_7 = NULL;
-          __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_mstate_global->__pyx_n_u_slogdet); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 519, __pyx_L42_error)
-          __Pyx_GOTREF(__pyx_t_2);
+          __Pyx_GetModuleGlobalName(__pyx_t_13, __pyx_mstate_global->__pyx_n_u_slogdet); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 563, __pyx_L41_error)
+          __Pyx_GOTREF(__pyx_t_13);
           __pyx_t_3 = 1;
           #if CYTHON_UNPACK_METHODS
-          if (unlikely(PyMethod_Check(__pyx_t_2))) {
-            __pyx_t_7 = PyMethod_GET_SELF(__pyx_t_2);
+          if (unlikely(PyMethod_Check(__pyx_t_13))) {
+            __pyx_t_7 = PyMethod_GET_SELF(__pyx_t_13);
             assert(__pyx_t_7);
-            PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_2);
+            PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_13);
             __Pyx_INCREF(__pyx_t_7);
             __Pyx_INCREF(__pyx__function);
-            __Pyx_DECREF_SET(__pyx_t_2, __pyx__function);
+            __Pyx_DECREF_SET(__pyx_t_13, __pyx__function);
             __pyx_t_3 = 0;
           }
           #endif
           {
             PyObject *__pyx_callargs[2] = {__pyx_t_7, __pyx_v_Sigma_reg};
-            __pyx_t_13 = __Pyx_PyObject_FastCall(__pyx_t_2, __pyx_callargs+__pyx_t_3, (2-__pyx_t_3) | (__pyx_t_3*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
+            __pyx_t_2 = __Pyx_PyObject_FastCall(__pyx_t_13, __pyx_callargs+__pyx_t_3, (2-__pyx_t_3) | (__pyx_t_3*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
             __Pyx_XDECREF(__pyx_t_7); __pyx_t_7 = 0;
-            __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-            if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 519, __pyx_L42_error)
-            __Pyx_GOTREF(__pyx_t_13);
+            __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+            if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 563, __pyx_L41_error)
+            __Pyx_GOTREF(__pyx_t_2);
           }
-          __pyx_t_2 = __Pyx_GetItemInt(__pyx_t_13, 1, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 519, __pyx_L42_error)
-          __Pyx_GOTREF(__pyx_t_2);
-          __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
-          __Pyx_XDECREF_SET(__pyx_v_log_det_Sigma, __pyx_t_2);
-          __pyx_t_2 = 0;
+          __pyx_t_13 = __Pyx_GetItemInt(__pyx_t_2, 1, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 563, __pyx_L41_error)
+          __Pyx_GOTREF(__pyx_t_13);
+          __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+          __Pyx_XDECREF_SET(__pyx_v_log_det_Sigma, __pyx_t_13);
+          __pyx_t_13 = 0;
 
-          /* "entrap/ebm_engine.pyx":517
+          /* "entrap/ebm_engine.pyx":561
  *                 ))
  * 
  *                 try:             # <<<<<<<<<<<<<<
@@ -10779,11 +11044,11 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
  *                     log_det_Sigma = slogdet(Sigma_reg)[1]
 */
         }
-        __Pyx_XDECREF(__pyx_t_19); __pyx_t_19 = 0;
         __Pyx_XDECREF(__pyx_t_20); __pyx_t_20 = 0;
         __Pyx_XDECREF(__pyx_t_21); __pyx_t_21 = 0;
-        goto __pyx_L49_try_end;
-        __pyx_L42_error:;
+        __Pyx_XDECREF(__pyx_t_22); __pyx_t_22 = 0;
+        goto __pyx_L48_try_end;
+        __pyx_L41_error:;
         __Pyx_XDECREF(__pyx_t_1); __pyx_t_1 = 0;
         __Pyx_XDECREF(__pyx_t_12); __pyx_t_12 = 0;
         __Pyx_XDECREF(__pyx_t_13); __pyx_t_13 = 0;
@@ -10792,7 +11057,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
         __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
         __Pyx_XDECREF(__pyx_t_7); __pyx_t_7 = 0;
 
-        /* "entrap/ebm_engine.pyx":520
+        /* "entrap/ebm_engine.pyx":564
  *                     Sigma_inv = inv(Sigma_reg)
  *                     log_det_Sigma = slogdet(Sigma_reg)[1]
  *                 except:             # <<<<<<<<<<<<<<
@@ -10801,90 +11066,90 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
 */
         /*except:*/ {
           __Pyx_AddTraceback("entrap.ebm_engine.EBM_Reassignment_Engine.reassign", __pyx_clineno, __pyx_lineno, __pyx_filename);
-          if (__Pyx_GetException(&__pyx_t_2, &__pyx_t_13, &__pyx_t_7) < 0) __PYX_ERR(0, 520, __pyx_L44_except_error)
-          __Pyx_XGOTREF(__pyx_t_2);
+          if (__Pyx_GetException(&__pyx_t_13, &__pyx_t_2, &__pyx_t_7) < 0) __PYX_ERR(0, 564, __pyx_L43_except_error)
           __Pyx_XGOTREF(__pyx_t_13);
+          __Pyx_XGOTREF(__pyx_t_2);
           __Pyx_XGOTREF(__pyx_t_7);
 
-          /* "entrap/ebm_engine.pyx":521
+          /* "entrap/ebm_engine.pyx":565
  *                     log_det_Sigma = slogdet(Sigma_reg)[1]
  *                 except:
  *                     Sigma_inv = np.eye(d) / (np.trace(Sigma_reg) / d + 1e-6)             # <<<<<<<<<<<<<<
  *                     log_det_Sigma = 0.0
  * 
 */
-          __pyx_t_14 = NULL;
-          __Pyx_GetModuleGlobalName(__pyx_t_12, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 521, __pyx_L44_except_error)
-          __Pyx_GOTREF(__pyx_t_12);
-          __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_12, __pyx_mstate_global->__pyx_n_u_eye); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 521, __pyx_L44_except_error)
-          __Pyx_GOTREF(__pyx_t_1);
-          __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
-          __pyx_t_12 = __Pyx_PyLong_From_int(__pyx_v_d); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 521, __pyx_L44_except_error)
-          __Pyx_GOTREF(__pyx_t_12);
-          __pyx_t_3 = 1;
-          #if CYTHON_UNPACK_METHODS
-          if (unlikely(PyMethod_Check(__pyx_t_1))) {
-            __pyx_t_14 = PyMethod_GET_SELF(__pyx_t_1);
-            assert(__pyx_t_14);
-            PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_1);
-            __Pyx_INCREF(__pyx_t_14);
-            __Pyx_INCREF(__pyx__function);
-            __Pyx_DECREF_SET(__pyx_t_1, __pyx__function);
-            __pyx_t_3 = 0;
-          }
-          #endif
-          {
-            PyObject *__pyx_callargs[2] = {__pyx_t_14, __pyx_t_12};
-            __pyx_t_6 = __Pyx_PyObject_FastCall(__pyx_t_1, __pyx_callargs+__pyx_t_3, (2-__pyx_t_3) | (__pyx_t_3*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
-            __Pyx_XDECREF(__pyx_t_14); __pyx_t_14 = 0;
-            __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
-            __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-            if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 521, __pyx_L44_except_error)
-            __Pyx_GOTREF(__pyx_t_6);
-          }
-          __pyx_t_12 = NULL;
-          __Pyx_GetModuleGlobalName(__pyx_t_14, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 521, __pyx_L44_except_error)
-          __Pyx_GOTREF(__pyx_t_14);
-          __pyx_t_22 = __Pyx_PyObject_GetAttrStr(__pyx_t_14, __pyx_mstate_global->__pyx_n_u_trace); if (unlikely(!__pyx_t_22)) __PYX_ERR(0, 521, __pyx_L44_except_error)
-          __Pyx_GOTREF(__pyx_t_22);
-          __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
-          __pyx_t_3 = 1;
-          #if CYTHON_UNPACK_METHODS
-          if (unlikely(PyMethod_Check(__pyx_t_22))) {
-            __pyx_t_12 = PyMethod_GET_SELF(__pyx_t_22);
-            assert(__pyx_t_12);
-            PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_22);
-            __Pyx_INCREF(__pyx_t_12);
-            __Pyx_INCREF(__pyx__function);
-            __Pyx_DECREF_SET(__pyx_t_22, __pyx__function);
-            __pyx_t_3 = 0;
-          }
-          #endif
-          {
-            PyObject *__pyx_callargs[2] = {__pyx_t_12, __pyx_v_Sigma_reg};
-            __pyx_t_1 = __Pyx_PyObject_FastCall(__pyx_t_22, __pyx_callargs+__pyx_t_3, (2-__pyx_t_3) | (__pyx_t_3*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
-            __Pyx_XDECREF(__pyx_t_12); __pyx_t_12 = 0;
-            __Pyx_DECREF(__pyx_t_22); __pyx_t_22 = 0;
-            if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 521, __pyx_L44_except_error)
-            __Pyx_GOTREF(__pyx_t_1);
-          }
-          __pyx_t_22 = __Pyx_PyLong_From_int(__pyx_v_d); if (unlikely(!__pyx_t_22)) __PYX_ERR(0, 521, __pyx_L44_except_error)
-          __Pyx_GOTREF(__pyx_t_22);
-          __pyx_t_12 = __Pyx_PyNumber_Divide(__pyx_t_1, __pyx_t_22); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 521, __pyx_L44_except_error)
-          __Pyx_GOTREF(__pyx_t_12);
-          __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-          __Pyx_DECREF(__pyx_t_22); __pyx_t_22 = 0;
-          __pyx_t_22 = __Pyx_PyFloat_AddObjC(__pyx_t_12, __pyx_mstate_global->__pyx_float_1eneg_6, 1e-6, 0, 0); if (unlikely(!__pyx_t_22)) __PYX_ERR(0, 521, __pyx_L44_except_error)
-          __Pyx_GOTREF(__pyx_t_22);
-          __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
-          __pyx_t_12 = __Pyx_PyNumber_Divide(__pyx_t_6, __pyx_t_22); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 521, __pyx_L44_except_error)
+          __pyx_t_1 = NULL;
+          __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 565, __pyx_L43_except_error)
+          __Pyx_GOTREF(__pyx_t_6);
+          __pyx_t_12 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_mstate_global->__pyx_n_u_eye); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 565, __pyx_L43_except_error)
           __Pyx_GOTREF(__pyx_t_12);
           __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-          __Pyx_DECREF(__pyx_t_22); __pyx_t_22 = 0;
-          __Pyx_XDECREF_SET(__pyx_v_Sigma_inv, __pyx_t_12);
-          __pyx_t_12 = 0;
+          __pyx_t_6 = __Pyx_PyLong_From_int(__pyx_v_d); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 565, __pyx_L43_except_error)
+          __Pyx_GOTREF(__pyx_t_6);
+          __pyx_t_3 = 1;
+          #if CYTHON_UNPACK_METHODS
+          if (unlikely(PyMethod_Check(__pyx_t_12))) {
+            __pyx_t_1 = PyMethod_GET_SELF(__pyx_t_12);
+            assert(__pyx_t_1);
+            PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_12);
+            __Pyx_INCREF(__pyx_t_1);
+            __Pyx_INCREF(__pyx__function);
+            __Pyx_DECREF_SET(__pyx_t_12, __pyx__function);
+            __pyx_t_3 = 0;
+          }
+          #endif
+          {
+            PyObject *__pyx_callargs[2] = {__pyx_t_1, __pyx_t_6};
+            __pyx_t_14 = __Pyx_PyObject_FastCall(__pyx_t_12, __pyx_callargs+__pyx_t_3, (2-__pyx_t_3) | (__pyx_t_3*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
+            __Pyx_XDECREF(__pyx_t_1); __pyx_t_1 = 0;
+            __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+            __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
+            if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 565, __pyx_L43_except_error)
+            __Pyx_GOTREF(__pyx_t_14);
+          }
+          __pyx_t_6 = NULL;
+          __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 565, __pyx_L43_except_error)
+          __Pyx_GOTREF(__pyx_t_1);
+          __pyx_t_23 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_mstate_global->__pyx_n_u_trace); if (unlikely(!__pyx_t_23)) __PYX_ERR(0, 565, __pyx_L43_except_error)
+          __Pyx_GOTREF(__pyx_t_23);
+          __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+          __pyx_t_3 = 1;
+          #if CYTHON_UNPACK_METHODS
+          if (unlikely(PyMethod_Check(__pyx_t_23))) {
+            __pyx_t_6 = PyMethod_GET_SELF(__pyx_t_23);
+            assert(__pyx_t_6);
+            PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_23);
+            __Pyx_INCREF(__pyx_t_6);
+            __Pyx_INCREF(__pyx__function);
+            __Pyx_DECREF_SET(__pyx_t_23, __pyx__function);
+            __pyx_t_3 = 0;
+          }
+          #endif
+          {
+            PyObject *__pyx_callargs[2] = {__pyx_t_6, __pyx_v_Sigma_reg};
+            __pyx_t_12 = __Pyx_PyObject_FastCall(__pyx_t_23, __pyx_callargs+__pyx_t_3, (2-__pyx_t_3) | (__pyx_t_3*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
+            __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
+            __Pyx_DECREF(__pyx_t_23); __pyx_t_23 = 0;
+            if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 565, __pyx_L43_except_error)
+            __Pyx_GOTREF(__pyx_t_12);
+          }
+          __pyx_t_23 = __Pyx_PyLong_From_int(__pyx_v_d); if (unlikely(!__pyx_t_23)) __PYX_ERR(0, 565, __pyx_L43_except_error)
+          __Pyx_GOTREF(__pyx_t_23);
+          __pyx_t_6 = __Pyx_PyNumber_Divide(__pyx_t_12, __pyx_t_23); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 565, __pyx_L43_except_error)
+          __Pyx_GOTREF(__pyx_t_6);
+          __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
+          __Pyx_DECREF(__pyx_t_23); __pyx_t_23 = 0;
+          __pyx_t_23 = __Pyx_PyFloat_AddObjC(__pyx_t_6, __pyx_mstate_global->__pyx_float_1eneg_6, 1e-6, 0, 0); if (unlikely(!__pyx_t_23)) __PYX_ERR(0, 565, __pyx_L43_except_error)
+          __Pyx_GOTREF(__pyx_t_23);
+          __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+          __pyx_t_6 = __Pyx_PyNumber_Divide(__pyx_t_14, __pyx_t_23); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 565, __pyx_L43_except_error)
+          __Pyx_GOTREF(__pyx_t_6);
+          __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
+          __Pyx_DECREF(__pyx_t_23); __pyx_t_23 = 0;
+          __Pyx_XDECREF_SET(__pyx_v_Sigma_inv, __pyx_t_6);
+          __pyx_t_6 = 0;
 
-          /* "entrap/ebm_engine.pyx":522
+          /* "entrap/ebm_engine.pyx":566
  *                 except:
  *                     Sigma_inv = np.eye(d) / (np.trace(Sigma_reg) / d + 1e-6)
  *                     log_det_Sigma = 0.0             # <<<<<<<<<<<<<<
@@ -10893,46 +11158,46 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
 */
           __Pyx_INCREF(__pyx_mstate_global->__pyx_float_0_0);
           __Pyx_XDECREF_SET(__pyx_v_log_det_Sigma, __pyx_mstate_global->__pyx_float_0_0);
-          __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
           __Pyx_XDECREF(__pyx_t_13); __pyx_t_13 = 0;
+          __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
           __Pyx_XDECREF(__pyx_t_7); __pyx_t_7 = 0;
-          goto __pyx_L43_exception_handled;
+          goto __pyx_L42_exception_handled;
         }
 
-        /* "entrap/ebm_engine.pyx":517
+        /* "entrap/ebm_engine.pyx":561
  *                 ))
  * 
  *                 try:             # <<<<<<<<<<<<<<
  *                     Sigma_inv = inv(Sigma_reg)
  *                     log_det_Sigma = slogdet(Sigma_reg)[1]
 */
-        __pyx_L44_except_error:;
-        __Pyx_XGIVEREF(__pyx_t_19);
+        __pyx_L43_except_error:;
         __Pyx_XGIVEREF(__pyx_t_20);
         __Pyx_XGIVEREF(__pyx_t_21);
-        __Pyx_ExceptionReset(__pyx_t_19, __pyx_t_20, __pyx_t_21);
+        __Pyx_XGIVEREF(__pyx_t_22);
+        __Pyx_ExceptionReset(__pyx_t_20, __pyx_t_21, __pyx_t_22);
         goto __pyx_L1_error;
-        __pyx_L43_exception_handled:;
-        __Pyx_XGIVEREF(__pyx_t_19);
+        __pyx_L42_exception_handled:;
         __Pyx_XGIVEREF(__pyx_t_20);
         __Pyx_XGIVEREF(__pyx_t_21);
-        __Pyx_ExceptionReset(__pyx_t_19, __pyx_t_20, __pyx_t_21);
-        __pyx_L49_try_end:;
+        __Pyx_XGIVEREF(__pyx_t_22);
+        __Pyx_ExceptionReset(__pyx_t_20, __pyx_t_21, __pyx_t_22);
+        __pyx_L48_try_end:;
       }
 
-      /* "entrap/ebm_engine.pyx":525
+      /* "entrap/ebm_engine.pyx":569
  * 
  *                 # Compute geometric energy for all candidates
  *                 candidate_energies = []             # <<<<<<<<<<<<<<
  *                 for candidate_idx in candidates_list:
  *                     x = X[candidate_idx]
 */
-      __pyx_t_7 = PyList_New(0); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 525, __pyx_L1_error)
+      __pyx_t_7 = PyList_New(0); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 569, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_7);
       __Pyx_XDECREF_SET(__pyx_v_candidate_energies, ((PyObject*)__pyx_t_7));
       __pyx_t_7 = 0;
 
-      /* "entrap/ebm_engine.pyx":526
+      /* "entrap/ebm_engine.pyx":570
  *                 # Compute geometric energy for all candidates
  *                 candidate_energies = []
  *                 for candidate_idx in candidates_list:             # <<<<<<<<<<<<<<
@@ -10940,72 +11205,72 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
  *                     E_G = self.geometric_energy(x, mu, Sigma_inv, log_det_Sigma)
 */
       __pyx_t_7 = __pyx_v_candidates_list; __Pyx_INCREF(__pyx_t_7);
-      __pyx_t_17 = 0;
+      __pyx_t_16 = 0;
       for (;;) {
         {
           Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_7);
           #if !CYTHON_ASSUME_SAFE_SIZE
-          if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 526, __pyx_L1_error)
+          if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 570, __pyx_L1_error)
           #endif
-          if (__pyx_t_17 >= __pyx_temp) break;
+          if (__pyx_t_16 >= __pyx_temp) break;
         }
-        __pyx_t_13 = __Pyx_PyList_GetItemRef(__pyx_t_7, __pyx_t_17);
-        ++__pyx_t_17;
-        if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 526, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_13);
-        __pyx_t_11 = __Pyx_PyLong_As_int(__pyx_t_13); if (unlikely((__pyx_t_11 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 526, __pyx_L1_error)
-        __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+        __pyx_t_2 = __Pyx_PyList_GetItemRef(__pyx_t_7, __pyx_t_16);
+        ++__pyx_t_16;
+        if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 570, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_2);
+        __pyx_t_11 = __Pyx_PyLong_As_int(__pyx_t_2); if (unlikely((__pyx_t_11 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 570, __pyx_L1_error)
+        __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
         __pyx_v_candidate_idx = __pyx_t_11;
 
-        /* "entrap/ebm_engine.pyx":527
+        /* "entrap/ebm_engine.pyx":571
  *                 candidate_energies = []
  *                 for candidate_idx in candidates_list:
  *                     x = X[candidate_idx]             # <<<<<<<<<<<<<<
  *                     E_G = self.geometric_energy(x, mu, Sigma_inv, log_det_Sigma)
  *                     candidate_energies.append((candidate_idx, E_G))
 */
-        __pyx_t_13 = __Pyx_GetItemInt(__pyx_v_X, __pyx_v_candidate_idx, int, 1, __Pyx_PyLong_From_int, 0, 0, 0, 1); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 527, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_13);
-        __Pyx_XDECREF_SET(__pyx_v_x, __pyx_t_13);
-        __pyx_t_13 = 0;
+        __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_X, __pyx_v_candidate_idx, int, 1, __Pyx_PyLong_From_int, 0, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 571, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_2);
+        __Pyx_XDECREF_SET(__pyx_v_x, __pyx_t_2);
+        __pyx_t_2 = 0;
 
-        /* "entrap/ebm_engine.pyx":528
+        /* "entrap/ebm_engine.pyx":572
  *                 for candidate_idx in candidates_list:
  *                     x = X[candidate_idx]
  *                     E_G = self.geometric_energy(x, mu, Sigma_inv, log_det_Sigma)             # <<<<<<<<<<<<<<
  *                     candidate_energies.append((candidate_idx, E_G))
  * 
 */
-        if (!(likely(((__pyx_v_x) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_x, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 528, __pyx_L1_error)
-        if (!(likely(((__pyx_v_mu) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_mu, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 528, __pyx_L1_error)
-        if (!(likely(((__pyx_v_Sigma_inv) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_Sigma_inv, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 528, __pyx_L1_error)
-        __pyx_t_18 = __Pyx_PyFloat_AsDouble(__pyx_v_log_det_Sigma); if (unlikely((__pyx_t_18 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 528, __pyx_L1_error)
-        __pyx_t_23 = ((struct __pyx_vtabstruct_6entrap_10ebm_engine_EBM_Reassignment_Engine *)__pyx_v_self->__pyx_vtab)->geometric_energy(__pyx_v_self, ((PyArrayObject *)__pyx_v_x), ((PyArrayObject *)__pyx_v_mu), ((PyArrayObject *)__pyx_v_Sigma_inv), __pyx_t_18, 0); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 528, __pyx_L1_error)
-        __pyx_v_E_G = __pyx_t_23;
+        if (!(likely(((__pyx_v_x) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_x, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 572, __pyx_L1_error)
+        if (!(likely(((__pyx_v_mu) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_mu, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 572, __pyx_L1_error)
+        if (!(likely(((__pyx_v_Sigma_inv) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_Sigma_inv, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 572, __pyx_L1_error)
+        __pyx_t_18 = __Pyx_PyFloat_AsDouble(__pyx_v_log_det_Sigma); if (unlikely((__pyx_t_18 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 572, __pyx_L1_error)
+        __pyx_t_24 = ((struct __pyx_vtabstruct_6entrap_10ebm_engine_EBM_Reassignment_Engine *)__pyx_v_self->__pyx_vtab)->geometric_energy(__pyx_v_self, ((PyArrayObject *)__pyx_v_x), ((PyArrayObject *)__pyx_v_mu), ((PyArrayObject *)__pyx_v_Sigma_inv), __pyx_t_18, 0); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 572, __pyx_L1_error)
+        __pyx_v_E_G = __pyx_t_24;
 
-        /* "entrap/ebm_engine.pyx":529
+        /* "entrap/ebm_engine.pyx":573
  *                     x = X[candidate_idx]
  *                     E_G = self.geometric_energy(x, mu, Sigma_inv, log_det_Sigma)
  *                     candidate_energies.append((candidate_idx, E_G))             # <<<<<<<<<<<<<<
  * 
- *                 # Sort by ascending E_G (lambda is OK here since it's def not cpdef)
+ *                 # Sort by ascending E_G using sorted() - cpdef compatible
 */
-        __pyx_t_13 = __Pyx_PyLong_From_int(__pyx_v_candidate_idx); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 529, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_13);
-        __pyx_t_2 = PyFloat_FromDouble(__pyx_v_E_G); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 529, __pyx_L1_error)
+        __pyx_t_2 = __Pyx_PyLong_From_int(__pyx_v_candidate_idx); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 573, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
-        __pyx_t_12 = PyTuple_New(2); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 529, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_12);
-        __Pyx_GIVEREF(__pyx_t_13);
-        if (__Pyx_PyTuple_SET_ITEM(__pyx_t_12, 0, __pyx_t_13) != (0)) __PYX_ERR(0, 529, __pyx_L1_error);
+        __pyx_t_13 = PyFloat_FromDouble(__pyx_v_E_G); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 573, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_13);
+        __pyx_t_6 = PyTuple_New(2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 573, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_6);
         __Pyx_GIVEREF(__pyx_t_2);
-        if (__Pyx_PyTuple_SET_ITEM(__pyx_t_12, 1, __pyx_t_2) != (0)) __PYX_ERR(0, 529, __pyx_L1_error);
-        __pyx_t_13 = 0;
+        if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_2) != (0)) __PYX_ERR(0, 573, __pyx_L1_error);
+        __Pyx_GIVEREF(__pyx_t_13);
+        if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 1, __pyx_t_13) != (0)) __PYX_ERR(0, 573, __pyx_L1_error);
         __pyx_t_2 = 0;
-        __pyx_t_24 = __Pyx_PyList_Append(__pyx_v_candidate_energies, __pyx_t_12); if (unlikely(__pyx_t_24 == ((int)-1))) __PYX_ERR(0, 529, __pyx_L1_error)
-        __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
+        __pyx_t_13 = 0;
+        __pyx_t_25 = __Pyx_PyList_Append(__pyx_v_candidate_energies, __pyx_t_6); if (unlikely(__pyx_t_25 == ((int)-1))) __PYX_ERR(0, 573, __pyx_L1_error)
+        __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
-        /* "entrap/ebm_engine.pyx":526
+        /* "entrap/ebm_engine.pyx":570
  *                 # Compute geometric energy for all candidates
  *                 candidate_energies = []
  *                 for candidate_idx in candidates_list:             # <<<<<<<<<<<<<<
@@ -11015,33 +11280,37 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
       }
       __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
-      /* "entrap/ebm_engine.pyx":532
- * 
- *                 # Sort by ascending E_G (lambda is OK here since it's def not cpdef)
- *                 candidate_energies.sort(key=lambda item: item[1])             # <<<<<<<<<<<<<<
+      /* "entrap/ebm_engine.pyx":577
+ *                 # Sort by ascending E_G using sorted() - cpdef compatible
+ *                 # (no lambda allowed, but sorted() with key param works fine in cpdef)
+ *                 candidate_energies = sorted(candidate_energies, key=lambda t: t[1])             # <<<<<<<<<<<<<<
  * 
  *                 # Early stopping counter
 */
-      __pyx_t_12 = __pyx_v_candidate_energies;
-      __Pyx_INCREF(__pyx_t_12);
-      __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_6entrap_10ebm_engine_23EBM_Reassignment_Engine_8reassign_1lambda1, 0, __pyx_mstate_global->__pyx_n_u_reassign_locals_lambda, NULL, __pyx_mstate_global->__pyx_n_u_entrap_ebm_engine, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[1])); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 532, __pyx_L1_error)
+      __pyx_t_6 = NULL;
+      __Pyx_INCREF(__pyx_builtin_sorted);
+      __pyx_t_13 = __pyx_builtin_sorted; 
+      __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_6entrap_10ebm_engine_23EBM_Reassignment_Engine_8reassign_1lambda1, 0, __pyx_mstate_global->__pyx_n_u_reassign_locals_lambda, NULL, __pyx_mstate_global->__pyx_n_u_entrap_ebm_engine, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[1])); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 577, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
-      __pyx_t_3 = 0;
+      __pyx_t_3 = 1;
       {
-        PyObject *__pyx_callargs[2 + ((CYTHON_VECTORCALL) ? 1 : 0)] = {__pyx_t_12, NULL};
-        __pyx_t_13 = __Pyx_MakeVectorcallBuilderKwds(1); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 532, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_13);
-        if (__Pyx_VectorcallBuilder_AddArg(__pyx_mstate_global->__pyx_n_u_key, __pyx_t_2, __pyx_t_13, __pyx_callargs+1, 0) < 0) __PYX_ERR(0, 532, __pyx_L1_error)
-        __pyx_t_7 = __Pyx_Object_VectorcallMethod_CallFromBuilder(__pyx_mstate_global->__pyx_n_u_sort, __pyx_callargs+__pyx_t_3, (1-__pyx_t_3) | (1*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET), __pyx_t_13);
-        __Pyx_XDECREF(__pyx_t_12); __pyx_t_12 = 0;
+        PyObject *__pyx_callargs[2 + ((CYTHON_VECTORCALL) ? 1 : 0)] = {__pyx_t_6, __pyx_v_candidate_energies};
+        __pyx_t_23 = __Pyx_MakeVectorcallBuilderKwds(1); if (unlikely(!__pyx_t_23)) __PYX_ERR(0, 577, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_23);
+        if (__Pyx_VectorcallBuilder_AddArg(__pyx_mstate_global->__pyx_n_u_key, __pyx_t_2, __pyx_t_23, __pyx_callargs+2, 0) < 0) __PYX_ERR(0, 577, __pyx_L1_error)
+        __pyx_t_7 = __Pyx_Object_Vectorcall_CallFromBuilder(__pyx_t_13, __pyx_callargs+__pyx_t_3, (2-__pyx_t_3) | (__pyx_t_3*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET), __pyx_t_23);
+        __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
         __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+        __Pyx_DECREF(__pyx_t_23); __pyx_t_23 = 0;
         __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
-        if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 532, __pyx_L1_error)
+        if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 577, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_7);
       }
-      __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+      if (!(likely(PyList_CheckExact(__pyx_t_7))||((__pyx_t_7) == Py_None) || __Pyx_RaiseUnexpectedTypeError("list", __pyx_t_7))) __PYX_ERR(0, 577, __pyx_L1_error)
+      __Pyx_DECREF_SET(__pyx_v_candidate_energies, ((PyObject*)__pyx_t_7));
+      __pyx_t_7 = 0;
 
-      /* "entrap/ebm_engine.pyx":535
+      /* "entrap/ebm_engine.pyx":580
  * 
  *                 # Early stopping counter
  *                 consecutive_rejects = 0             # <<<<<<<<<<<<<<
@@ -11050,26 +11319,30 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
 */
       __pyx_v_consecutive_rejects = 0;
 
-      /* "entrap/ebm_engine.pyx":537
+      /* "entrap/ebm_engine.pyx":582
  *                 consecutive_rejects = 0
  * 
  *                 for candidate_idx, E_G in candidate_energies:             # <<<<<<<<<<<<<<
  *                     E_cheap = lambda_G_t * E_G
  * 
 */
+      if (unlikely(__pyx_v_candidate_energies == Py_None)) {
+        PyErr_SetString(PyExc_TypeError, "'NoneType' object is not iterable");
+        __PYX_ERR(0, 582, __pyx_L1_error)
+      }
       __pyx_t_7 = __pyx_v_candidate_energies; __Pyx_INCREF(__pyx_t_7);
-      __pyx_t_17 = 0;
+      __pyx_t_16 = 0;
       for (;;) {
         {
           Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_7);
           #if !CYTHON_ASSUME_SAFE_SIZE
-          if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 537, __pyx_L1_error)
+          if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 582, __pyx_L1_error)
           #endif
-          if (__pyx_t_17 >= __pyx_temp) break;
+          if (__pyx_t_16 >= __pyx_temp) break;
         }
-        __pyx_t_13 = __Pyx_PyList_GetItemRef(__pyx_t_7, __pyx_t_17);
-        ++__pyx_t_17;
-        if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 537, __pyx_L1_error)
+        __pyx_t_13 = __Pyx_PyList_GetItemRef(__pyx_t_7, __pyx_t_16);
+        ++__pyx_t_16;
+        if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 582, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_13);
         if ((likely(PyTuple_CheckExact(__pyx_t_13))) || (PyList_CheckExact(__pyx_t_13))) {
           PyObject* sequence = __pyx_t_13;
@@ -11077,58 +11350,58 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
           if (unlikely(size != 2)) {
             if (size > 2) __Pyx_RaiseTooManyValuesError(2);
             else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
-            __PYX_ERR(0, 537, __pyx_L1_error)
+            __PYX_ERR(0, 582, __pyx_L1_error)
           }
           #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
           if (likely(PyTuple_CheckExact(sequence))) {
-            __pyx_t_2 = PyTuple_GET_ITEM(sequence, 0);
+            __pyx_t_23 = PyTuple_GET_ITEM(sequence, 0);
+            __Pyx_INCREF(__pyx_t_23);
+            __pyx_t_2 = PyTuple_GET_ITEM(sequence, 1);
             __Pyx_INCREF(__pyx_t_2);
-            __pyx_t_12 = PyTuple_GET_ITEM(sequence, 1);
-            __Pyx_INCREF(__pyx_t_12);
           } else {
-            __pyx_t_2 = __Pyx_PyList_GetItemRef(sequence, 0);
-            if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 537, __pyx_L1_error)
+            __pyx_t_23 = __Pyx_PyList_GetItemRef(sequence, 0);
+            if (unlikely(!__pyx_t_23)) __PYX_ERR(0, 582, __pyx_L1_error)
+            __Pyx_XGOTREF(__pyx_t_23);
+            __pyx_t_2 = __Pyx_PyList_GetItemRef(sequence, 1);
+            if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 582, __pyx_L1_error)
             __Pyx_XGOTREF(__pyx_t_2);
-            __pyx_t_12 = __Pyx_PyList_GetItemRef(sequence, 1);
-            if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 537, __pyx_L1_error)
-            __Pyx_XGOTREF(__pyx_t_12);
           }
           #else
-          __pyx_t_2 = __Pyx_PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 537, __pyx_L1_error)
+          __pyx_t_23 = __Pyx_PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_23)) __PYX_ERR(0, 582, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_23);
+          __pyx_t_2 = __Pyx_PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 582, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_2);
-          __pyx_t_12 = __Pyx_PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 537, __pyx_L1_error)
-          __Pyx_GOTREF(__pyx_t_12);
           #endif
           __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
         } else {
           Py_ssize_t index = -1;
-          __pyx_t_22 = PyObject_GetIter(__pyx_t_13); if (unlikely(!__pyx_t_22)) __PYX_ERR(0, 537, __pyx_L1_error)
-          __Pyx_GOTREF(__pyx_t_22);
+          __pyx_t_6 = PyObject_GetIter(__pyx_t_13); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 582, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_6);
           __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
-          __pyx_t_15 = (CYTHON_COMPILING_IN_LIMITED_API) ? PyIter_Next : __Pyx_PyObject_GetIterNextFunc(__pyx_t_22);
-          index = 0; __pyx_t_2 = __pyx_t_15(__pyx_t_22); if (unlikely(!__pyx_t_2)) goto __pyx_L57_unpacking_failed;
+          __pyx_t_15 = (CYTHON_COMPILING_IN_LIMITED_API) ? PyIter_Next : __Pyx_PyObject_GetIterNextFunc(__pyx_t_6);
+          index = 0; __pyx_t_23 = __pyx_t_15(__pyx_t_6); if (unlikely(!__pyx_t_23)) goto __pyx_L56_unpacking_failed;
+          __Pyx_GOTREF(__pyx_t_23);
+          index = 1; __pyx_t_2 = __pyx_t_15(__pyx_t_6); if (unlikely(!__pyx_t_2)) goto __pyx_L56_unpacking_failed;
           __Pyx_GOTREF(__pyx_t_2);
-          index = 1; __pyx_t_12 = __pyx_t_15(__pyx_t_22); if (unlikely(!__pyx_t_12)) goto __pyx_L57_unpacking_failed;
-          __Pyx_GOTREF(__pyx_t_12);
-          if (__Pyx_IternextUnpackEndCheck(__pyx_t_15(__pyx_t_22), 2) < 0) __PYX_ERR(0, 537, __pyx_L1_error)
+          if (__Pyx_IternextUnpackEndCheck(__pyx_t_15(__pyx_t_6), 2) < 0) __PYX_ERR(0, 582, __pyx_L1_error)
           __pyx_t_15 = NULL;
-          __Pyx_DECREF(__pyx_t_22); __pyx_t_22 = 0;
-          goto __pyx_L58_unpacking_done;
-          __pyx_L57_unpacking_failed:;
-          __Pyx_DECREF(__pyx_t_22); __pyx_t_22 = 0;
+          __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+          goto __pyx_L57_unpacking_done;
+          __pyx_L56_unpacking_failed:;
+          __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
           __pyx_t_15 = NULL;
           if (__Pyx_IterFinish() == 0) __Pyx_RaiseNeedMoreValuesError(index);
-          __PYX_ERR(0, 537, __pyx_L1_error)
-          __pyx_L58_unpacking_done:;
+          __PYX_ERR(0, 582, __pyx_L1_error)
+          __pyx_L57_unpacking_done:;
         }
-        __pyx_t_11 = __Pyx_PyLong_As_int(__pyx_t_2); if (unlikely((__pyx_t_11 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 537, __pyx_L1_error)
+        __pyx_t_11 = __Pyx_PyLong_As_int(__pyx_t_23); if (unlikely((__pyx_t_11 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 582, __pyx_L1_error)
+        __Pyx_DECREF(__pyx_t_23); __pyx_t_23 = 0;
+        __pyx_t_24 = __Pyx_PyFloat_AsDouble(__pyx_t_2); if (unlikely((__pyx_t_24 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 582, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-        __pyx_t_23 = __Pyx_PyFloat_AsDouble(__pyx_t_12); if (unlikely((__pyx_t_23 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 537, __pyx_L1_error)
-        __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
         __pyx_v_candidate_idx = __pyx_t_11;
-        __pyx_v_E_G = __pyx_t_23;
+        __pyx_v_E_G = __pyx_t_24;
 
-        /* "entrap/ebm_engine.pyx":538
+        /* "entrap/ebm_engine.pyx":583
  * 
  *                 for candidate_idx, E_G in candidate_energies:
  *                     E_cheap = lambda_G_t * E_G             # <<<<<<<<<<<<<<
@@ -11137,7 +11410,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
 */
         __pyx_v_E_cheap = (__pyx_v_lambda_G_t * __pyx_v_E_G);
 
-        /* "entrap/ebm_engine.pyx":540
+        /* "entrap/ebm_engine.pyx":585
  *                     E_cheap = lambda_G_t * E_G
  * 
  *                     if E_G >= E_noise:             # <<<<<<<<<<<<<<
@@ -11147,7 +11420,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
         __pyx_t_5 = (__pyx_v_E_G >= __pyx_v_E_noise);
         if (__pyx_t_5) {
 
-          /* "entrap/ebm_engine.pyx":541
+          /* "entrap/ebm_engine.pyx":586
  * 
  *                     if E_G >= E_noise:
  *                         consecutive_rejects += 1             # <<<<<<<<<<<<<<
@@ -11156,7 +11429,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
 */
           __pyx_v_consecutive_rejects = (__pyx_v_consecutive_rejects + 1);
 
-          /* "entrap/ebm_engine.pyx":542
+          /* "entrap/ebm_engine.pyx":587
  *                     if E_G >= E_noise:
  *                         consecutive_rejects += 1
  *                         if consecutive_rejects >= early_stop_threshold:             # <<<<<<<<<<<<<<
@@ -11166,16 +11439,16 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
           __pyx_t_5 = (__pyx_v_consecutive_rejects >= __pyx_v_early_stop_threshold);
           if (__pyx_t_5) {
 
-            /* "entrap/ebm_engine.pyx":543
+            /* "entrap/ebm_engine.pyx":588
  *                         consecutive_rejects += 1
  *                         if consecutive_rejects >= early_stop_threshold:
  *                             break             # <<<<<<<<<<<<<<
  *                         continue
  *                     else:
 */
-            goto __pyx_L56_break;
+            goto __pyx_L55_break;
 
-            /* "entrap/ebm_engine.pyx":542
+            /* "entrap/ebm_engine.pyx":587
  *                     if E_G >= E_noise:
  *                         consecutive_rejects += 1
  *                         if consecutive_rejects >= early_stop_threshold:             # <<<<<<<<<<<<<<
@@ -11184,16 +11457,16 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
 */
           }
 
-          /* "entrap/ebm_engine.pyx":544
+          /* "entrap/ebm_engine.pyx":589
  *                         if consecutive_rejects >= early_stop_threshold:
  *                             break
  *                         continue             # <<<<<<<<<<<<<<
  *                     else:
  *                         consecutive_rejects = 0
 */
-          goto __pyx_L55_continue;
+          goto __pyx_L54_continue;
 
-          /* "entrap/ebm_engine.pyx":540
+          /* "entrap/ebm_engine.pyx":585
  *                     E_cheap = lambda_G_t * E_G
  * 
  *                     if E_G >= E_noise:             # <<<<<<<<<<<<<<
@@ -11202,7 +11475,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
 */
         }
 
-        /* "entrap/ebm_engine.pyx":546
+        /* "entrap/ebm_engine.pyx":591
  *                         continue
  *                     else:
  *                         consecutive_rejects = 0             # <<<<<<<<<<<<<<
@@ -11213,7 +11486,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
           __pyx_v_consecutive_rejects = 0;
         }
 
-        /* "entrap/ebm_engine.pyx":548
+        /* "entrap/ebm_engine.pyx":593
  *                         consecutive_rejects = 0
  * 
  *                     if E_cheap >= E_noise:             # <<<<<<<<<<<<<<
@@ -11223,16 +11496,16 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
         __pyx_t_5 = (__pyx_v_E_cheap >= __pyx_v_E_noise);
         if (__pyx_t_5) {
 
-          /* "entrap/ebm_engine.pyx":549
+          /* "entrap/ebm_engine.pyx":594
  * 
  *                     if E_cheap >= E_noise:
  *                         continue             # <<<<<<<<<<<<<<
  * 
  *                     x = X[candidate_idx]
 */
-          goto __pyx_L55_continue;
+          goto __pyx_L54_continue;
 
-          /* "entrap/ebm_engine.pyx":548
+          /* "entrap/ebm_engine.pyx":593
  *                         consecutive_rejects = 0
  * 
  *                     if E_cheap >= E_noise:             # <<<<<<<<<<<<<<
@@ -11241,114 +11514,340 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
 */
         }
 
-        /* "entrap/ebm_engine.pyx":551
+        /* "entrap/ebm_engine.pyx":596
  *                         continue
  * 
  *                     x = X[candidate_idx]             # <<<<<<<<<<<<<<
  *                     cluster_mask_current = (refined_labels == cid)
  *                     cluster_points_current = X[cluster_mask_current]
 */
-        __pyx_t_13 = __Pyx_GetItemInt(__pyx_v_X, __pyx_v_candidate_idx, int, 1, __Pyx_PyLong_From_int, 0, 0, 0, 1); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 551, __pyx_L1_error)
+        __pyx_t_13 = __Pyx_GetItemInt(__pyx_v_X, __pyx_v_candidate_idx, int, 1, __Pyx_PyLong_From_int, 0, 0, 0, 1); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 596, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_13);
         __Pyx_XDECREF_SET(__pyx_v_x, __pyx_t_13);
         __pyx_t_13 = 0;
 
-        /* "entrap/ebm_engine.pyx":552
+        /* "entrap/ebm_engine.pyx":597
  * 
  *                     x = X[candidate_idx]
  *                     cluster_mask_current = (refined_labels == cid)             # <<<<<<<<<<<<<<
  *                     cluster_points_current = X[cluster_mask_current]
  * 
 */
-        __pyx_t_13 = __Pyx_PyLong_From_int(__pyx_v_cid); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 552, __pyx_L1_error)
+        __pyx_t_13 = __Pyx_PyLong_From_int(__pyx_v_cid); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 597, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_13);
-        __pyx_t_12 = PyObject_RichCompare(__pyx_v_refined_labels, __pyx_t_13, Py_EQ); __Pyx_XGOTREF(__pyx_t_12); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 552, __pyx_L1_error)
+        __pyx_t_2 = PyObject_RichCompare(((PyObject *)__pyx_v_refined_labels), __pyx_t_13, Py_EQ); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 597, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
-        __Pyx_XDECREF_SET(__pyx_v_cluster_mask_current, __pyx_t_12);
-        __pyx_t_12 = 0;
+        __Pyx_XDECREF_SET(__pyx_v_cluster_mask_current, __pyx_t_2);
+        __pyx_t_2 = 0;
 
-        /* "entrap/ebm_engine.pyx":553
+        /* "entrap/ebm_engine.pyx":598
  *                     x = X[candidate_idx]
  *                     cluster_mask_current = (refined_labels == cid)
  *                     cluster_points_current = X[cluster_mask_current]             # <<<<<<<<<<<<<<
  * 
- *                     delta_T = self.delta_topological_energy(
+ *                     # Use incremental TDA if enabled, otherwise fall back to full computation
 */
-        __pyx_t_12 = __Pyx_PyObject_GetItem(__pyx_v_X, __pyx_v_cluster_mask_current); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 553, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_12);
-        __Pyx_XDECREF_SET(__pyx_v_cluster_points_current, __pyx_t_12);
-        __pyx_t_12 = 0;
+        __pyx_t_2 = __Pyx_PyObject_GetItem(__pyx_v_X, __pyx_v_cluster_mask_current); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 598, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_2);
+        __Pyx_XDECREF_SET(__pyx_v_cluster_points_current, __pyx_t_2);
+        __pyx_t_2 = 0;
 
-        /* "entrap/ebm_engine.pyx":556
+        /* "entrap/ebm_engine.pyx":601
  * 
- *                     delta_T = self.delta_topological_energy(
- *                         x, cluster_points_current, state['T_norm'], state['size']             # <<<<<<<<<<<<<<
- *                     )
+ *                     # Use incremental TDA if enabled, otherwise fall back to full computation
+ *                     if self.incremental_tda is not None:             # <<<<<<<<<<<<<<
+ *                         cluster_indices_current = np.where(cluster_mask_current)[0]
+ *                         delta_T, tda_meta = self.incremental_tda.compute_delta_topological_energy(
+*/
+        __pyx_t_5 = (__pyx_v_self->incremental_tda != Py_None);
+        if (__pyx_t_5) {
+
+          /* "entrap/ebm_engine.pyx":602
+ *                     # Use incremental TDA if enabled, otherwise fall back to full computation
+ *                     if self.incremental_tda is not None:
+ *                         cluster_indices_current = np.where(cluster_mask_current)[0]             # <<<<<<<<<<<<<<
+ *                         delta_T, tda_meta = self.incremental_tda.compute_delta_topological_energy(
+ *                             x, cluster_points_current, cluster_indices_current,
+*/
+          __pyx_t_13 = NULL;
+          __Pyx_GetModuleGlobalName(__pyx_t_23, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_23)) __PYX_ERR(0, 602, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_23);
+          __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_23, __pyx_mstate_global->__pyx_n_u_where); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 602, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_6);
+          __Pyx_DECREF(__pyx_t_23); __pyx_t_23 = 0;
+          __pyx_t_3 = 1;
+          #if CYTHON_UNPACK_METHODS
+          if (unlikely(PyMethod_Check(__pyx_t_6))) {
+            __pyx_t_13 = PyMethod_GET_SELF(__pyx_t_6);
+            assert(__pyx_t_13);
+            PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_6);
+            __Pyx_INCREF(__pyx_t_13);
+            __Pyx_INCREF(__pyx__function);
+            __Pyx_DECREF_SET(__pyx_t_6, __pyx__function);
+            __pyx_t_3 = 0;
+          }
+          #endif
+          {
+            PyObject *__pyx_callargs[2] = {__pyx_t_13, __pyx_v_cluster_mask_current};
+            __pyx_t_2 = __Pyx_PyObject_FastCall(__pyx_t_6, __pyx_callargs+__pyx_t_3, (2-__pyx_t_3) | (__pyx_t_3*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
+            __Pyx_XDECREF(__pyx_t_13); __pyx_t_13 = 0;
+            __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+            if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 602, __pyx_L1_error)
+            __Pyx_GOTREF(__pyx_t_2);
+          }
+          __pyx_t_6 = __Pyx_GetItemInt(__pyx_t_2, 0, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 602, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_6);
+          __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+          __Pyx_XDECREF_SET(__pyx_v_cluster_indices_current, __pyx_t_6);
+          __pyx_t_6 = 0;
+
+          /* "entrap/ebm_engine.pyx":603
+ *                     if self.incremental_tda is not None:
+ *                         cluster_indices_current = np.where(cluster_mask_current)[0]
+ *                         delta_T, tda_meta = self.incremental_tda.compute_delta_topological_energy(             # <<<<<<<<<<<<<<
+ *                             x, cluster_points_current, cluster_indices_current,
+ *                             state['T_norm'], state['size']
+*/
+          __pyx_t_2 = __pyx_v_self->incremental_tda;
+          __Pyx_INCREF(__pyx_t_2);
+
+          /* "entrap/ebm_engine.pyx":605
+ *                         delta_T, tda_meta = self.incremental_tda.compute_delta_topological_energy(
+ *                             x, cluster_points_current, cluster_indices_current,
+ *                             state['T_norm'], state['size']             # <<<<<<<<<<<<<<
+ *                         )
+ *                         state['tda_calls'] += 1
+*/
+          __pyx_t_13 = __Pyx_PyObject_Dict_GetItem(__pyx_v_state, __pyx_mstate_global->__pyx_n_u_T_norm); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 605, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_13);
+          __pyx_t_23 = __Pyx_PyObject_Dict_GetItem(__pyx_v_state, __pyx_mstate_global->__pyx_n_u_size); if (unlikely(!__pyx_t_23)) __PYX_ERR(0, 605, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_23);
+          __pyx_t_3 = 0;
+          {
+            PyObject *__pyx_callargs[6] = {__pyx_t_2, __pyx_v_x, __pyx_v_cluster_points_current, __pyx_v_cluster_indices_current, __pyx_t_13, __pyx_t_23};
+            __pyx_t_6 = __Pyx_PyObject_FastCallMethod(__pyx_mstate_global->__pyx_n_u_compute_delta_topological_energy, __pyx_callargs+__pyx_t_3, (6-__pyx_t_3) | (1*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
+            __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
+            __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+            __Pyx_DECREF(__pyx_t_23); __pyx_t_23 = 0;
+            if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 603, __pyx_L1_error)
+            __Pyx_GOTREF(__pyx_t_6);
+          }
+          if ((likely(PyTuple_CheckExact(__pyx_t_6))) || (PyList_CheckExact(__pyx_t_6))) {
+            PyObject* sequence = __pyx_t_6;
+            Py_ssize_t size = __Pyx_PySequence_SIZE(sequence);
+            if (unlikely(size != 2)) {
+              if (size > 2) __Pyx_RaiseTooManyValuesError(2);
+              else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
+              __PYX_ERR(0, 603, __pyx_L1_error)
+            }
+            #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
+            if (likely(PyTuple_CheckExact(sequence))) {
+              __pyx_t_23 = PyTuple_GET_ITEM(sequence, 0);
+              __Pyx_INCREF(__pyx_t_23);
+              __pyx_t_13 = PyTuple_GET_ITEM(sequence, 1);
+              __Pyx_INCREF(__pyx_t_13);
+            } else {
+              __pyx_t_23 = __Pyx_PyList_GetItemRef(sequence, 0);
+              if (unlikely(!__pyx_t_23)) __PYX_ERR(0, 603, __pyx_L1_error)
+              __Pyx_XGOTREF(__pyx_t_23);
+              __pyx_t_13 = __Pyx_PyList_GetItemRef(sequence, 1);
+              if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 603, __pyx_L1_error)
+              __Pyx_XGOTREF(__pyx_t_13);
+            }
+            #else
+            __pyx_t_23 = __Pyx_PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_23)) __PYX_ERR(0, 603, __pyx_L1_error)
+            __Pyx_GOTREF(__pyx_t_23);
+            __pyx_t_13 = __Pyx_PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 603, __pyx_L1_error)
+            __Pyx_GOTREF(__pyx_t_13);
+            #endif
+            __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+          } else {
+            Py_ssize_t index = -1;
+            __pyx_t_2 = PyObject_GetIter(__pyx_t_6); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 603, __pyx_L1_error)
+            __Pyx_GOTREF(__pyx_t_2);
+            __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+            __pyx_t_15 = (CYTHON_COMPILING_IN_LIMITED_API) ? PyIter_Next : __Pyx_PyObject_GetIterNextFunc(__pyx_t_2);
+            index = 0; __pyx_t_23 = __pyx_t_15(__pyx_t_2); if (unlikely(!__pyx_t_23)) goto __pyx_L62_unpacking_failed;
+            __Pyx_GOTREF(__pyx_t_23);
+            index = 1; __pyx_t_13 = __pyx_t_15(__pyx_t_2); if (unlikely(!__pyx_t_13)) goto __pyx_L62_unpacking_failed;
+            __Pyx_GOTREF(__pyx_t_13);
+            if (__Pyx_IternextUnpackEndCheck(__pyx_t_15(__pyx_t_2), 2) < 0) __PYX_ERR(0, 603, __pyx_L1_error)
+            __pyx_t_15 = NULL;
+            __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+            goto __pyx_L63_unpacking_done;
+            __pyx_L62_unpacking_failed:;
+            __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+            __pyx_t_15 = NULL;
+            if (__Pyx_IterFinish() == 0) __Pyx_RaiseNeedMoreValuesError(index);
+            __PYX_ERR(0, 603, __pyx_L1_error)
+            __pyx_L63_unpacking_done:;
+          }
+
+          /* "entrap/ebm_engine.pyx":603
+ *                     if self.incremental_tda is not None:
+ *                         cluster_indices_current = np.where(cluster_mask_current)[0]
+ *                         delta_T, tda_meta = self.incremental_tda.compute_delta_topological_energy(             # <<<<<<<<<<<<<<
+ *                             x, cluster_points_current, cluster_indices_current,
+ *                             state['T_norm'], state['size']
+*/
+          __pyx_t_24 = __Pyx_PyFloat_AsDouble(__pyx_t_23); if (unlikely((__pyx_t_24 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 603, __pyx_L1_error)
+          __Pyx_DECREF(__pyx_t_23); __pyx_t_23 = 0;
+          __pyx_v_delta_T = __pyx_t_24;
+          __Pyx_XDECREF_SET(__pyx_v_tda_meta, __pyx_t_13);
+          __pyx_t_13 = 0;
+
+          /* "entrap/ebm_engine.pyx":607
+ *                             state['T_norm'], state['size']
+ *                         )
+ *                         state['tda_calls'] += 1             # <<<<<<<<<<<<<<
+ *                         if tda_meta.get('cache_hit', False):
+ *                             state['cache_hits'] += 1
+*/
+          __Pyx_INCREF(__pyx_mstate_global->__pyx_n_u_tda_calls);
+          __pyx_t_26 = __pyx_mstate_global->__pyx_n_u_tda_calls;
+          __pyx_t_6 = __Pyx_PyObject_Dict_GetItem(__pyx_v_state, __pyx_t_26); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 607, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_6);
+          __pyx_t_13 = __Pyx_PyLong_AddObjC(__pyx_t_6, __pyx_mstate_global->__pyx_int_1, 1, 1, 0); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 607, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_13);
+          __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+          if (unlikely((PyObject_SetItem(__pyx_v_state, __pyx_t_26, __pyx_t_13) < 0))) __PYX_ERR(0, 607, __pyx_L1_error)
+          __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+          __Pyx_DECREF(__pyx_t_26); __pyx_t_26 = 0;
+
+          /* "entrap/ebm_engine.pyx":608
+ *                         )
+ *                         state['tda_calls'] += 1
+ *                         if tda_meta.get('cache_hit', False):             # <<<<<<<<<<<<<<
+ *                             state['cache_hits'] += 1
+ *                     else:
+*/
+          __pyx_t_13 = __Pyx_PyObject_GetAttrStr(__pyx_v_tda_meta, __pyx_mstate_global->__pyx_n_u_get); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 608, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_13);
+          __pyx_t_6 = __Pyx_PyObject_Call(__pyx_t_13, __pyx_mstate_global->__pyx_tuple[1], NULL); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 608, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_6);
+          __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+          __pyx_t_5 = __Pyx_PyObject_IsTrue(__pyx_t_6); if (unlikely((__pyx_t_5 < 0))) __PYX_ERR(0, 608, __pyx_L1_error)
+          __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+          if (__pyx_t_5) {
+
+            /* "entrap/ebm_engine.pyx":609
+ *                         state['tda_calls'] += 1
+ *                         if tda_meta.get('cache_hit', False):
+ *                             state['cache_hits'] += 1             # <<<<<<<<<<<<<<
+ *                     else:
+ *                         delta_T = self.delta_topological_energy(
+*/
+            __Pyx_INCREF(__pyx_mstate_global->__pyx_n_u_cache_hits);
+            __pyx_t_26 = __pyx_mstate_global->__pyx_n_u_cache_hits;
+            __pyx_t_6 = __Pyx_PyObject_Dict_GetItem(__pyx_v_state, __pyx_t_26); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 609, __pyx_L1_error)
+            __Pyx_GOTREF(__pyx_t_6);
+            __pyx_t_13 = __Pyx_PyLong_AddObjC(__pyx_t_6, __pyx_mstate_global->__pyx_int_1, 1, 1, 0); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 609, __pyx_L1_error)
+            __Pyx_GOTREF(__pyx_t_13);
+            __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+            if (unlikely((PyObject_SetItem(__pyx_v_state, __pyx_t_26, __pyx_t_13) < 0))) __PYX_ERR(0, 609, __pyx_L1_error)
+            __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+            __Pyx_DECREF(__pyx_t_26); __pyx_t_26 = 0;
+
+            /* "entrap/ebm_engine.pyx":608
+ *                         )
+ *                         state['tda_calls'] += 1
+ *                         if tda_meta.get('cache_hit', False):             # <<<<<<<<<<<<<<
+ *                             state['cache_hits'] += 1
+ *                     else:
+*/
+          }
+
+          /* "entrap/ebm_engine.pyx":601
+ * 
+ *                     # Use incremental TDA if enabled, otherwise fall back to full computation
+ *                     if self.incremental_tda is not None:             # <<<<<<<<<<<<<<
+ *                         cluster_indices_current = np.where(cluster_mask_current)[0]
+ *                         delta_T, tda_meta = self.incremental_tda.compute_delta_topological_energy(
+*/
+          goto __pyx_L61;
+        }
+
+        /* "entrap/ebm_engine.pyx":611
+ *                             state['cache_hits'] += 1
+ *                     else:
+ *                         delta_T = self.delta_topological_energy(             # <<<<<<<<<<<<<<
+ *                             x, cluster_points_current, state['T_norm'], state['size']
+ *                         )
+*/
+        /*else*/ {
+
+          /* "entrap/ebm_engine.pyx":612
+ *                     else:
+ *                         delta_T = self.delta_topological_energy(
+ *                             x, cluster_points_current, state['T_norm'], state['size']             # <<<<<<<<<<<<<<
+ *                         )
+ *                         state['tda_calls'] += 1
+*/
+          if (!(likely(((__pyx_v_x) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_x, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 612, __pyx_L1_error)
+          if (!(likely(((__pyx_v_cluster_points_current) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_cluster_points_current, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 612, __pyx_L1_error)
+          __pyx_t_13 = __Pyx_PyObject_Dict_GetItem(__pyx_v_state, __pyx_mstate_global->__pyx_n_u_T_norm); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 612, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_13);
+          __pyx_t_24 = __Pyx_PyFloat_AsDouble(__pyx_t_13); if (unlikely((__pyx_t_24 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 612, __pyx_L1_error)
+          __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+          __pyx_t_13 = __Pyx_PyObject_Dict_GetItem(__pyx_v_state, __pyx_mstate_global->__pyx_n_u_size); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 612, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_13);
+          __pyx_t_11 = __Pyx_PyLong_As_int(__pyx_t_13); if (unlikely((__pyx_t_11 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 612, __pyx_L1_error)
+          __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+
+          /* "entrap/ebm_engine.pyx":611
+ *                             state['cache_hits'] += 1
+ *                     else:
+ *                         delta_T = self.delta_topological_energy(             # <<<<<<<<<<<<<<
+ *                             x, cluster_points_current, state['T_norm'], state['size']
+ *                         )
+*/
+          __pyx_t_18 = ((struct __pyx_vtabstruct_6entrap_10ebm_engine_EBM_Reassignment_Engine *)__pyx_v_self->__pyx_vtab)->delta_topological_energy(__pyx_v_self, ((PyArrayObject *)__pyx_v_x), ((PyArrayObject *)__pyx_v_cluster_points_current), __pyx_t_24, __pyx_t_11, 0); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 611, __pyx_L1_error)
+          __pyx_v_delta_T = __pyx_t_18;
+
+          /* "entrap/ebm_engine.pyx":614
+ *                             x, cluster_points_current, state['T_norm'], state['size']
+ *                         )
+ *                         state['tda_calls'] += 1             # <<<<<<<<<<<<<<
+ * 
  *                     delta_T_hat = self.bounded_delta_energy(delta_T, state['size'])
 */
-        if (!(likely(((__pyx_v_x) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_x, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 556, __pyx_L1_error)
-        if (!(likely(((__pyx_v_cluster_points_current) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_cluster_points_current, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 556, __pyx_L1_error)
-        __pyx_t_12 = __Pyx_PyObject_Dict_GetItem(__pyx_v_state, __pyx_mstate_global->__pyx_n_u_T_norm); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 556, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_12);
-        __pyx_t_23 = __Pyx_PyFloat_AsDouble(__pyx_t_12); if (unlikely((__pyx_t_23 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 556, __pyx_L1_error)
-        __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
-        __pyx_t_12 = __Pyx_PyObject_Dict_GetItem(__pyx_v_state, __pyx_mstate_global->__pyx_n_u_size); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 556, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_12);
-        __pyx_t_11 = __Pyx_PyLong_As_int(__pyx_t_12); if (unlikely((__pyx_t_11 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 556, __pyx_L1_error)
-        __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
+          __Pyx_INCREF(__pyx_mstate_global->__pyx_n_u_tda_calls);
+          __pyx_t_26 = __pyx_mstate_global->__pyx_n_u_tda_calls;
+          __pyx_t_13 = __Pyx_PyObject_Dict_GetItem(__pyx_v_state, __pyx_t_26); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 614, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_13);
+          __pyx_t_6 = __Pyx_PyLong_AddObjC(__pyx_t_13, __pyx_mstate_global->__pyx_int_1, 1, 1, 0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 614, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_6);
+          __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+          if (unlikely((PyObject_SetItem(__pyx_v_state, __pyx_t_26, __pyx_t_6) < 0))) __PYX_ERR(0, 614, __pyx_L1_error)
+          __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+          __Pyx_DECREF(__pyx_t_26); __pyx_t_26 = 0;
+        }
+        __pyx_L61:;
 
-        /* "entrap/ebm_engine.pyx":555
- *                     cluster_points_current = X[cluster_mask_current]
+        /* "entrap/ebm_engine.pyx":616
+ *                         state['tda_calls'] += 1
  * 
- *                     delta_T = self.delta_topological_energy(             # <<<<<<<<<<<<<<
- *                         x, cluster_points_current, state['T_norm'], state['size']
- *                     )
-*/
-        __pyx_t_18 = ((struct __pyx_vtabstruct_6entrap_10ebm_engine_EBM_Reassignment_Engine *)__pyx_v_self->__pyx_vtab)->delta_topological_energy(__pyx_v_self, ((PyArrayObject *)__pyx_v_x), ((PyArrayObject *)__pyx_v_cluster_points_current), __pyx_t_23, __pyx_t_11, 0); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 555, __pyx_L1_error)
-        __pyx_v_delta_T = __pyx_t_18;
-
-        /* "entrap/ebm_engine.pyx":558
- *                         x, cluster_points_current, state['T_norm'], state['size']
- *                     )
  *                     delta_T_hat = self.bounded_delta_energy(delta_T, state['size'])             # <<<<<<<<<<<<<<
- *                     state['tda_calls'] += 1
+ *                     E_total = E_cheap + self.lambda_T * delta_T_hat
  * 
 */
-        __pyx_t_12 = __Pyx_PyObject_Dict_GetItem(__pyx_v_state, __pyx_mstate_global->__pyx_n_u_size); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 558, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_12);
-        __pyx_t_11 = __Pyx_PyLong_As_int(__pyx_t_12); if (unlikely((__pyx_t_11 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 558, __pyx_L1_error)
-        __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
-        __pyx_t_18 = ((struct __pyx_vtabstruct_6entrap_10ebm_engine_EBM_Reassignment_Engine *)__pyx_v_self->__pyx_vtab)->bounded_delta_energy(__pyx_v_self, __pyx_v_delta_T, __pyx_t_11, 0); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 558, __pyx_L1_error)
+        __pyx_t_6 = __Pyx_PyObject_Dict_GetItem(__pyx_v_state, __pyx_mstate_global->__pyx_n_u_size); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 616, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_6);
+        __pyx_t_11 = __Pyx_PyLong_As_int(__pyx_t_6); if (unlikely((__pyx_t_11 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 616, __pyx_L1_error)
+        __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+        __pyx_t_18 = ((struct __pyx_vtabstruct_6entrap_10ebm_engine_EBM_Reassignment_Engine *)__pyx_v_self->__pyx_vtab)->bounded_delta_energy(__pyx_v_self, __pyx_v_delta_T, __pyx_t_11, 0); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 616, __pyx_L1_error)
         __pyx_v_delta_T_hat = __pyx_t_18;
 
-        /* "entrap/ebm_engine.pyx":559
- *                     )
+        /* "entrap/ebm_engine.pyx":617
+ * 
  *                     delta_T_hat = self.bounded_delta_energy(delta_T, state['size'])
- *                     state['tda_calls'] += 1             # <<<<<<<<<<<<<<
- * 
- *                     E_total = E_cheap + self.lambda_T * delta_T_hat
-*/
-        __Pyx_INCREF(__pyx_mstate_global->__pyx_n_u_tda_calls);
-        __pyx_t_25 = __pyx_mstate_global->__pyx_n_u_tda_calls;
-        __pyx_t_12 = __Pyx_PyObject_Dict_GetItem(__pyx_v_state, __pyx_t_25); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 559, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_12);
-        __pyx_t_13 = __Pyx_PyLong_AddObjC(__pyx_t_12, __pyx_mstate_global->__pyx_int_1, 1, 1, 0); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 559, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_13);
-        __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
-        if (unlikely((PyObject_SetItem(__pyx_v_state, __pyx_t_25, __pyx_t_13) < 0))) __PYX_ERR(0, 559, __pyx_L1_error)
-        __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
-        __Pyx_DECREF(__pyx_t_25); __pyx_t_25 = 0;
-
-        /* "entrap/ebm_engine.pyx":561
- *                     state['tda_calls'] += 1
- * 
  *                     E_total = E_cheap + self.lambda_T * delta_T_hat             # <<<<<<<<<<<<<<
  * 
  *                     if E_total < E_noise:
 */
         __pyx_v_E_total = (__pyx_v_E_cheap + (__pyx_v_self->lambda_T * __pyx_v_delta_T_hat));
 
-        /* "entrap/ebm_engine.pyx":563
+        /* "entrap/ebm_engine.pyx":619
  *                     E_total = E_cheap + self.lambda_T * delta_T_hat
  * 
  *                     if E_total < E_noise:             # <<<<<<<<<<<<<<
@@ -11358,50 +11857,44 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
         __pyx_t_5 = (__pyx_v_E_total < __pyx_v_E_noise);
         if (__pyx_t_5) {
 
-          /* "entrap/ebm_engine.pyx":565
+          /* "entrap/ebm_engine.pyx":621
  *                     if E_total < E_noise:
  *                         # RESCUE
  *                         refined_labels[candidate_idx] = cid             # <<<<<<<<<<<<<<
  *                         candidates.discard(candidate_idx)
  * 
 */
-          __pyx_t_13 = __Pyx_PyLong_From_int(__pyx_v_cid); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 565, __pyx_L1_error)
-          __Pyx_GOTREF(__pyx_t_13);
-          if (unlikely((__Pyx_SetItemInt(__pyx_v_refined_labels, __pyx_v_candidate_idx, __pyx_t_13, int, 1, __Pyx_PyLong_From_int, 0, 0, 0, 1) < 0))) __PYX_ERR(0, 565, __pyx_L1_error)
-          __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+          __pyx_t_6 = __Pyx_PyLong_From_int(__pyx_v_cid); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 621, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_6);
+          if (unlikely((__Pyx_SetItemInt(((PyObject *)__pyx_v_refined_labels), __pyx_v_candidate_idx, __pyx_t_6, int, 1, __Pyx_PyLong_From_int, 0, 0, 0, 1) < 0))) __PYX_ERR(0, 621, __pyx_L1_error)
+          __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
-          /* "entrap/ebm_engine.pyx":566
+          /* "entrap/ebm_engine.pyx":622
  *                         # RESCUE
  *                         refined_labels[candidate_idx] = cid
  *                         candidates.discard(candidate_idx)             # <<<<<<<<<<<<<<
  * 
  *                         state['needs_T_update'] = True
 */
-          __pyx_t_12 = __pyx_v_candidates;
-          __Pyx_INCREF(__pyx_t_12);
-          __pyx_t_2 = __Pyx_PyLong_From_int(__pyx_v_candidate_idx); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 566, __pyx_L1_error)
-          __Pyx_GOTREF(__pyx_t_2);
-          __pyx_t_3 = 0;
-          {
-            PyObject *__pyx_callargs[2] = {__pyx_t_12, __pyx_t_2};
-            __pyx_t_13 = __Pyx_PyObject_FastCallMethod(__pyx_mstate_global->__pyx_n_u_discard, __pyx_callargs+__pyx_t_3, (2-__pyx_t_3) | (1*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
-            __Pyx_XDECREF(__pyx_t_12); __pyx_t_12 = 0;
-            __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-            if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 566, __pyx_L1_error)
-            __Pyx_GOTREF(__pyx_t_13);
+          if (unlikely(__pyx_v_candidates == Py_None)) {
+            PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%.30s'", "discard");
+            __PYX_ERR(0, 622, __pyx_L1_error)
           }
-          __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+          __pyx_t_6 = __Pyx_PyLong_From_int(__pyx_v_candidate_idx); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 622, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_6);
+          __pyx_t_25 = __Pyx_PySet_Discard(__pyx_v_candidates, __pyx_t_6); if (unlikely(__pyx_t_25 == ((int)-1))) __PYX_ERR(0, 622, __pyx_L1_error)
+          __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
-          /* "entrap/ebm_engine.pyx":568
+          /* "entrap/ebm_engine.pyx":624
  *                         candidates.discard(candidate_idx)
  * 
  *                         state['needs_T_update'] = True             # <<<<<<<<<<<<<<
  *                         state['size'] += 1
  *                         state['rescued_count'] += 1
 */
-          if (unlikely((PyObject_SetItem(__pyx_v_state, __pyx_mstate_global->__pyx_n_u_needs_T_update, Py_True) < 0))) __PYX_ERR(0, 568, __pyx_L1_error)
+          if (unlikely((PyObject_SetItem(__pyx_v_state, __pyx_mstate_global->__pyx_n_u_needs_T_update, Py_True) < 0))) __PYX_ERR(0, 624, __pyx_L1_error)
 
-          /* "entrap/ebm_engine.pyx":569
+          /* "entrap/ebm_engine.pyx":625
  * 
  *                         state['needs_T_update'] = True
  *                         state['size'] += 1             # <<<<<<<<<<<<<<
@@ -11409,17 +11902,17 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
  * 
 */
           __Pyx_INCREF(__pyx_mstate_global->__pyx_n_u_size);
-          __pyx_t_25 = __pyx_mstate_global->__pyx_n_u_size;
-          __pyx_t_13 = __Pyx_PyObject_Dict_GetItem(__pyx_v_state, __pyx_t_25); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 569, __pyx_L1_error)
+          __pyx_t_26 = __pyx_mstate_global->__pyx_n_u_size;
+          __pyx_t_6 = __Pyx_PyObject_Dict_GetItem(__pyx_v_state, __pyx_t_26); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 625, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_6);
+          __pyx_t_13 = __Pyx_PyLong_AddObjC(__pyx_t_6, __pyx_mstate_global->__pyx_int_1, 1, 1, 0); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 625, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_13);
-          __pyx_t_2 = __Pyx_PyLong_AddObjC(__pyx_t_13, __pyx_mstate_global->__pyx_int_1, 1, 1, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 569, __pyx_L1_error)
-          __Pyx_GOTREF(__pyx_t_2);
+          __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+          if (unlikely((PyObject_SetItem(__pyx_v_state, __pyx_t_26, __pyx_t_13) < 0))) __PYX_ERR(0, 625, __pyx_L1_error)
           __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
-          if (unlikely((PyObject_SetItem(__pyx_v_state, __pyx_t_25, __pyx_t_2) < 0))) __PYX_ERR(0, 569, __pyx_L1_error)
-          __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-          __Pyx_DECREF(__pyx_t_25); __pyx_t_25 = 0;
+          __Pyx_DECREF(__pyx_t_26); __pyx_t_26 = 0;
 
-          /* "entrap/ebm_engine.pyx":570
+          /* "entrap/ebm_engine.pyx":626
  *                         state['needs_T_update'] = True
  *                         state['size'] += 1
  *                         state['rescued_count'] += 1             # <<<<<<<<<<<<<<
@@ -11427,17 +11920,17 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
  *                         total_rescued += 1
 */
           __Pyx_INCREF(__pyx_mstate_global->__pyx_n_u_rescued_count);
-          __pyx_t_25 = __pyx_mstate_global->__pyx_n_u_rescued_count;
-          __pyx_t_2 = __Pyx_PyObject_Dict_GetItem(__pyx_v_state, __pyx_t_25); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 570, __pyx_L1_error)
-          __Pyx_GOTREF(__pyx_t_2);
-          __pyx_t_13 = __Pyx_PyLong_AddObjC(__pyx_t_2, __pyx_mstate_global->__pyx_int_1, 1, 1, 0); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 570, __pyx_L1_error)
+          __pyx_t_26 = __pyx_mstate_global->__pyx_n_u_rescued_count;
+          __pyx_t_13 = __Pyx_PyObject_Dict_GetItem(__pyx_v_state, __pyx_t_26); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 626, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_13);
-          __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-          if (unlikely((PyObject_SetItem(__pyx_v_state, __pyx_t_25, __pyx_t_13) < 0))) __PYX_ERR(0, 570, __pyx_L1_error)
+          __pyx_t_6 = __Pyx_PyLong_AddObjC(__pyx_t_13, __pyx_mstate_global->__pyx_int_1, 1, 1, 0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 626, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_6);
           __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
-          __Pyx_DECREF(__pyx_t_25); __pyx_t_25 = 0;
+          if (unlikely((PyObject_SetItem(__pyx_v_state, __pyx_t_26, __pyx_t_6) < 0))) __PYX_ERR(0, 626, __pyx_L1_error)
+          __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+          __Pyx_DECREF(__pyx_t_26); __pyx_t_26 = 0;
 
-          /* "entrap/ebm_engine.pyx":572
+          /* "entrap/ebm_engine.pyx":628
  *                         state['rescued_count'] += 1
  * 
  *                         total_rescued += 1             # <<<<<<<<<<<<<<
@@ -11446,7 +11939,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
 */
           __pyx_v_total_rescued = (__pyx_v_total_rescued + 1);
 
-          /* "entrap/ebm_engine.pyx":573
+          /* "entrap/ebm_engine.pyx":629
  * 
  *                         total_rescued += 1
  *                         recruited_this_round = True             # <<<<<<<<<<<<<<
@@ -11455,74 +11948,74 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
 */
           __pyx_v_recruited_this_round = 1;
 
-          /* "entrap/ebm_engine.pyx":575
+          /* "entrap/ebm_engine.pyx":631
  *                         recruited_this_round = True
  * 
  *                         for other_cid in sorted_cluster_ids:             # <<<<<<<<<<<<<<
  *                             if other_cid != cid:
  *                                 cluster_states[other_cid]['candidates'].discard(candidate_idx)
 */
-          __pyx_t_13 = __pyx_v_sorted_cluster_ids; __Pyx_INCREF(__pyx_t_13);
-          __pyx_t_16 = 0;
+          __pyx_t_6 = __pyx_v_sorted_cluster_ids; __Pyx_INCREF(__pyx_t_6);
+          __pyx_t_17 = 0;
           for (;;) {
             {
-              Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_13);
+              Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_6);
               #if !CYTHON_ASSUME_SAFE_SIZE
-              if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 575, __pyx_L1_error)
+              if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 631, __pyx_L1_error)
               #endif
-              if (__pyx_t_16 >= __pyx_temp) break;
+              if (__pyx_t_17 >= __pyx_temp) break;
             }
-            __pyx_t_2 = __Pyx_PyList_GetItemRef(__pyx_t_13, __pyx_t_16);
-            ++__pyx_t_16;
-            if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 575, __pyx_L1_error)
-            __Pyx_GOTREF(__pyx_t_2);
-            __Pyx_XDECREF_SET(__pyx_v_other_cid, __pyx_t_2);
-            __pyx_t_2 = 0;
+            __pyx_t_13 = __Pyx_PyList_GetItemRef(__pyx_t_6, __pyx_t_17);
+            ++__pyx_t_17;
+            if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 631, __pyx_L1_error)
+            __Pyx_GOTREF(__pyx_t_13);
+            __Pyx_XDECREF_SET(__pyx_v_other_cid, __pyx_t_13);
+            __pyx_t_13 = 0;
 
-            /* "entrap/ebm_engine.pyx":576
+            /* "entrap/ebm_engine.pyx":632
  * 
  *                         for other_cid in sorted_cluster_ids:
  *                             if other_cid != cid:             # <<<<<<<<<<<<<<
  *                                 cluster_states[other_cid]['candidates'].discard(candidate_idx)
  * 
 */
-            __pyx_t_2 = __Pyx_PyLong_From_int(__pyx_v_cid); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 576, __pyx_L1_error)
-            __Pyx_GOTREF(__pyx_t_2);
-            __pyx_t_12 = PyObject_RichCompare(__pyx_v_other_cid, __pyx_t_2, Py_NE); __Pyx_XGOTREF(__pyx_t_12); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 576, __pyx_L1_error)
-            __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-            __pyx_t_5 = __Pyx_PyObject_IsTrue(__pyx_t_12); if (unlikely((__pyx_t_5 < 0))) __PYX_ERR(0, 576, __pyx_L1_error)
-            __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
+            __pyx_t_13 = __Pyx_PyLong_From_int(__pyx_v_cid); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 632, __pyx_L1_error)
+            __Pyx_GOTREF(__pyx_t_13);
+            __pyx_t_23 = PyObject_RichCompare(__pyx_v_other_cid, __pyx_t_13, Py_NE); __Pyx_XGOTREF(__pyx_t_23); if (unlikely(!__pyx_t_23)) __PYX_ERR(0, 632, __pyx_L1_error)
+            __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+            __pyx_t_5 = __Pyx_PyObject_IsTrue(__pyx_t_23); if (unlikely((__pyx_t_5 < 0))) __PYX_ERR(0, 632, __pyx_L1_error)
+            __Pyx_DECREF(__pyx_t_23); __pyx_t_23 = 0;
             if (__pyx_t_5) {
 
-              /* "entrap/ebm_engine.pyx":577
+              /* "entrap/ebm_engine.pyx":633
  *                         for other_cid in sorted_cluster_ids:
  *                             if other_cid != cid:
  *                                 cluster_states[other_cid]['candidates'].discard(candidate_idx)             # <<<<<<<<<<<<<<
  * 
  *                         break
 */
-              __pyx_t_22 = __Pyx_PyDict_GetItem(__pyx_v_cluster_states, __pyx_v_other_cid); if (unlikely(!__pyx_t_22)) __PYX_ERR(0, 577, __pyx_L1_error)
-              __Pyx_GOTREF(__pyx_t_22);
-              __pyx_t_6 = __Pyx_PyObject_Dict_GetItem(__pyx_t_22, __pyx_mstate_global->__pyx_n_u_candidates); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 577, __pyx_L1_error)
-              __Pyx_GOTREF(__pyx_t_6);
-              __Pyx_DECREF(__pyx_t_22); __pyx_t_22 = 0;
-              __pyx_t_2 = __pyx_t_6;
-              __Pyx_INCREF(__pyx_t_2);
-              __pyx_t_22 = __Pyx_PyLong_From_int(__pyx_v_candidate_idx); if (unlikely(!__pyx_t_22)) __PYX_ERR(0, 577, __pyx_L1_error)
-              __Pyx_GOTREF(__pyx_t_22);
+              __pyx_t_2 = __Pyx_PyDict_GetItem(__pyx_v_cluster_states, __pyx_v_other_cid); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 633, __pyx_L1_error)
+              __Pyx_GOTREF(__pyx_t_2);
+              __pyx_t_14 = __Pyx_PyObject_Dict_GetItem(__pyx_t_2, __pyx_mstate_global->__pyx_n_u_candidates); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 633, __pyx_L1_error)
+              __Pyx_GOTREF(__pyx_t_14);
+              __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+              __pyx_t_13 = __pyx_t_14;
+              __Pyx_INCREF(__pyx_t_13);
+              __pyx_t_2 = __Pyx_PyLong_From_int(__pyx_v_candidate_idx); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 633, __pyx_L1_error)
+              __Pyx_GOTREF(__pyx_t_2);
               __pyx_t_3 = 0;
               {
-                PyObject *__pyx_callargs[2] = {__pyx_t_2, __pyx_t_22};
-                __pyx_t_12 = __Pyx_PyObject_FastCallMethod(__pyx_mstate_global->__pyx_n_u_discard, __pyx_callargs+__pyx_t_3, (2-__pyx_t_3) | (1*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
-                __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
-                __Pyx_DECREF(__pyx_t_22); __pyx_t_22 = 0;
-                __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-                if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 577, __pyx_L1_error)
-                __Pyx_GOTREF(__pyx_t_12);
+                PyObject *__pyx_callargs[2] = {__pyx_t_13, __pyx_t_2};
+                __pyx_t_23 = __Pyx_PyObject_FastCallMethod(__pyx_mstate_global->__pyx_n_u_discard, __pyx_callargs+__pyx_t_3, (2-__pyx_t_3) | (1*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
+                __Pyx_XDECREF(__pyx_t_13); __pyx_t_13 = 0;
+                __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+                __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
+                if (unlikely(!__pyx_t_23)) __PYX_ERR(0, 633, __pyx_L1_error)
+                __Pyx_GOTREF(__pyx_t_23);
               }
-              __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
+              __Pyx_DECREF(__pyx_t_23); __pyx_t_23 = 0;
 
-              /* "entrap/ebm_engine.pyx":576
+              /* "entrap/ebm_engine.pyx":632
  * 
  *                         for other_cid in sorted_cluster_ids:
  *                             if other_cid != cid:             # <<<<<<<<<<<<<<
@@ -11531,7 +12024,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
 */
             }
 
-            /* "entrap/ebm_engine.pyx":575
+            /* "entrap/ebm_engine.pyx":631
  *                         recruited_this_round = True
  * 
  *                         for other_cid in sorted_cluster_ids:             # <<<<<<<<<<<<<<
@@ -11539,18 +12032,18 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
  *                                 cluster_states[other_cid]['candidates'].discard(candidate_idx)
 */
           }
-          __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+          __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
-          /* "entrap/ebm_engine.pyx":579
+          /* "entrap/ebm_engine.pyx":635
  *                                 cluster_states[other_cid]['candidates'].discard(candidate_idx)
  * 
  *                         break             # <<<<<<<<<<<<<<
  * 
  *             # Batch TDA recomputation
 */
-          goto __pyx_L56_break;
+          goto __pyx_L55_break;
 
-          /* "entrap/ebm_engine.pyx":563
+          /* "entrap/ebm_engine.pyx":619
  *                     E_total = E_cheap + self.lambda_T * delta_T_hat
  * 
  *                     if E_total < E_noise:             # <<<<<<<<<<<<<<
@@ -11559,23 +12052,23 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
 */
         }
 
-        /* "entrap/ebm_engine.pyx":537
+        /* "entrap/ebm_engine.pyx":582
  *                 consecutive_rejects = 0
  * 
  *                 for candidate_idx, E_G in candidate_energies:             # <<<<<<<<<<<<<<
  *                     E_cheap = lambda_G_t * E_G
  * 
 */
-        __pyx_L55_continue:;
+        __pyx_L54_continue:;
       }
       __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-      goto __pyx_L67_for_end;
-      __pyx_L56_break:;
+      goto __pyx_L70_for_end;
+      __pyx_L55_break:;
       __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-      goto __pyx_L67_for_end;
-      __pyx_L67_for_end:;
+      goto __pyx_L70_for_end;
+      __pyx_L70_for_end:;
 
-      /* "entrap/ebm_engine.pyx":493
+      /* "entrap/ebm_engine.pyx":537
  *             recruited_this_round = False
  * 
  *             for cid in sorted_cluster_ids:             # <<<<<<<<<<<<<<
@@ -11586,7 +12079,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
     }
     __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
 
-    /* "entrap/ebm_engine.pyx":582
+    /* "entrap/ebm_engine.pyx":638
  * 
  *             # Batch TDA recomputation
  *             for cid in sorted_cluster_ids:             # <<<<<<<<<<<<<<
@@ -11599,111 +12092,111 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
       {
         Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_8);
         #if !CYTHON_ASSUME_SAFE_SIZE
-        if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 582, __pyx_L1_error)
+        if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 638, __pyx_L1_error)
         #endif
         if (__pyx_t_9 >= __pyx_temp) break;
       }
       __pyx_t_7 = __Pyx_PyList_GetItemRef(__pyx_t_8, __pyx_t_9);
       ++__pyx_t_9;
-      if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 582, __pyx_L1_error)
+      if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 638, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_7);
-      __pyx_t_11 = __Pyx_PyLong_As_int(__pyx_t_7); if (unlikely((__pyx_t_11 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 582, __pyx_L1_error)
+      __pyx_t_11 = __Pyx_PyLong_As_int(__pyx_t_7); if (unlikely((__pyx_t_11 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 638, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
       __pyx_v_cid = __pyx_t_11;
 
-      /* "entrap/ebm_engine.pyx":583
+      /* "entrap/ebm_engine.pyx":639
  *             # Batch TDA recomputation
  *             for cid in sorted_cluster_ids:
  *                 state = cluster_states[cid]             # <<<<<<<<<<<<<<
  *                 if state.get('needs_T_update', False):
  *                     cluster_mask_updated = (refined_labels == cid)
 */
-      __pyx_t_7 = __Pyx_PyLong_From_int(__pyx_v_cid); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 583, __pyx_L1_error)
+      __pyx_t_7 = __Pyx_PyLong_From_int(__pyx_v_cid); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 639, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_7);
-      __pyx_t_13 = __Pyx_PyDict_GetItem(__pyx_v_cluster_states, __pyx_t_7); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 583, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_13);
+      __pyx_t_6 = __Pyx_PyDict_GetItem(__pyx_v_cluster_states, __pyx_t_7); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 639, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_6);
       __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-      __Pyx_XDECREF_SET(__pyx_v_state, __pyx_t_13);
-      __pyx_t_13 = 0;
+      __Pyx_XDECREF_SET(__pyx_v_state, __pyx_t_6);
+      __pyx_t_6 = 0;
 
-      /* "entrap/ebm_engine.pyx":584
+      /* "entrap/ebm_engine.pyx":640
  *             for cid in sorted_cluster_ids:
  *                 state = cluster_states[cid]
  *                 if state.get('needs_T_update', False):             # <<<<<<<<<<<<<<
  *                     cluster_mask_updated = (refined_labels == cid)
  *                     cluster_points_updated = X[cluster_mask_updated]
 */
-      __pyx_t_13 = __Pyx_PyObject_GetAttrStr(__pyx_v_state, __pyx_mstate_global->__pyx_n_u_get); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 584, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_13);
-      __pyx_t_7 = __Pyx_PyObject_Call(__pyx_t_13, __pyx_mstate_global->__pyx_tuple[1], NULL); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 584, __pyx_L1_error)
+      __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_state, __pyx_mstate_global->__pyx_n_u_get); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 640, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_6);
+      __pyx_t_7 = __Pyx_PyObject_Call(__pyx_t_6, __pyx_mstate_global->__pyx_tuple[2], NULL); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 640, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_7);
-      __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
-      __pyx_t_5 = __Pyx_PyObject_IsTrue(__pyx_t_7); if (unlikely((__pyx_t_5 < 0))) __PYX_ERR(0, 584, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+      __pyx_t_5 = __Pyx_PyObject_IsTrue(__pyx_t_7); if (unlikely((__pyx_t_5 < 0))) __PYX_ERR(0, 640, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
       if (__pyx_t_5) {
 
-        /* "entrap/ebm_engine.pyx":585
+        /* "entrap/ebm_engine.pyx":641
  *                 state = cluster_states[cid]
  *                 if state.get('needs_T_update', False):
  *                     cluster_mask_updated = (refined_labels == cid)             # <<<<<<<<<<<<<<
  *                     cluster_points_updated = X[cluster_mask_updated]
  * 
 */
-        __pyx_t_7 = __Pyx_PyLong_From_int(__pyx_v_cid); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 585, __pyx_L1_error)
+        __pyx_t_7 = __Pyx_PyLong_From_int(__pyx_v_cid); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 641, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_7);
-        __pyx_t_13 = PyObject_RichCompare(__pyx_v_refined_labels, __pyx_t_7, Py_EQ); __Pyx_XGOTREF(__pyx_t_13); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 585, __pyx_L1_error)
+        __pyx_t_6 = PyObject_RichCompare(((PyObject *)__pyx_v_refined_labels), __pyx_t_7, Py_EQ); __Pyx_XGOTREF(__pyx_t_6); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 641, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-        __Pyx_XDECREF_SET(__pyx_v_cluster_mask_updated, __pyx_t_13);
-        __pyx_t_13 = 0;
+        __Pyx_XDECREF_SET(__pyx_v_cluster_mask_updated, __pyx_t_6);
+        __pyx_t_6 = 0;
 
-        /* "entrap/ebm_engine.pyx":586
+        /* "entrap/ebm_engine.pyx":642
  *                 if state.get('needs_T_update', False):
  *                     cluster_mask_updated = (refined_labels == cid)
  *                     cluster_points_updated = X[cluster_mask_updated]             # <<<<<<<<<<<<<<
  * 
  *                     state['T_norm'] = self.compute_normalized_topological_energy(
 */
-        __pyx_t_13 = __Pyx_PyObject_GetItem(__pyx_v_X, __pyx_v_cluster_mask_updated); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 586, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_13);
-        __Pyx_XDECREF_SET(__pyx_v_cluster_points_updated, __pyx_t_13);
-        __pyx_t_13 = 0;
+        __pyx_t_6 = __Pyx_PyObject_GetItem(__pyx_v_X, __pyx_v_cluster_mask_updated); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 642, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_6);
+        __Pyx_XDECREF_SET(__pyx_v_cluster_points_updated, __pyx_t_6);
+        __pyx_t_6 = 0;
 
-        /* "entrap/ebm_engine.pyx":589
+        /* "entrap/ebm_engine.pyx":645
  * 
  *                     state['T_norm'] = self.compute_normalized_topological_energy(
  *                         cluster_points_updated, state['size']             # <<<<<<<<<<<<<<
  *                     )
  *                     state['needs_T_update'] = False
 */
-        if (!(likely(((__pyx_v_cluster_points_updated) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_cluster_points_updated, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 589, __pyx_L1_error)
-        __pyx_t_13 = __Pyx_PyObject_Dict_GetItem(__pyx_v_state, __pyx_mstate_global->__pyx_n_u_size); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 589, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_13);
-        __pyx_t_11 = __Pyx_PyLong_As_int(__pyx_t_13); if (unlikely((__pyx_t_11 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 589, __pyx_L1_error)
-        __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+        if (!(likely(((__pyx_v_cluster_points_updated) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_cluster_points_updated, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 645, __pyx_L1_error)
+        __pyx_t_6 = __Pyx_PyObject_Dict_GetItem(__pyx_v_state, __pyx_mstate_global->__pyx_n_u_size); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 645, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_6);
+        __pyx_t_11 = __Pyx_PyLong_As_int(__pyx_t_6); if (unlikely((__pyx_t_11 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 645, __pyx_L1_error)
+        __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
-        /* "entrap/ebm_engine.pyx":588
+        /* "entrap/ebm_engine.pyx":644
  *                     cluster_points_updated = X[cluster_mask_updated]
  * 
  *                     state['T_norm'] = self.compute_normalized_topological_energy(             # <<<<<<<<<<<<<<
  *                         cluster_points_updated, state['size']
  *                     )
 */
-        __pyx_t_18 = ((struct __pyx_vtabstruct_6entrap_10ebm_engine_EBM_Reassignment_Engine *)__pyx_v_self->__pyx_vtab)->compute_normalized_topological_energy(__pyx_v_self, ((PyArrayObject *)__pyx_v_cluster_points_updated), __pyx_t_11, 0); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 588, __pyx_L1_error)
-        __pyx_t_13 = PyFloat_FromDouble(__pyx_t_18); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 588, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_13);
-        if (unlikely((PyObject_SetItem(__pyx_v_state, __pyx_mstate_global->__pyx_n_u_T_norm, __pyx_t_13) < 0))) __PYX_ERR(0, 588, __pyx_L1_error)
-        __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+        __pyx_t_18 = ((struct __pyx_vtabstruct_6entrap_10ebm_engine_EBM_Reassignment_Engine *)__pyx_v_self->__pyx_vtab)->compute_normalized_topological_energy(__pyx_v_self, ((PyArrayObject *)__pyx_v_cluster_points_updated), __pyx_t_11, 0); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 644, __pyx_L1_error)
+        __pyx_t_6 = PyFloat_FromDouble(__pyx_t_18); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 644, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_6);
+        if (unlikely((PyObject_SetItem(__pyx_v_state, __pyx_mstate_global->__pyx_n_u_T_norm, __pyx_t_6) < 0))) __PYX_ERR(0, 644, __pyx_L1_error)
+        __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
-        /* "entrap/ebm_engine.pyx":591
+        /* "entrap/ebm_engine.pyx":647
  *                         cluster_points_updated, state['size']
  *                     )
  *                     state['needs_T_update'] = False             # <<<<<<<<<<<<<<
  * 
- *             iteration += 1
+ *                 # Invalidate cache for completed cluster iteration
 */
-        if (unlikely((PyObject_SetItem(__pyx_v_state, __pyx_mstate_global->__pyx_n_u_needs_T_update, Py_False) < 0))) __PYX_ERR(0, 591, __pyx_L1_error)
+        if (unlikely((PyObject_SetItem(__pyx_v_state, __pyx_mstate_global->__pyx_n_u_needs_T_update, Py_False) < 0))) __PYX_ERR(0, 647, __pyx_L1_error)
 
-        /* "entrap/ebm_engine.pyx":584
+        /* "entrap/ebm_engine.pyx":640
  *             for cid in sorted_cluster_ids:
  *                 state = cluster_states[cid]
  *                 if state.get('needs_T_update', False):             # <<<<<<<<<<<<<<
@@ -11712,7 +12205,60 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
 */
       }
 
-      /* "entrap/ebm_engine.pyx":582
+      /* "entrap/ebm_engine.pyx":650
+ * 
+ *                 # Invalidate cache for completed cluster iteration
+ *                 if self.incremental_tda is not None and len(state['candidates']) == 0:             # <<<<<<<<<<<<<<
+ *                     self.incremental_tda.invalidate_cluster_cache(state['cluster_indices'])
+ * 
+*/
+      __pyx_t_4 = (__pyx_v_self->incremental_tda != Py_None);
+      if (__pyx_t_4) {
+      } else {
+        __pyx_t_5 = __pyx_t_4;
+        goto __pyx_L76_bool_binop_done;
+      }
+      __pyx_t_6 = __Pyx_PyObject_Dict_GetItem(__pyx_v_state, __pyx_mstate_global->__pyx_n_u_candidates); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 650, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_6);
+      __pyx_t_16 = PyObject_Length(__pyx_t_6); if (unlikely(__pyx_t_16 == ((Py_ssize_t)-1))) __PYX_ERR(0, 650, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+      __pyx_t_4 = (__pyx_t_16 == 0);
+      __pyx_t_5 = __pyx_t_4;
+      __pyx_L76_bool_binop_done:;
+      if (__pyx_t_5) {
+
+        /* "entrap/ebm_engine.pyx":651
+ *                 # Invalidate cache for completed cluster iteration
+ *                 if self.incremental_tda is not None and len(state['candidates']) == 0:
+ *                     self.incremental_tda.invalidate_cluster_cache(state['cluster_indices'])             # <<<<<<<<<<<<<<
+ * 
+ *             # Signal iteration advance for cache staleness tracking
+*/
+        __pyx_t_7 = __pyx_v_self->incremental_tda;
+        __Pyx_INCREF(__pyx_t_7);
+        __pyx_t_23 = __Pyx_PyObject_Dict_GetItem(__pyx_v_state, __pyx_mstate_global->__pyx_n_u_cluster_indices); if (unlikely(!__pyx_t_23)) __PYX_ERR(0, 651, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_23);
+        __pyx_t_3 = 0;
+        {
+          PyObject *__pyx_callargs[2] = {__pyx_t_7, __pyx_t_23};
+          __pyx_t_6 = __Pyx_PyObject_FastCallMethod(__pyx_mstate_global->__pyx_n_u_invalidate_cluster_cache, __pyx_callargs+__pyx_t_3, (2-__pyx_t_3) | (1*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
+          __Pyx_XDECREF(__pyx_t_7); __pyx_t_7 = 0;
+          __Pyx_DECREF(__pyx_t_23); __pyx_t_23 = 0;
+          if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 651, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_6);
+        }
+        __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+
+        /* "entrap/ebm_engine.pyx":650
+ * 
+ *                 # Invalidate cache for completed cluster iteration
+ *                 if self.incremental_tda is not None and len(state['candidates']) == 0:             # <<<<<<<<<<<<<<
+ *                     self.incremental_tda.invalidate_cluster_cache(state['cluster_indices'])
+ * 
+*/
+      }
+
+      /* "entrap/ebm_engine.pyx":638
  * 
  *             # Batch TDA recomputation
  *             for cid in sorted_cluster_ids:             # <<<<<<<<<<<<<<
@@ -11722,8 +12268,46 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
     }
     __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
 
-    /* "entrap/ebm_engine.pyx":593
- *                     state['needs_T_update'] = False
+    /* "entrap/ebm_engine.pyx":654
+ * 
+ *             # Signal iteration advance for cache staleness tracking
+ *             if self.incremental_tda is not None:             # <<<<<<<<<<<<<<
+ *                 self.incremental_tda.next_iteration()
+ * 
+*/
+    __pyx_t_5 = (__pyx_v_self->incremental_tda != Py_None);
+    if (__pyx_t_5) {
+
+      /* "entrap/ebm_engine.pyx":655
+ *             # Signal iteration advance for cache staleness tracking
+ *             if self.incremental_tda is not None:
+ *                 self.incremental_tda.next_iteration()             # <<<<<<<<<<<<<<
+ * 
+ *             iteration += 1
+*/
+      __pyx_t_6 = __pyx_v_self->incremental_tda;
+      __Pyx_INCREF(__pyx_t_6);
+      __pyx_t_3 = 0;
+      {
+        PyObject *__pyx_callargs[2] = {__pyx_t_6, NULL};
+        __pyx_t_8 = __Pyx_PyObject_FastCallMethod(__pyx_mstate_global->__pyx_n_u_next_iteration, __pyx_callargs+__pyx_t_3, (1-__pyx_t_3) | (1*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
+        __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
+        if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 655, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_8);
+      }
+      __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
+
+      /* "entrap/ebm_engine.pyx":654
+ * 
+ *             # Signal iteration advance for cache staleness tracking
+ *             if self.incremental_tda is not None:             # <<<<<<<<<<<<<<
+ *                 self.incremental_tda.next_iteration()
+ * 
+*/
+    }
+
+    /* "entrap/ebm_engine.pyx":657
+ *                 self.incremental_tda.next_iteration()
  * 
  *             iteration += 1             # <<<<<<<<<<<<<<
  * 
@@ -11731,7 +12315,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
 */
     __pyx_v_iteration = (__pyx_v_iteration + 1);
 
-    /* "entrap/ebm_engine.pyx":595
+    /* "entrap/ebm_engine.pyx":659
  *             iteration += 1
  * 
  *             if not recruited_this_round:             # <<<<<<<<<<<<<<
@@ -11741,7 +12325,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
     __pyx_t_5 = (!__pyx_v_recruited_this_round);
     if (__pyx_t_5) {
 
-      /* "entrap/ebm_engine.pyx":596
+      /* "entrap/ebm_engine.pyx":660
  * 
  *             if not recruited_this_round:
  *                 break             # <<<<<<<<<<<<<<
@@ -11750,7 +12334,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
 */
       goto __pyx_L29_break;
 
-      /* "entrap/ebm_engine.pyx":595
+      /* "entrap/ebm_engine.pyx":659
  *             iteration += 1
  * 
  *             if not recruited_this_round:             # <<<<<<<<<<<<<<
@@ -11761,19 +12345,19 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
   }
   __pyx_L29_break:;
 
-  /* "entrap/ebm_engine.pyx":599
+  /* "entrap/ebm_engine.pyx":663
  * 
  *         # Finalize statistics
  *         cluster_stats = {}             # <<<<<<<<<<<<<<
  *         for cid in sorted_cluster_ids:
  *             state = cluster_states[cid]
 */
-  __pyx_t_8 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 599, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 663, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_8);
   __pyx_v_cluster_stats = ((PyObject*)__pyx_t_8);
   __pyx_t_8 = 0;
 
-  /* "entrap/ebm_engine.pyx":600
+  /* "entrap/ebm_engine.pyx":664
  *         # Finalize statistics
  *         cluster_stats = {}
  *         for cid in sorted_cluster_ids:             # <<<<<<<<<<<<<<
@@ -11786,118 +12370,133 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
     {
       Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_8);
       #if !CYTHON_ASSUME_SAFE_SIZE
-      if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 600, __pyx_L1_error)
+      if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 664, __pyx_L1_error)
       #endif
       if (__pyx_t_9 >= __pyx_temp) break;
     }
-    __pyx_t_13 = __Pyx_PyList_GetItemRef(__pyx_t_8, __pyx_t_9);
+    __pyx_t_6 = __Pyx_PyList_GetItemRef(__pyx_t_8, __pyx_t_9);
     ++__pyx_t_9;
-    if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 600, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_13);
-    __pyx_t_11 = __Pyx_PyLong_As_int(__pyx_t_13); if (unlikely((__pyx_t_11 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 600, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+    if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 664, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_6);
+    __pyx_t_11 = __Pyx_PyLong_As_int(__pyx_t_6); if (unlikely((__pyx_t_11 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 664, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     __pyx_v_cid = __pyx_t_11;
 
-    /* "entrap/ebm_engine.pyx":601
+    /* "entrap/ebm_engine.pyx":665
  *         cluster_stats = {}
  *         for cid in sorted_cluster_ids:
  *             state = cluster_states[cid]             # <<<<<<<<<<<<<<
  *             cluster_stats[cid] = {
  *                 'iterations': iteration,
 */
-    __pyx_t_13 = __Pyx_PyLong_From_int(__pyx_v_cid); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 601, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_13);
-    __pyx_t_7 = __Pyx_PyDict_GetItem(__pyx_v_cluster_states, __pyx_t_13); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 601, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_7);
-    __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
-    __Pyx_XDECREF_SET(__pyx_v_state, __pyx_t_7);
-    __pyx_t_7 = 0;
+    __pyx_t_6 = __Pyx_PyLong_From_int(__pyx_v_cid); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 665, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_6);
+    __pyx_t_23 = __Pyx_PyDict_GetItem(__pyx_v_cluster_states, __pyx_t_6); if (unlikely(!__pyx_t_23)) __PYX_ERR(0, 665, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_23);
+    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+    __Pyx_XDECREF_SET(__pyx_v_state, __pyx_t_23);
+    __pyx_t_23 = 0;
 
-    /* "entrap/ebm_engine.pyx":603
+    /* "entrap/ebm_engine.pyx":667
  *             state = cluster_states[cid]
  *             cluster_stats[cid] = {
  *                 'iterations': iteration,             # <<<<<<<<<<<<<<
  *                 'rescued': state['rescued_count'],
  *                 'tda_calls': state['tda_calls'],
 */
-    __pyx_t_7 = __Pyx_PyDict_NewPresized(6); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 603, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_7);
-    __pyx_t_13 = __Pyx_PyLong_From_int(__pyx_v_iteration); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 603, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_13);
-    if (PyDict_SetItem(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_iterations, __pyx_t_13) < 0) __PYX_ERR(0, 603, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+    __pyx_t_23 = __Pyx_PyDict_NewPresized(7); if (unlikely(!__pyx_t_23)) __PYX_ERR(0, 667, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_23);
+    __pyx_t_6 = __Pyx_PyLong_From_int(__pyx_v_iteration); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 667, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_6);
+    if (PyDict_SetItem(__pyx_t_23, __pyx_mstate_global->__pyx_n_u_iterations, __pyx_t_6) < 0) __PYX_ERR(0, 667, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
-    /* "entrap/ebm_engine.pyx":604
+    /* "entrap/ebm_engine.pyx":668
  *             cluster_stats[cid] = {
  *                 'iterations': iteration,
  *                 'rescued': state['rescued_count'],             # <<<<<<<<<<<<<<
  *                 'tda_calls': state['tda_calls'],
- *                 'final_size': state['size'],
+ *                 'cache_hits': state.get('cache_hits', 0),
 */
-    __pyx_t_13 = __Pyx_PyObject_Dict_GetItem(__pyx_v_state, __pyx_mstate_global->__pyx_n_u_rescued_count); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 604, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_13);
-    if (PyDict_SetItem(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_rescued, __pyx_t_13) < 0) __PYX_ERR(0, 603, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+    __pyx_t_6 = __Pyx_PyObject_Dict_GetItem(__pyx_v_state, __pyx_mstate_global->__pyx_n_u_rescued_count); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 668, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_6);
+    if (PyDict_SetItem(__pyx_t_23, __pyx_mstate_global->__pyx_n_u_rescued, __pyx_t_6) < 0) __PYX_ERR(0, 667, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
-    /* "entrap/ebm_engine.pyx":605
+    /* "entrap/ebm_engine.pyx":669
  *                 'iterations': iteration,
  *                 'rescued': state['rescued_count'],
  *                 'tda_calls': state['tda_calls'],             # <<<<<<<<<<<<<<
+ *                 'cache_hits': state.get('cache_hits', 0),
+ *                 'final_size': state['size'],
+*/
+    __pyx_t_6 = __Pyx_PyObject_Dict_GetItem(__pyx_v_state, __pyx_mstate_global->__pyx_n_u_tda_calls); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 669, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_6);
+    if (PyDict_SetItem(__pyx_t_23, __pyx_mstate_global->__pyx_n_u_tda_calls, __pyx_t_6) < 0) __PYX_ERR(0, 667, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+
+    /* "entrap/ebm_engine.pyx":670
+ *                 'rescued': state['rescued_count'],
+ *                 'tda_calls': state['tda_calls'],
+ *                 'cache_hits': state.get('cache_hits', 0),             # <<<<<<<<<<<<<<
  *                 'final_size': state['size'],
  *                 'final_T_norm': state['T_norm'],
 */
-    __pyx_t_13 = __Pyx_PyObject_Dict_GetItem(__pyx_v_state, __pyx_mstate_global->__pyx_n_u_tda_calls); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 605, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_13);
-    if (PyDict_SetItem(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_tda_calls, __pyx_t_13) < 0) __PYX_ERR(0, 603, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_state, __pyx_mstate_global->__pyx_n_u_get); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 670, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_6);
+    __pyx_t_7 = __Pyx_PyObject_Call(__pyx_t_6, __pyx_mstate_global->__pyx_tuple[3], NULL); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 670, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_7);
+    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+    if (PyDict_SetItem(__pyx_t_23, __pyx_mstate_global->__pyx_n_u_cache_hits, __pyx_t_7) < 0) __PYX_ERR(0, 667, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
-    /* "entrap/ebm_engine.pyx":606
- *                 'rescued': state['rescued_count'],
+    /* "entrap/ebm_engine.pyx":671
  *                 'tda_calls': state['tda_calls'],
+ *                 'cache_hits': state.get('cache_hits', 0),
  *                 'final_size': state['size'],             # <<<<<<<<<<<<<<
  *                 'final_T_norm': state['T_norm'],
  *                 'converged': True
 */
-    __pyx_t_13 = __Pyx_PyObject_Dict_GetItem(__pyx_v_state, __pyx_mstate_global->__pyx_n_u_size); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 606, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_13);
-    if (PyDict_SetItem(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_final_size, __pyx_t_13) < 0) __PYX_ERR(0, 603, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+    __pyx_t_7 = __Pyx_PyObject_Dict_GetItem(__pyx_v_state, __pyx_mstate_global->__pyx_n_u_size); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 671, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_7);
+    if (PyDict_SetItem(__pyx_t_23, __pyx_mstate_global->__pyx_n_u_final_size, __pyx_t_7) < 0) __PYX_ERR(0, 667, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
-    /* "entrap/ebm_engine.pyx":607
- *                 'tda_calls': state['tda_calls'],
+    /* "entrap/ebm_engine.pyx":672
+ *                 'cache_hits': state.get('cache_hits', 0),
  *                 'final_size': state['size'],
  *                 'final_T_norm': state['T_norm'],             # <<<<<<<<<<<<<<
  *                 'converged': True
  *             }
 */
-    __pyx_t_13 = __Pyx_PyObject_Dict_GetItem(__pyx_v_state, __pyx_mstate_global->__pyx_n_u_T_norm); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 607, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_13);
-    if (PyDict_SetItem(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_final_T_norm, __pyx_t_13) < 0) __PYX_ERR(0, 603, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+    __pyx_t_7 = __Pyx_PyObject_Dict_GetItem(__pyx_v_state, __pyx_mstate_global->__pyx_n_u_T_norm); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 672, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_7);
+    if (PyDict_SetItem(__pyx_t_23, __pyx_mstate_global->__pyx_n_u_final_T_norm, __pyx_t_7) < 0) __PYX_ERR(0, 667, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
-    /* "entrap/ebm_engine.pyx":608
+    /* "entrap/ebm_engine.pyx":673
  *                 'final_size': state['size'],
  *                 'final_T_norm': state['T_norm'],
  *                 'converged': True             # <<<<<<<<<<<<<<
  *             }
  * 
 */
-    if (PyDict_SetItem(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_converged, Py_True) < 0) __PYX_ERR(0, 603, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_23, __pyx_mstate_global->__pyx_n_u_converged, Py_True) < 0) __PYX_ERR(0, 667, __pyx_L1_error)
 
-    /* "entrap/ebm_engine.pyx":602
+    /* "entrap/ebm_engine.pyx":666
  *         for cid in sorted_cluster_ids:
  *             state = cluster_states[cid]
  *             cluster_stats[cid] = {             # <<<<<<<<<<<<<<
  *                 'iterations': iteration,
  *                 'rescued': state['rescued_count'],
 */
-    __pyx_t_13 = __Pyx_PyLong_From_int(__pyx_v_cid); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 602, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_13);
-    if (unlikely((PyDict_SetItem(__pyx_v_cluster_stats, __pyx_t_13, __pyx_t_7) < 0))) __PYX_ERR(0, 602, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+    __pyx_t_7 = __Pyx_PyLong_From_int(__pyx_v_cid); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 666, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_7);
+    if (unlikely((PyDict_SetItem(__pyx_v_cluster_stats, __pyx_t_7, __pyx_t_23) < 0))) __PYX_ERR(0, 666, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+    __Pyx_DECREF(__pyx_t_23); __pyx_t_23 = 0;
 
-    /* "entrap/ebm_engine.pyx":600
+    /* "entrap/ebm_engine.pyx":664
  *         # Finalize statistics
  *         cluster_stats = {}
  *         for cid in sorted_cluster_ids:             # <<<<<<<<<<<<<<
@@ -11907,42 +12506,141 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
   }
   __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
 
-  /* "entrap/ebm_engine.pyx":611
- *             }
+  /* "entrap/ebm_engine.pyx":677
+ * 
+ *         # Log cache statistics if incremental TDA enabled
+ *         if self.incremental_tda is not None:             # <<<<<<<<<<<<<<
+ *             cache_stats = self.incremental_tda.get_cache_stats()
+ *             logger.info(f"Cache stats: {cache_stats}")
+*/
+  __pyx_t_5 = (__pyx_v_self->incremental_tda != Py_None);
+  if (__pyx_t_5) {
+
+    /* "entrap/ebm_engine.pyx":678
+ *         # Log cache statistics if incremental TDA enabled
+ *         if self.incremental_tda is not None:
+ *             cache_stats = self.incremental_tda.get_cache_stats()             # <<<<<<<<<<<<<<
+ *             logger.info(f"Cache stats: {cache_stats}")
+ *             # Cleanup cache
+*/
+    __pyx_t_23 = __pyx_v_self->incremental_tda;
+    __Pyx_INCREF(__pyx_t_23);
+    __pyx_t_3 = 0;
+    {
+      PyObject *__pyx_callargs[2] = {__pyx_t_23, NULL};
+      __pyx_t_8 = __Pyx_PyObject_FastCallMethod(__pyx_mstate_global->__pyx_n_u_get_cache_stats, __pyx_callargs+__pyx_t_3, (1-__pyx_t_3) | (1*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
+      __Pyx_XDECREF(__pyx_t_23); __pyx_t_23 = 0;
+      if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 678, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_8);
+    }
+    __pyx_v_cache_stats = __pyx_t_8;
+    __pyx_t_8 = 0;
+
+    /* "entrap/ebm_engine.pyx":679
+ *         if self.incremental_tda is not None:
+ *             cache_stats = self.incremental_tda.get_cache_stats()
+ *             logger.info(f"Cache stats: {cache_stats}")             # <<<<<<<<<<<<<<
+ *             # Cleanup cache
+ *             self.incremental_tda.cleanup()
+*/
+    __pyx_t_23 = NULL;
+    __Pyx_GetModuleGlobalName(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_logger); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 679, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_7);
+    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_7, __pyx_mstate_global->__pyx_n_u_info); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 679, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_6);
+    __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+    __pyx_t_7 = __Pyx_PyObject_FormatSimple(__pyx_v_cache_stats, __pyx_mstate_global->__pyx_empty_unicode); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 679, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_7);
+    __pyx_t_14 = __Pyx_PyUnicode_Concat(__pyx_mstate_global->__pyx_kp_u_Cache_stats, __pyx_t_7); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 679, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_14);
+    __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+    __pyx_t_3 = 1;
+    #if CYTHON_UNPACK_METHODS
+    if (unlikely(PyMethod_Check(__pyx_t_6))) {
+      __pyx_t_23 = PyMethod_GET_SELF(__pyx_t_6);
+      assert(__pyx_t_23);
+      PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_6);
+      __Pyx_INCREF(__pyx_t_23);
+      __Pyx_INCREF(__pyx__function);
+      __Pyx_DECREF_SET(__pyx_t_6, __pyx__function);
+      __pyx_t_3 = 0;
+    }
+    #endif
+    {
+      PyObject *__pyx_callargs[2] = {__pyx_t_23, __pyx_t_14};
+      __pyx_t_8 = __Pyx_PyObject_FastCall(__pyx_t_6, __pyx_callargs+__pyx_t_3, (2-__pyx_t_3) | (__pyx_t_3*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
+      __Pyx_XDECREF(__pyx_t_23); __pyx_t_23 = 0;
+      __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
+      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+      if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 679, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_8);
+    }
+    __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
+
+    /* "entrap/ebm_engine.pyx":681
+ *             logger.info(f"Cache stats: {cache_stats}")
+ *             # Cleanup cache
+ *             self.incremental_tda.cleanup()             # <<<<<<<<<<<<<<
+ * 
+ *         gc.collect()
+*/
+    __pyx_t_6 = __pyx_v_self->incremental_tda;
+    __Pyx_INCREF(__pyx_t_6);
+    __pyx_t_3 = 0;
+    {
+      PyObject *__pyx_callargs[2] = {__pyx_t_6, NULL};
+      __pyx_t_8 = __Pyx_PyObject_FastCallMethod(__pyx_mstate_global->__pyx_n_u_cleanup, __pyx_callargs+__pyx_t_3, (1-__pyx_t_3) | (1*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
+      __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
+      if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 681, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_8);
+    }
+    __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
+
+    /* "entrap/ebm_engine.pyx":677
+ * 
+ *         # Log cache statistics if incremental TDA enabled
+ *         if self.incremental_tda is not None:             # <<<<<<<<<<<<<<
+ *             cache_stats = self.incremental_tda.get_cache_stats()
+ *             logger.info(f"Cache stats: {cache_stats}")
+*/
+  }
+
+  /* "entrap/ebm_engine.pyx":683
+ *             self.incremental_tda.cleanup()
  * 
  *         gc.collect()             # <<<<<<<<<<<<<<
  *         return refined_labels, total_rescued, cluster_stats
  * 
 */
-  __pyx_t_7 = NULL;
-  __Pyx_GetModuleGlobalName(__pyx_t_13, __pyx_mstate_global->__pyx_n_u_gc); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 611, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_13);
-  __pyx_t_12 = __Pyx_PyObject_GetAttrStr(__pyx_t_13, __pyx_mstate_global->__pyx_n_u_collect); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 611, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_12);
-  __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+  __pyx_t_6 = NULL;
+  __Pyx_GetModuleGlobalName(__pyx_t_14, __pyx_mstate_global->__pyx_n_u_gc); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 683, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_14);
+  __pyx_t_23 = __Pyx_PyObject_GetAttrStr(__pyx_t_14, __pyx_mstate_global->__pyx_n_u_collect); if (unlikely(!__pyx_t_23)) __PYX_ERR(0, 683, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_23);
+  __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
   __pyx_t_3 = 1;
   #if CYTHON_UNPACK_METHODS
-  if (unlikely(PyMethod_Check(__pyx_t_12))) {
-    __pyx_t_7 = PyMethod_GET_SELF(__pyx_t_12);
-    assert(__pyx_t_7);
-    PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_12);
-    __Pyx_INCREF(__pyx_t_7);
+  if (unlikely(PyMethod_Check(__pyx_t_23))) {
+    __pyx_t_6 = PyMethod_GET_SELF(__pyx_t_23);
+    assert(__pyx_t_6);
+    PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_23);
+    __Pyx_INCREF(__pyx_t_6);
     __Pyx_INCREF(__pyx__function);
-    __Pyx_DECREF_SET(__pyx_t_12, __pyx__function);
+    __Pyx_DECREF_SET(__pyx_t_23, __pyx__function);
     __pyx_t_3 = 0;
   }
   #endif
   {
-    PyObject *__pyx_callargs[2] = {__pyx_t_7, NULL};
-    __pyx_t_8 = __Pyx_PyObject_FastCall(__pyx_t_12, __pyx_callargs+__pyx_t_3, (1-__pyx_t_3) | (__pyx_t_3*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
-    __Pyx_XDECREF(__pyx_t_7); __pyx_t_7 = 0;
-    __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
-    if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 611, __pyx_L1_error)
+    PyObject *__pyx_callargs[2] = {__pyx_t_6, NULL};
+    __pyx_t_8 = __Pyx_PyObject_FastCall(__pyx_t_23, __pyx_callargs+__pyx_t_3, (1-__pyx_t_3) | (__pyx_t_3*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
+    __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
+    __Pyx_DECREF(__pyx_t_23); __pyx_t_23 = 0;
+    if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 683, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_8);
   }
   __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
 
-  /* "entrap/ebm_engine.pyx":612
+  /* "entrap/ebm_engine.pyx":684
  * 
  *         gc.collect()
  *         return refined_labels, total_rescued, cluster_stats             # <<<<<<<<<<<<<<
@@ -11950,24 +12648,24 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
  *     cpdef void cleanup(self):
 */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_8 = __Pyx_PyLong_From_int(__pyx_v_total_rescued); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 612, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_PyLong_From_int(__pyx_v_total_rescued); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 684, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_8);
-  __pyx_t_12 = PyTuple_New(3); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 612, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_12);
-  __Pyx_INCREF(__pyx_v_refined_labels);
-  __Pyx_GIVEREF(__pyx_v_refined_labels);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_12, 0, __pyx_v_refined_labels) != (0)) __PYX_ERR(0, 612, __pyx_L1_error);
+  __pyx_t_23 = PyTuple_New(3); if (unlikely(!__pyx_t_23)) __PYX_ERR(0, 684, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_23);
+  __Pyx_INCREF((PyObject *)__pyx_v_refined_labels);
+  __Pyx_GIVEREF((PyObject *)__pyx_v_refined_labels);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_23, 0, ((PyObject *)__pyx_v_refined_labels)) != (0)) __PYX_ERR(0, 684, __pyx_L1_error);
   __Pyx_GIVEREF(__pyx_t_8);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_12, 1, __pyx_t_8) != (0)) __PYX_ERR(0, 612, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_23, 1, __pyx_t_8) != (0)) __PYX_ERR(0, 684, __pyx_L1_error);
   __Pyx_INCREF(__pyx_v_cluster_stats);
   __Pyx_GIVEREF(__pyx_v_cluster_stats);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_12, 2, __pyx_v_cluster_stats) != (0)) __PYX_ERR(0, 612, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_23, 2, __pyx_v_cluster_stats) != (0)) __PYX_ERR(0, 684, __pyx_L1_error);
   __pyx_t_8 = 0;
-  __pyx_r = __pyx_t_12;
-  __pyx_t_12 = 0;
+  __pyx_r = __pyx_t_23;
+  __pyx_t_23 = 0;
   goto __pyx_L0;
 
-  /* "entrap/ebm_engine.pyx":362
+  /* "entrap/ebm_engine.pyx":389
  *             return E_noise
  * 
  *     def reassign(self, X, labels, dek_selector):             # <<<<<<<<<<<<<<
@@ -11985,45 +12683,48 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
   __Pyx_XDECREF(__pyx_t_12);
   __Pyx_XDECREF(__pyx_t_13);
   __Pyx_XDECREF(__pyx_t_14);
-  __Pyx_XDECREF(__pyx_t_22);
-  __Pyx_XDECREF(__pyx_t_25);
+  __Pyx_XDECREF(__pyx_t_23);
+  __Pyx_XDECREF(__pyx_t_26);
   __Pyx_AddTraceback("entrap.ebm_engine.EBM_Reassignment_Engine.reassign", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
-  __Pyx_XDECREF(__pyx_v_refined_labels);
-  __Pyx_XDECREF(__pyx_v_noise_mask);
-  __Pyx_XDECREF(__pyx_v_unique_labels);
+  __Pyx_XDECREF((PyObject *)__pyx_v_refined_labels);
+  __Pyx_XDECREF((PyObject *)__pyx_v_noise_mask);
+  __Pyx_XDECREF((PyObject *)__pyx_v_unique_labels);
   __Pyx_XDECREF(__pyx_v_cluster_sizes);
   __Pyx_XDECREF(__pyx_v_sorted_cluster_ids);
   __Pyx_XDECREF(__pyx_v_cluster_candidate_sets);
+  __Pyx_XDECREF(__pyx_v_cluster_states);
   __Pyx_XDECREF(__pyx_v_all_claimed_candidates);
-  __Pyx_XDECREF(__pyx_v_noise_indices);
-  __Pyx_XDECREF(__pyx_v_noise_points);
+  __Pyx_XDECREF(__pyx_v_candidates);
+  __Pyx_XDECREF((PyObject *)__pyx_v_noise_indices);
+  __Pyx_XDECREF((PyObject *)__pyx_v_noise_points);
   __Pyx_XDECREF(__pyx_v_noise_tree);
+  __Pyx_XDECREF((PyObject *)__pyx_v_cluster_points);
+  __Pyx_XDECREF((PyObject *)__pyx_v_true_noise_indices_arr);
+  __Pyx_XDECREF((PyObject *)__pyx_v_distances);
+  __Pyx_XDECREF((PyObject *)__pyx_v_indices);
+  __Pyx_XDECREF(__pyx_v_candidate_energies);
+  __Pyx_XDECREF(__pyx_v_candidates_list);
   __Pyx_XDECREF(__pyx_v_cluster_mask);
-  __Pyx_XDECREF(__pyx_v_cluster_points);
-  __Pyx_XDECREF(__pyx_v_distances);
-  __Pyx_XDECREF(__pyx_v_indices);
   __Pyx_XDECREF(__pyx_v_candidate_local_indices);
   __Pyx_XDECREF(__pyx_v_candidate_global_indices);
   __Pyx_XDECREF(__pyx_v_true_noise_indices);
-  __Pyx_XDECREF(__pyx_v_true_noise_indices_arr);
-  __Pyx_XDECREF(__pyx_v_cluster_states);
   __Pyx_XDECREF(__pyx_v_state);
-  __Pyx_XDECREF(__pyx_v_candidates);
-  __Pyx_XDECREF(__pyx_v_candidates_list);
   __Pyx_XDECREF(__pyx_v_mu);
   __Pyx_XDECREF(__pyx_v_Sigma_reg);
   __Pyx_XDECREF(__pyx_v_Sigma_inv);
   __Pyx_XDECREF(__pyx_v_log_det_Sigma);
-  __Pyx_XDECREF(__pyx_v_candidate_energies);
   __Pyx_XDECREF(__pyx_v_x);
   __Pyx_XDECREF(__pyx_v_cluster_mask_current);
   __Pyx_XDECREF(__pyx_v_cluster_points_current);
+  __Pyx_XDECREF(__pyx_v_cluster_indices_current);
+  __Pyx_XDECREF(__pyx_v_tda_meta);
   __Pyx_XDECREF(__pyx_v_other_cid);
   __Pyx_XDECREF(__pyx_v_cluster_mask_updated);
   __Pyx_XDECREF(__pyx_v_cluster_points_updated);
   __Pyx_XDECREF(__pyx_v_cluster_stats);
+  __Pyx_XDECREF(__pyx_v_cache_stats);
   __Pyx_XDECREF(__pyx_8genexpr1__pyx_v__);
   __Pyx_XDECREF(__pyx_8genexpr2__pyx_v_idx);
   __Pyx_XGIVEREF(__pyx_r);
@@ -12031,11 +12732,11 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_12reass
   return __pyx_r;
 }
 
-/* "entrap/ebm_engine.pyx":614
+/* "entrap/ebm_engine.pyx":686
  *         return refined_labels, total_rescued, cluster_stats
  * 
  *     cpdef void cleanup(self):             # <<<<<<<<<<<<<<
- *         """Release memory-mapped resources."""
+ *         """Release memory-mapped resources and incremental TDA cache."""
  *         self.energy_computer.cleanup()
 */
 
@@ -12053,6 +12754,7 @@ static void __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_cleanup(struc
   PyObject *__pyx_t_3 = NULL;
   PyObject *__pyx_t_4 = NULL;
   size_t __pyx_t_5;
+  int __pyx_t_6;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
@@ -12073,7 +12775,7 @@ static void __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_cleanup(struc
     if (unlikely(!__Pyx_object_dict_version_matches(((PyObject *)__pyx_v_self), __pyx_tp_dict_version, __pyx_obj_dict_version))) {
       PY_UINT64_T __pyx_typedict_guard = __Pyx_get_tp_dict_version(((PyObject *)__pyx_v_self));
       #endif
-      __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_mstate_global->__pyx_n_u_cleanup); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 614, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_mstate_global->__pyx_n_u_cleanup); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 686, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
       if (!__Pyx_IsSameCFunction(__pyx_t_1, (void(*)(void)) __pyx_pw_6entrap_10ebm_engine_23EBM_Reassignment_Engine_15cleanup)) {
         __pyx_t_3 = NULL;
@@ -12096,7 +12798,7 @@ static void __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_cleanup(struc
           __pyx_t_2 = __Pyx_PyObject_FastCall(__pyx_t_4, __pyx_callargs+__pyx_t_5, (1-__pyx_t_5) | (__pyx_t_5*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
           __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
           __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-          if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 614, __pyx_L1_error)
+          if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 686, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_2);
         }
         __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
@@ -12116,10 +12818,12 @@ static void __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_cleanup(struc
     #endif
   }
 
-  /* "entrap/ebm_engine.pyx":616
+  /* "entrap/ebm_engine.pyx":688
  *     cpdef void cleanup(self):
- *         """Release memory-mapped resources."""
+ *         """Release memory-mapped resources and incremental TDA cache."""
  *         self.energy_computer.cleanup()             # <<<<<<<<<<<<<<
+ *         if self.incremental_tda is not None:
+ *             self.incremental_tda.cleanup()
 */
   __pyx_t_2 = __pyx_v_self->energy_computer;
   __Pyx_INCREF(__pyx_t_2);
@@ -12128,16 +12832,50 @@ static void __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_cleanup(struc
     PyObject *__pyx_callargs[2] = {__pyx_t_2, NULL};
     __pyx_t_1 = __Pyx_PyObject_FastCallMethod(__pyx_mstate_global->__pyx_n_u_cleanup, __pyx_callargs+__pyx_t_5, (1-__pyx_t_5) | (1*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
     __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
-    if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 616, __pyx_L1_error)
+    if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 688, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
   }
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "entrap/ebm_engine.pyx":614
+  /* "entrap/ebm_engine.pyx":689
+ *         """Release memory-mapped resources and incremental TDA cache."""
+ *         self.energy_computer.cleanup()
+ *         if self.incremental_tda is not None:             # <<<<<<<<<<<<<<
+ *             self.incremental_tda.cleanup()
+*/
+  __pyx_t_6 = (__pyx_v_self->incremental_tda != Py_None);
+  if (__pyx_t_6) {
+
+    /* "entrap/ebm_engine.pyx":690
+ *         self.energy_computer.cleanup()
+ *         if self.incremental_tda is not None:
+ *             self.incremental_tda.cleanup()             # <<<<<<<<<<<<<<
+*/
+    __pyx_t_2 = __pyx_v_self->incremental_tda;
+    __Pyx_INCREF(__pyx_t_2);
+    __pyx_t_5 = 0;
+    {
+      PyObject *__pyx_callargs[2] = {__pyx_t_2, NULL};
+      __pyx_t_1 = __Pyx_PyObject_FastCallMethod(__pyx_mstate_global->__pyx_n_u_cleanup, __pyx_callargs+__pyx_t_5, (1-__pyx_t_5) | (1*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
+      __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
+      if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 690, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_1);
+    }
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+
+    /* "entrap/ebm_engine.pyx":689
+ *         """Release memory-mapped resources and incremental TDA cache."""
+ *         self.energy_computer.cleanup()
+ *         if self.incremental_tda is not None:             # <<<<<<<<<<<<<<
+ *             self.incremental_tda.cleanup()
+*/
+  }
+
+  /* "entrap/ebm_engine.pyx":686
  *         return refined_labels, total_rescued, cluster_stats
  * 
  *     cpdef void cleanup(self):             # <<<<<<<<<<<<<<
- *         """Release memory-mapped resources."""
+ *         """Release memory-mapped resources and incremental TDA cache."""
  *         self.energy_computer.cleanup()
 */
 
@@ -12161,7 +12899,7 @@ PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 PyObject *__pyx_args, PyObject *__pyx_kwds
 #endif
 ); /*proto*/
-PyDoc_STRVAR(__pyx_doc_6entrap_10ebm_engine_23EBM_Reassignment_Engine_14cleanup, "EBM_Reassignment_Engine.cleanup(self) -> void\n\nRelease memory-mapped resources.");
+PyDoc_STRVAR(__pyx_doc_6entrap_10ebm_engine_23EBM_Reassignment_Engine_14cleanup, "EBM_Reassignment_Engine.cleanup(self) -> void\n\nRelease memory-mapped resources and incremental TDA cache.");
 static PyMethodDef __pyx_mdef_6entrap_10ebm_engine_23EBM_Reassignment_Engine_15cleanup = {"cleanup", (PyCFunction)(void(*)(void))(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_6entrap_10ebm_engine_23EBM_Reassignment_Engine_15cleanup, __Pyx_METH_FASTCALL|METH_KEYWORDS, __pyx_doc_6entrap_10ebm_engine_23EBM_Reassignment_Engine_14cleanup};
 static PyObject *__pyx_pw_6entrap_10ebm_engine_23EBM_Reassignment_Engine_15cleanup(PyObject *__pyx_v_self, 
 #if CYTHON_METH_FASTCALL
@@ -12205,8 +12943,8 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_14clean
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("cleanup", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_cleanup(__pyx_v_self, 1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 614, __pyx_L1_error)
-  __pyx_t_1 = __Pyx_void_to_None(NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 614, __pyx_L1_error)
+  __pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_cleanup(__pyx_v_self, 1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 686, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_void_to_None(NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 686, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -12223,7 +12961,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_14clean
   return __pyx_r;
 }
 
-/* "entrap/ebm_engine.pxd":7
+/* "entrap/ebm_engine.pxd":10
  * 
  * cdef class EBM_Reassignment_Engine:
  *     cdef public double alpha             # <<<<<<<<<<<<<<
@@ -12255,7 +12993,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_5alpha_
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__get__", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_self->alpha); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 7, __pyx_L1_error)
+  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_self->alpha); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 10, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -12293,7 +13031,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_5alpha_2__set
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
-  __pyx_t_1 = __Pyx_PyFloat_AsDouble(__pyx_v_value); if (unlikely((__pyx_t_1 == (double)-1) && PyErr_Occurred())) __PYX_ERR(2, 7, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyFloat_AsDouble(__pyx_v_value); if (unlikely((__pyx_t_1 == (double)-1) && PyErr_Occurred())) __PYX_ERR(2, 10, __pyx_L1_error)
   __pyx_v_self->alpha = __pyx_t_1;
 
   /* function exit code */
@@ -12306,7 +13044,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_5alpha_2__set
   return __pyx_r;
 }
 
-/* "entrap/ebm_engine.pxd":8
+/* "entrap/ebm_engine.pxd":11
  * cdef class EBM_Reassignment_Engine:
  *     cdef public double alpha
  *     cdef public double beta             # <<<<<<<<<<<<<<
@@ -12338,7 +13076,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_4beta__
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__get__", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_self->beta); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 8, __pyx_L1_error)
+  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_self->beta); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 11, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -12376,7 +13114,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_4beta_2__set_
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
-  __pyx_t_1 = __Pyx_PyFloat_AsDouble(__pyx_v_value); if (unlikely((__pyx_t_1 == (double)-1) && PyErr_Occurred())) __PYX_ERR(2, 8, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyFloat_AsDouble(__pyx_v_value); if (unlikely((__pyx_t_1 == (double)-1) && PyErr_Occurred())) __PYX_ERR(2, 11, __pyx_L1_error)
   __pyx_v_self->beta = __pyx_t_1;
 
   /* function exit code */
@@ -12389,7 +13127,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_4beta_2__set_
   return __pyx_r;
 }
 
-/* "entrap/ebm_engine.pxd":9
+/* "entrap/ebm_engine.pxd":12
  *     cdef public double alpha
  *     cdef public double beta
  *     cdef public double eps0             # <<<<<<<<<<<<<<
@@ -12421,7 +13159,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_4eps0__
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__get__", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_self->eps0); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 9, __pyx_L1_error)
+  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_self->eps0); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 12, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -12459,7 +13197,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_4eps0_2__set_
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
-  __pyx_t_1 = __Pyx_PyFloat_AsDouble(__pyx_v_value); if (unlikely((__pyx_t_1 == (double)-1) && PyErr_Occurred())) __PYX_ERR(2, 9, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyFloat_AsDouble(__pyx_v_value); if (unlikely((__pyx_t_1 == (double)-1) && PyErr_Occurred())) __PYX_ERR(2, 12, __pyx_L1_error)
   __pyx_v_self->eps0 = __pyx_t_1;
 
   /* function exit code */
@@ -12472,7 +13210,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_4eps0_2__set_
   return __pyx_r;
 }
 
-/* "entrap/ebm_engine.pxd":10
+/* "entrap/ebm_engine.pxd":13
  *     cdef public double beta
  *     cdef public double eps0
  *     cdef public double lambda_T             # <<<<<<<<<<<<<<
@@ -12504,7 +13242,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_8lambda
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__get__", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_self->lambda_T); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 10, __pyx_L1_error)
+  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_self->lambda_T); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 13, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -12542,7 +13280,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_8lambda_T_2__
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
-  __pyx_t_1 = __Pyx_PyFloat_AsDouble(__pyx_v_value); if (unlikely((__pyx_t_1 == (double)-1) && PyErr_Occurred())) __PYX_ERR(2, 10, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyFloat_AsDouble(__pyx_v_value); if (unlikely((__pyx_t_1 == (double)-1) && PyErr_Occurred())) __PYX_ERR(2, 13, __pyx_L1_error)
   __pyx_v_self->lambda_T = __pyx_t_1;
 
   /* function exit code */
@@ -12555,7 +13293,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_8lambda_T_2__
   return __pyx_r;
 }
 
-/* "entrap/ebm_engine.pxd":11
+/* "entrap/ebm_engine.pxd":14
  *     cdef public double eps0
  *     cdef public double lambda_T
  *     cdef public double lambda_G0             # <<<<<<<<<<<<<<
@@ -12587,7 +13325,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_9lambda
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__get__", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_self->lambda_G0); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 11, __pyx_L1_error)
+  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_self->lambda_G0); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 14, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -12625,7 +13363,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_9lambda_G0_2_
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
-  __pyx_t_1 = __Pyx_PyFloat_AsDouble(__pyx_v_value); if (unlikely((__pyx_t_1 == (double)-1) && PyErr_Occurred())) __PYX_ERR(2, 11, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyFloat_AsDouble(__pyx_v_value); if (unlikely((__pyx_t_1 == (double)-1) && PyErr_Occurred())) __PYX_ERR(2, 14, __pyx_L1_error)
   __pyx_v_self->lambda_G0 = __pyx_t_1;
 
   /* function exit code */
@@ -12638,7 +13376,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_9lambda_G0_2_
   return __pyx_r;
 }
 
-/* "entrap/ebm_engine.pxd":12
+/* "entrap/ebm_engine.pxd":15
  *     cdef public double lambda_T
  *     cdef public double lambda_G0
  *     cdef public double tau             # <<<<<<<<<<<<<<
@@ -12670,7 +13408,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_3tau___
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__get__", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_self->tau); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 12, __pyx_L1_error)
+  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_self->tau); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 15, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -12708,7 +13446,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_3tau_2__set__
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
-  __pyx_t_1 = __Pyx_PyFloat_AsDouble(__pyx_v_value); if (unlikely((__pyx_t_1 == (double)-1) && PyErr_Occurred())) __PYX_ERR(2, 12, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyFloat_AsDouble(__pyx_v_value); if (unlikely((__pyx_t_1 == (double)-1) && PyErr_Occurred())) __PYX_ERR(2, 15, __pyx_L1_error)
   __pyx_v_self->tau = __pyx_t_1;
 
   /* function exit code */
@@ -12721,7 +13459,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_3tau_2__set__
   return __pyx_r;
 }
 
-/* "entrap/ebm_engine.pxd":13
+/* "entrap/ebm_engine.pxd":16
  *     cdef public double lambda_G0
  *     cdef public double tau
  *     cdef public int max_landmarks             # <<<<<<<<<<<<<<
@@ -12753,7 +13491,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_13max_l
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__get__", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_PyLong_From_int(__pyx_v_self->max_landmarks); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 13, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyLong_From_int(__pyx_v_self->max_landmarks); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 16, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -12791,7 +13529,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_13max_landmar
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
-  __pyx_t_1 = __Pyx_PyLong_As_int(__pyx_v_value); if (unlikely((__pyx_t_1 == (int)-1) && PyErr_Occurred())) __PYX_ERR(2, 13, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyLong_As_int(__pyx_v_value); if (unlikely((__pyx_t_1 == (int)-1) && PyErr_Occurred())) __PYX_ERR(2, 16, __pyx_L1_error)
   __pyx_v_self->max_landmarks = __pyx_t_1;
 
   /* function exit code */
@@ -12804,7 +13542,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_13max_landmar
   return __pyx_r;
 }
 
-/* "entrap/ebm_engine.pxd":14
+/* "entrap/ebm_engine.pxd":17
  *     cdef public double tau
  *     cdef public int max_landmarks
  *     cdef public int min_landmarks             # <<<<<<<<<<<<<<
@@ -12836,7 +13574,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_13min_l
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__get__", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_PyLong_From_int(__pyx_v_self->min_landmarks); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 14, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyLong_From_int(__pyx_v_self->min_landmarks); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 17, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -12874,7 +13612,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_13min_landmar
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
-  __pyx_t_1 = __Pyx_PyLong_As_int(__pyx_v_value); if (unlikely((__pyx_t_1 == (int)-1) && PyErr_Occurred())) __PYX_ERR(2, 14, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyLong_As_int(__pyx_v_value); if (unlikely((__pyx_t_1 == (int)-1) && PyErr_Occurred())) __PYX_ERR(2, 17, __pyx_L1_error)
   __pyx_v_self->min_landmarks = __pyx_t_1;
 
   /* function exit code */
@@ -12887,7 +13625,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_13min_landmar
   return __pyx_r;
 }
 
-/* "entrap/ebm_engine.pxd":15
+/* "entrap/ebm_engine.pxd":18
  *     cdef public int max_landmarks
  *     cdef public int min_landmarks
  *     cdef public double landmark_variance_threshold             # <<<<<<<<<<<<<<
@@ -12919,7 +13657,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_27landm
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__get__", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_self->landmark_variance_threshold); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 15, __pyx_L1_error)
+  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_self->landmark_variance_threshold); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 18, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -12957,7 +13695,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_27landmark_va
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
-  __pyx_t_1 = __Pyx_PyFloat_AsDouble(__pyx_v_value); if (unlikely((__pyx_t_1 == (double)-1) && PyErr_Occurred())) __PYX_ERR(2, 15, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyFloat_AsDouble(__pyx_v_value); if (unlikely((__pyx_t_1 == (double)-1) && PyErr_Occurred())) __PYX_ERR(2, 18, __pyx_L1_error)
   __pyx_v_self->landmark_variance_threshold = __pyx_t_1;
 
   /* function exit code */
@@ -12970,7 +13708,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_27landmark_va
   return __pyx_r;
 }
 
-/* "entrap/ebm_engine.pxd":16
+/* "entrap/ebm_engine.pxd":19
  *     cdef public int min_landmarks
  *     cdef public double landmark_variance_threshold
  *     cdef public double ridge_epsilon             # <<<<<<<<<<<<<<
@@ -13002,7 +13740,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_13ridge
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__get__", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_self->ridge_epsilon); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 16, __pyx_L1_error)
+  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_self->ridge_epsilon); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 19, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -13040,7 +13778,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_13ridge_epsil
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
-  __pyx_t_1 = __Pyx_PyFloat_AsDouble(__pyx_v_value); if (unlikely((__pyx_t_1 == (double)-1) && PyErr_Occurred())) __PYX_ERR(2, 16, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyFloat_AsDouble(__pyx_v_value); if (unlikely((__pyx_t_1 == (double)-1) && PyErr_Occurred())) __PYX_ERR(2, 19, __pyx_L1_error)
   __pyx_v_self->ridge_epsilon = __pyx_t_1;
 
   /* function exit code */
@@ -13053,7 +13791,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_13ridge_epsil
   return __pyx_r;
 }
 
-/* "entrap/ebm_engine.pxd":17
+/* "entrap/ebm_engine.pxd":20
  *     cdef public double landmark_variance_threshold
  *     cdef public double ridge_epsilon
  *     cdef public object metric             # <<<<<<<<<<<<<<
@@ -13154,12 +13892,12 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_6metric_4__de
   return __pyx_r;
 }
 
-/* "entrap/ebm_engine.pxd":18
+/* "entrap/ebm_engine.pxd":21
  *     cdef public double ridge_epsilon
  *     cdef public object metric
  *     cdef public dict metric_params             # <<<<<<<<<<<<<<
  *     cdef public bint use_memmap
- *     cdef public object energy_computer  # Pure Python object
+ *     cdef public bint use_incremental_tda
 */
 
 /* Python wrapper */
@@ -13218,7 +13956,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_13metric_para
   __Pyx_RefNannySetupContext("__set__", 0);
   __pyx_t_1 = __pyx_v_value;
   __Pyx_INCREF(__pyx_t_1);
-  if (!(likely(PyDict_CheckExact(__pyx_t_1))||((__pyx_t_1) == Py_None) || __Pyx_RaiseUnexpectedTypeError("dict", __pyx_t_1))) __PYX_ERR(2, 18, __pyx_L1_error)
+  if (!(likely(PyDict_CheckExact(__pyx_t_1))||((__pyx_t_1) == Py_None) || __Pyx_RaiseUnexpectedTypeError("dict", __pyx_t_1))) __PYX_ERR(2, 21, __pyx_L1_error)
   __Pyx_GIVEREF(__pyx_t_1);
   __Pyx_GOTREF(__pyx_v_self->metric_params);
   __Pyx_DECREF(__pyx_v_self->metric_params);
@@ -13268,12 +14006,12 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_13metric_para
   return __pyx_r;
 }
 
-/* "entrap/ebm_engine.pxd":19
+/* "entrap/ebm_engine.pxd":22
  *     cdef public object metric
  *     cdef public dict metric_params
  *     cdef public bint use_memmap             # <<<<<<<<<<<<<<
+ *     cdef public bint use_incremental_tda
  *     cdef public object energy_computer  # Pure Python object
- *     cdef public object empirical_noise_energy_
 */
 
 /* Python wrapper */
@@ -13300,7 +14038,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_10use_m
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__get__", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_PyBool_FromLong(__pyx_v_self->use_memmap); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 19, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyBool_FromLong(__pyx_v_self->use_memmap); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 22, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -13338,7 +14076,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_10use_memmap_
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
-  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_v_value); if (unlikely((__pyx_t_1 == (int)-1) && PyErr_Occurred())) __PYX_ERR(2, 19, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_v_value); if (unlikely((__pyx_t_1 == (int)-1) && PyErr_Occurred())) __PYX_ERR(2, 22, __pyx_L1_error)
   __pyx_v_self->use_memmap = __pyx_t_1;
 
   /* function exit code */
@@ -13351,12 +14089,95 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_10use_memmap_
   return __pyx_r;
 }
 
-/* "entrap/ebm_engine.pxd":20
+/* "entrap/ebm_engine.pxd":23
  *     cdef public dict metric_params
  *     cdef public bint use_memmap
+ *     cdef public bint use_incremental_tda             # <<<<<<<<<<<<<<
+ *     cdef public object energy_computer  # Pure Python object
+ *     cdef public object incremental_tda  # Incremental TDA engine (optional)
+*/
+
+/* Python wrapper */
+static PyObject *__pyx_pw_6entrap_10ebm_engine_23EBM_Reassignment_Engine_19use_incremental_tda_1__get__(PyObject *__pyx_v_self); /*proto*/
+static PyObject *__pyx_pw_6entrap_10ebm_engine_23EBM_Reassignment_Engine_19use_incremental_tda_1__get__(PyObject *__pyx_v_self) {
+  CYTHON_UNUSED PyObject *const *__pyx_kwvalues;
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("__get__ (wrapper)", 0);
+  __pyx_kwvalues = __Pyx_KwValues_VARARGS(__pyx_args, __pyx_nargs);
+  __pyx_r = __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_19use_incremental_tda___get__(((struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *)__pyx_v_self));
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_19use_incremental_tda___get__(struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *__pyx_v_self) {
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("__get__", 0);
+  __Pyx_XDECREF(__pyx_r);
+  __pyx_t_1 = __Pyx_PyBool_FromLong(__pyx_v_self->use_incremental_tda); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 23, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_r = __pyx_t_1;
+  __pyx_t_1 = 0;
+  goto __pyx_L0;
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_AddTraceback("entrap.ebm_engine.EBM_Reassignment_Engine.use_incremental_tda.__get__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* Python wrapper */
+static int __pyx_pw_6entrap_10ebm_engine_23EBM_Reassignment_Engine_19use_incremental_tda_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value); /*proto*/
+static int __pyx_pw_6entrap_10ebm_engine_23EBM_Reassignment_Engine_19use_incremental_tda_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value) {
+  CYTHON_UNUSED PyObject *const *__pyx_kwvalues;
+  int __pyx_r;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("__set__ (wrapper)", 0);
+  __pyx_kwvalues = __Pyx_KwValues_VARARGS(__pyx_args, __pyx_nargs);
+  __pyx_r = __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_19use_incremental_tda_2__set__(((struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *)__pyx_v_self), ((PyObject *)__pyx_v_value));
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_19use_incremental_tda_2__set__(struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *__pyx_v_self, PyObject *__pyx_v_value) {
+  int __pyx_r;
+  int __pyx_t_1;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_v_value); if (unlikely((__pyx_t_1 == (int)-1) && PyErr_Occurred())) __PYX_ERR(2, 23, __pyx_L1_error)
+  __pyx_v_self->use_incremental_tda = __pyx_t_1;
+
+  /* function exit code */
+  __pyx_r = 0;
+  goto __pyx_L0;
+  __pyx_L1_error:;
+  __Pyx_AddTraceback("entrap.ebm_engine.EBM_Reassignment_Engine.use_incremental_tda.__set__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = -1;
+  __pyx_L0:;
+  return __pyx_r;
+}
+
+/* "entrap/ebm_engine.pxd":24
+ *     cdef public bint use_memmap
+ *     cdef public bint use_incremental_tda
  *     cdef public object energy_computer  # Pure Python object             # <<<<<<<<<<<<<<
+ *     cdef public object incremental_tda  # Incremental TDA engine (optional)
  *     cdef public object empirical_noise_energy_
- *     cdef public dict noise_energy_details_
 */
 
 /* Python wrapper */
@@ -13452,9 +14273,110 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_15energy_comp
   return __pyx_r;
 }
 
-/* "entrap/ebm_engine.pxd":21
- *     cdef public bint use_memmap
+/* "entrap/ebm_engine.pxd":25
+ *     cdef public bint use_incremental_tda
  *     cdef public object energy_computer  # Pure Python object
+ *     cdef public object incremental_tda  # Incremental TDA engine (optional)             # <<<<<<<<<<<<<<
+ *     cdef public object empirical_noise_energy_
+ *     cdef public dict noise_energy_details_
+*/
+
+/* Python wrapper */
+static PyObject *__pyx_pw_6entrap_10ebm_engine_23EBM_Reassignment_Engine_15incremental_tda_1__get__(PyObject *__pyx_v_self); /*proto*/
+static PyObject *__pyx_pw_6entrap_10ebm_engine_23EBM_Reassignment_Engine_15incremental_tda_1__get__(PyObject *__pyx_v_self) {
+  CYTHON_UNUSED PyObject *const *__pyx_kwvalues;
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("__get__ (wrapper)", 0);
+  __pyx_kwvalues = __Pyx_KwValues_VARARGS(__pyx_args, __pyx_nargs);
+  __pyx_r = __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_15incremental_tda___get__(((struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *)__pyx_v_self));
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_15incremental_tda___get__(struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *__pyx_v_self) {
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("__get__", 0);
+  __Pyx_XDECREF(__pyx_r);
+  __Pyx_INCREF(__pyx_v_self->incremental_tda);
+  __pyx_r = __pyx_v_self->incremental_tda;
+  goto __pyx_L0;
+
+  /* function exit code */
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* Python wrapper */
+static int __pyx_pw_6entrap_10ebm_engine_23EBM_Reassignment_Engine_15incremental_tda_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value); /*proto*/
+static int __pyx_pw_6entrap_10ebm_engine_23EBM_Reassignment_Engine_15incremental_tda_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value) {
+  CYTHON_UNUSED PyObject *const *__pyx_kwvalues;
+  int __pyx_r;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("__set__ (wrapper)", 0);
+  __pyx_kwvalues = __Pyx_KwValues_VARARGS(__pyx_args, __pyx_nargs);
+  __pyx_r = __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_15incremental_tda_2__set__(((struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *)__pyx_v_self), ((PyObject *)__pyx_v_value));
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_15incremental_tda_2__set__(struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *__pyx_v_self, PyObject *__pyx_v_value) {
+  int __pyx_r;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("__set__", 0);
+  __Pyx_INCREF(__pyx_v_value);
+  __Pyx_GIVEREF(__pyx_v_value);
+  __Pyx_GOTREF(__pyx_v_self->incremental_tda);
+  __Pyx_DECREF(__pyx_v_self->incremental_tda);
+  __pyx_v_self->incremental_tda = __pyx_v_value;
+
+  /* function exit code */
+  __pyx_r = 0;
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* Python wrapper */
+static int __pyx_pw_6entrap_10ebm_engine_23EBM_Reassignment_Engine_15incremental_tda_5__del__(PyObject *__pyx_v_self); /*proto*/
+static int __pyx_pw_6entrap_10ebm_engine_23EBM_Reassignment_Engine_15incremental_tda_5__del__(PyObject *__pyx_v_self) {
+  CYTHON_UNUSED PyObject *const *__pyx_kwvalues;
+  int __pyx_r;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("__del__ (wrapper)", 0);
+  __pyx_kwvalues = __Pyx_KwValues_VARARGS(__pyx_args, __pyx_nargs);
+  __pyx_r = __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_15incremental_tda_4__del__(((struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *)__pyx_v_self));
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_15incremental_tda_4__del__(struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *__pyx_v_self) {
+  int __pyx_r;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("__del__", 0);
+  __Pyx_INCREF(Py_None);
+  __Pyx_GIVEREF(Py_None);
+  __Pyx_GOTREF(__pyx_v_self->incremental_tda);
+  __Pyx_DECREF(__pyx_v_self->incremental_tda);
+  __pyx_v_self->incremental_tda = Py_None;
+
+  /* function exit code */
+  __pyx_r = 0;
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "entrap/ebm_engine.pxd":26
+ *     cdef public object energy_computer  # Pure Python object
+ *     cdef public object incremental_tda  # Incremental TDA engine (optional)
  *     cdef public object empirical_noise_energy_             # <<<<<<<<<<<<<<
  *     cdef public dict noise_energy_details_
  * 
@@ -13553,8 +14475,8 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_23empirical_n
   return __pyx_r;
 }
 
-/* "entrap/ebm_engine.pxd":22
- *     cdef public object energy_computer  # Pure Python object
+/* "entrap/ebm_engine.pxd":27
+ *     cdef public object incremental_tda  # Incremental TDA engine (optional)
  *     cdef public object empirical_noise_energy_
  *     cdef public dict noise_energy_details_             # <<<<<<<<<<<<<<
  * 
@@ -13617,7 +14539,7 @@ static int __pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_21noise_energ
   __Pyx_RefNannySetupContext("__set__", 0);
   __pyx_t_1 = __pyx_v_value;
   __Pyx_INCREF(__pyx_t_1);
-  if (!(likely(PyDict_CheckExact(__pyx_t_1))||((__pyx_t_1) == Py_None) || __Pyx_RaiseUnexpectedTypeError("dict", __pyx_t_1))) __PYX_ERR(2, 22, __pyx_L1_error)
+  if (!(likely(PyDict_CheckExact(__pyx_t_1))||((__pyx_t_1) == Py_None) || __Pyx_RaiseUnexpectedTypeError("dict", __pyx_t_1))) __PYX_ERR(2, 27, __pyx_L1_error)
   __Pyx_GIVEREF(__pyx_t_1);
   __Pyx_GOTREF(__pyx_v_self->noise_energy_details_);
   __Pyx_DECREF(__pyx_v_self->noise_energy_details_);
@@ -13734,8 +14656,9 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_16__red
   PyObject *__pyx_t_10 = NULL;
   PyObject *__pyx_t_11 = NULL;
   PyObject *__pyx_t_12 = NULL;
-  int __pyx_t_13;
+  PyObject *__pyx_t_13 = NULL;
   int __pyx_t_14;
+  int __pyx_t_15;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
@@ -13744,7 +14667,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_16__red
   /* "(tree fragment)":5
  *     cdef object _dict
  *     cdef bint use_setstate
- *     state = (self.alpha, self.beta, self.empirical_noise_energy_, self.energy_computer, self.eps0, self.lambda_G0, self.lambda_T, self.landmark_variance_threshold, self.max_landmarks, self.metric, self.metric_params, self.min_landmarks, self.noise_energy_details_, self.ridge_epsilon, self.tau, self.use_memmap)             # <<<<<<<<<<<<<<
+ *     state = (self.alpha, self.beta, self.empirical_noise_energy_, self.energy_computer, self.eps0, self.incremental_tda, self.lambda_G0, self.lambda_T, self.landmark_variance_threshold, self.max_landmarks, self.metric, self.metric_params, self.min_landmarks, self.noise_energy_details_, self.ridge_epsilon, self.tau, self.use_incremental_tda, self.use_memmap)             # <<<<<<<<<<<<<<
  *     _dict = getattr(self, '__dict__', None)
  *     if _dict is not None:
 */
@@ -13768,47 +14691,54 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_16__red
   __Pyx_GOTREF(__pyx_t_9);
   __pyx_t_10 = PyFloat_FromDouble(__pyx_v_self->tau); if (unlikely(!__pyx_t_10)) __PYX_ERR(3, 5, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_10);
-  __pyx_t_11 = __Pyx_PyBool_FromLong(__pyx_v_self->use_memmap); if (unlikely(!__pyx_t_11)) __PYX_ERR(3, 5, __pyx_L1_error)
+  __pyx_t_11 = __Pyx_PyBool_FromLong(__pyx_v_self->use_incremental_tda); if (unlikely(!__pyx_t_11)) __PYX_ERR(3, 5, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_11);
-  __pyx_t_12 = PyTuple_New(16); if (unlikely(!__pyx_t_12)) __PYX_ERR(3, 5, __pyx_L1_error)
+  __pyx_t_12 = __Pyx_PyBool_FromLong(__pyx_v_self->use_memmap); if (unlikely(!__pyx_t_12)) __PYX_ERR(3, 5, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_12);
+  __pyx_t_13 = PyTuple_New(18); if (unlikely(!__pyx_t_13)) __PYX_ERR(3, 5, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_13);
   __Pyx_GIVEREF(__pyx_t_1);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_12, 0, __pyx_t_1) != (0)) __PYX_ERR(3, 5, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_13, 0, __pyx_t_1) != (0)) __PYX_ERR(3, 5, __pyx_L1_error);
   __Pyx_GIVEREF(__pyx_t_2);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_12, 1, __pyx_t_2) != (0)) __PYX_ERR(3, 5, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_13, 1, __pyx_t_2) != (0)) __PYX_ERR(3, 5, __pyx_L1_error);
   __Pyx_INCREF(__pyx_v_self->empirical_noise_energy_);
   __Pyx_GIVEREF(__pyx_v_self->empirical_noise_energy_);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_12, 2, __pyx_v_self->empirical_noise_energy_) != (0)) __PYX_ERR(3, 5, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_13, 2, __pyx_v_self->empirical_noise_energy_) != (0)) __PYX_ERR(3, 5, __pyx_L1_error);
   __Pyx_INCREF(__pyx_v_self->energy_computer);
   __Pyx_GIVEREF(__pyx_v_self->energy_computer);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_12, 3, __pyx_v_self->energy_computer) != (0)) __PYX_ERR(3, 5, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_13, 3, __pyx_v_self->energy_computer) != (0)) __PYX_ERR(3, 5, __pyx_L1_error);
   __Pyx_GIVEREF(__pyx_t_3);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_12, 4, __pyx_t_3) != (0)) __PYX_ERR(3, 5, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_13, 4, __pyx_t_3) != (0)) __PYX_ERR(3, 5, __pyx_L1_error);
+  __Pyx_INCREF(__pyx_v_self->incremental_tda);
+  __Pyx_GIVEREF(__pyx_v_self->incremental_tda);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_13, 5, __pyx_v_self->incremental_tda) != (0)) __PYX_ERR(3, 5, __pyx_L1_error);
   __Pyx_GIVEREF(__pyx_t_4);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_12, 5, __pyx_t_4) != (0)) __PYX_ERR(3, 5, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_13, 6, __pyx_t_4) != (0)) __PYX_ERR(3, 5, __pyx_L1_error);
   __Pyx_GIVEREF(__pyx_t_5);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_12, 6, __pyx_t_5) != (0)) __PYX_ERR(3, 5, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_13, 7, __pyx_t_5) != (0)) __PYX_ERR(3, 5, __pyx_L1_error);
   __Pyx_GIVEREF(__pyx_t_6);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_12, 7, __pyx_t_6) != (0)) __PYX_ERR(3, 5, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_13, 8, __pyx_t_6) != (0)) __PYX_ERR(3, 5, __pyx_L1_error);
   __Pyx_GIVEREF(__pyx_t_7);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_12, 8, __pyx_t_7) != (0)) __PYX_ERR(3, 5, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_13, 9, __pyx_t_7) != (0)) __PYX_ERR(3, 5, __pyx_L1_error);
   __Pyx_INCREF(__pyx_v_self->metric);
   __Pyx_GIVEREF(__pyx_v_self->metric);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_12, 9, __pyx_v_self->metric) != (0)) __PYX_ERR(3, 5, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_13, 10, __pyx_v_self->metric) != (0)) __PYX_ERR(3, 5, __pyx_L1_error);
   __Pyx_INCREF(__pyx_v_self->metric_params);
   __Pyx_GIVEREF(__pyx_v_self->metric_params);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_12, 10, __pyx_v_self->metric_params) != (0)) __PYX_ERR(3, 5, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_13, 11, __pyx_v_self->metric_params) != (0)) __PYX_ERR(3, 5, __pyx_L1_error);
   __Pyx_GIVEREF(__pyx_t_8);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_12, 11, __pyx_t_8) != (0)) __PYX_ERR(3, 5, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_13, 12, __pyx_t_8) != (0)) __PYX_ERR(3, 5, __pyx_L1_error);
   __Pyx_INCREF(__pyx_v_self->noise_energy_details_);
   __Pyx_GIVEREF(__pyx_v_self->noise_energy_details_);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_12, 12, __pyx_v_self->noise_energy_details_) != (0)) __PYX_ERR(3, 5, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_13, 13, __pyx_v_self->noise_energy_details_) != (0)) __PYX_ERR(3, 5, __pyx_L1_error);
   __Pyx_GIVEREF(__pyx_t_9);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_12, 13, __pyx_t_9) != (0)) __PYX_ERR(3, 5, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_13, 14, __pyx_t_9) != (0)) __PYX_ERR(3, 5, __pyx_L1_error);
   __Pyx_GIVEREF(__pyx_t_10);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_12, 14, __pyx_t_10) != (0)) __PYX_ERR(3, 5, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_13, 15, __pyx_t_10) != (0)) __PYX_ERR(3, 5, __pyx_L1_error);
   __Pyx_GIVEREF(__pyx_t_11);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_12, 15, __pyx_t_11) != (0)) __PYX_ERR(3, 5, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_13, 16, __pyx_t_11) != (0)) __PYX_ERR(3, 5, __pyx_L1_error);
+  __Pyx_GIVEREF(__pyx_t_12);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_13, 17, __pyx_t_12) != (0)) __PYX_ERR(3, 5, __pyx_L1_error);
   __pyx_t_1 = 0;
   __pyx_t_2 = 0;
   __pyx_t_3 = 0;
@@ -13820,30 +14750,31 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_16__red
   __pyx_t_9 = 0;
   __pyx_t_10 = 0;
   __pyx_t_11 = 0;
-  __pyx_v_state = ((PyObject*)__pyx_t_12);
   __pyx_t_12 = 0;
+  __pyx_v_state = ((PyObject*)__pyx_t_13);
+  __pyx_t_13 = 0;
 
   /* "(tree fragment)":6
  *     cdef bint use_setstate
- *     state = (self.alpha, self.beta, self.empirical_noise_energy_, self.energy_computer, self.eps0, self.lambda_G0, self.lambda_T, self.landmark_variance_threshold, self.max_landmarks, self.metric, self.metric_params, self.min_landmarks, self.noise_energy_details_, self.ridge_epsilon, self.tau, self.use_memmap)
+ *     state = (self.alpha, self.beta, self.empirical_noise_energy_, self.energy_computer, self.eps0, self.incremental_tda, self.lambda_G0, self.lambda_T, self.landmark_variance_threshold, self.max_landmarks, self.metric, self.metric_params, self.min_landmarks, self.noise_energy_details_, self.ridge_epsilon, self.tau, self.use_incremental_tda, self.use_memmap)
  *     _dict = getattr(self, '__dict__', None)             # <<<<<<<<<<<<<<
  *     if _dict is not None:
  *         state += (_dict,)
 */
-  __pyx_t_12 = __Pyx_GetAttr3(((PyObject *)__pyx_v_self), __pyx_mstate_global->__pyx_n_u_dict, Py_None); if (unlikely(!__pyx_t_12)) __PYX_ERR(3, 6, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_12);
-  __pyx_v__dict = __pyx_t_12;
-  __pyx_t_12 = 0;
+  __pyx_t_13 = __Pyx_GetAttr3(((PyObject *)__pyx_v_self), __pyx_mstate_global->__pyx_n_u_dict, Py_None); if (unlikely(!__pyx_t_13)) __PYX_ERR(3, 6, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_13);
+  __pyx_v__dict = __pyx_t_13;
+  __pyx_t_13 = 0;
 
   /* "(tree fragment)":7
- *     state = (self.alpha, self.beta, self.empirical_noise_energy_, self.energy_computer, self.eps0, self.lambda_G0, self.lambda_T, self.landmark_variance_threshold, self.max_landmarks, self.metric, self.metric_params, self.min_landmarks, self.noise_energy_details_, self.ridge_epsilon, self.tau, self.use_memmap)
+ *     state = (self.alpha, self.beta, self.empirical_noise_energy_, self.energy_computer, self.eps0, self.incremental_tda, self.lambda_G0, self.lambda_T, self.landmark_variance_threshold, self.max_landmarks, self.metric, self.metric_params, self.min_landmarks, self.noise_energy_details_, self.ridge_epsilon, self.tau, self.use_incremental_tda, self.use_memmap)
  *     _dict = getattr(self, '__dict__', None)
  *     if _dict is not None:             # <<<<<<<<<<<<<<
  *         state += (_dict,)
  *         use_setstate = True
 */
-  __pyx_t_13 = (__pyx_v__dict != Py_None);
-  if (__pyx_t_13) {
+  __pyx_t_14 = (__pyx_v__dict != Py_None);
+  if (__pyx_t_14) {
 
     /* "(tree fragment)":8
  *     _dict = getattr(self, '__dict__', None)
@@ -13852,28 +14783,28 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_16__red
  *         use_setstate = True
  *     else:
 */
-    __pyx_t_12 = PyTuple_New(1); if (unlikely(!__pyx_t_12)) __PYX_ERR(3, 8, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_12);
+    __pyx_t_13 = PyTuple_New(1); if (unlikely(!__pyx_t_13)) __PYX_ERR(3, 8, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_13);
     __Pyx_INCREF(__pyx_v__dict);
     __Pyx_GIVEREF(__pyx_v__dict);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_12, 0, __pyx_v__dict) != (0)) __PYX_ERR(3, 8, __pyx_L1_error);
-    __pyx_t_11 = PyNumber_InPlaceAdd(__pyx_v_state, __pyx_t_12); if (unlikely(!__pyx_t_11)) __PYX_ERR(3, 8, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_11);
-    __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
-    __Pyx_DECREF_SET(__pyx_v_state, ((PyObject*)__pyx_t_11));
-    __pyx_t_11 = 0;
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_13, 0, __pyx_v__dict) != (0)) __PYX_ERR(3, 8, __pyx_L1_error);
+    __pyx_t_12 = PyNumber_InPlaceAdd(__pyx_v_state, __pyx_t_13); if (unlikely(!__pyx_t_12)) __PYX_ERR(3, 8, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_12);
+    __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+    __Pyx_DECREF_SET(__pyx_v_state, ((PyObject*)__pyx_t_12));
+    __pyx_t_12 = 0;
 
     /* "(tree fragment)":9
  *     if _dict is not None:
  *         state += (_dict,)
  *         use_setstate = True             # <<<<<<<<<<<<<<
  *     else:
- *         use_setstate = self.empirical_noise_energy_ is not None or self.energy_computer is not None or self.metric is not None or self.metric_params is not None or self.noise_energy_details_ is not None
+ *         use_setstate = self.empirical_noise_energy_ is not None or self.energy_computer is not None or self.incremental_tda is not None or self.metric is not None or self.metric_params is not None or self.noise_energy_details_ is not None
 */
     __pyx_v_use_setstate = 1;
 
     /* "(tree fragment)":7
- *     state = (self.alpha, self.beta, self.empirical_noise_energy_, self.energy_computer, self.eps0, self.lambda_G0, self.lambda_T, self.landmark_variance_threshold, self.max_landmarks, self.metric, self.metric_params, self.min_landmarks, self.noise_energy_details_, self.ridge_epsilon, self.tau, self.use_memmap)
+ *     state = (self.alpha, self.beta, self.empirical_noise_energy_, self.energy_computer, self.eps0, self.incremental_tda, self.lambda_G0, self.lambda_T, self.landmark_variance_threshold, self.max_landmarks, self.metric, self.metric_params, self.min_landmarks, self.noise_energy_details_, self.ridge_epsilon, self.tau, self.use_incremental_tda, self.use_memmap)
  *     _dict = getattr(self, '__dict__', None)
  *     if _dict is not None:             # <<<<<<<<<<<<<<
  *         state += (_dict,)
@@ -13885,128 +14816,134 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_16__red
   /* "(tree fragment)":11
  *         use_setstate = True
  *     else:
- *         use_setstate = self.empirical_noise_energy_ is not None or self.energy_computer is not None or self.metric is not None or self.metric_params is not None or self.noise_energy_details_ is not None             # <<<<<<<<<<<<<<
+ *         use_setstate = self.empirical_noise_energy_ is not None or self.energy_computer is not None or self.incremental_tda is not None or self.metric is not None or self.metric_params is not None or self.noise_energy_details_ is not None             # <<<<<<<<<<<<<<
  *     if use_setstate:
- *         return __pyx_unpickle_EBM_Reassignment_Engine, (type(self), 0x66e8b4b, None), state
+ *         return __pyx_unpickle_EBM_Reassignment_Engine, (type(self), 0x9f6179c, None), state
 */
   /*else*/ {
-    __pyx_t_14 = (__pyx_v_self->empirical_noise_energy_ != Py_None);
-    if (!__pyx_t_14) {
+    __pyx_t_15 = (__pyx_v_self->empirical_noise_energy_ != Py_None);
+    if (!__pyx_t_15) {
     } else {
-      __pyx_t_13 = __pyx_t_14;
+      __pyx_t_14 = __pyx_t_15;
       goto __pyx_L4_bool_binop_done;
     }
-    __pyx_t_14 = (__pyx_v_self->energy_computer != Py_None);
-    if (!__pyx_t_14) {
+    __pyx_t_15 = (__pyx_v_self->energy_computer != Py_None);
+    if (!__pyx_t_15) {
     } else {
-      __pyx_t_13 = __pyx_t_14;
+      __pyx_t_14 = __pyx_t_15;
       goto __pyx_L4_bool_binop_done;
     }
-    __pyx_t_14 = (__pyx_v_self->metric != Py_None);
-    if (!__pyx_t_14) {
+    __pyx_t_15 = (__pyx_v_self->incremental_tda != Py_None);
+    if (!__pyx_t_15) {
     } else {
-      __pyx_t_13 = __pyx_t_14;
+      __pyx_t_14 = __pyx_t_15;
       goto __pyx_L4_bool_binop_done;
     }
-    __pyx_t_14 = (__pyx_v_self->metric_params != ((PyObject*)Py_None));
-    if (!__pyx_t_14) {
+    __pyx_t_15 = (__pyx_v_self->metric != Py_None);
+    if (!__pyx_t_15) {
     } else {
-      __pyx_t_13 = __pyx_t_14;
+      __pyx_t_14 = __pyx_t_15;
       goto __pyx_L4_bool_binop_done;
     }
-    __pyx_t_14 = (__pyx_v_self->noise_energy_details_ != ((PyObject*)Py_None));
-    __pyx_t_13 = __pyx_t_14;
+    __pyx_t_15 = (__pyx_v_self->metric_params != ((PyObject*)Py_None));
+    if (!__pyx_t_15) {
+    } else {
+      __pyx_t_14 = __pyx_t_15;
+      goto __pyx_L4_bool_binop_done;
+    }
+    __pyx_t_15 = (__pyx_v_self->noise_energy_details_ != ((PyObject*)Py_None));
+    __pyx_t_14 = __pyx_t_15;
     __pyx_L4_bool_binop_done:;
-    __pyx_v_use_setstate = __pyx_t_13;
+    __pyx_v_use_setstate = __pyx_t_14;
   }
   __pyx_L3:;
 
   /* "(tree fragment)":12
  *     else:
- *         use_setstate = self.empirical_noise_energy_ is not None or self.energy_computer is not None or self.metric is not None or self.metric_params is not None or self.noise_energy_details_ is not None
+ *         use_setstate = self.empirical_noise_energy_ is not None or self.energy_computer is not None or self.incremental_tda is not None or self.metric is not None or self.metric_params is not None or self.noise_energy_details_ is not None
  *     if use_setstate:             # <<<<<<<<<<<<<<
- *         return __pyx_unpickle_EBM_Reassignment_Engine, (type(self), 0x66e8b4b, None), state
+ *         return __pyx_unpickle_EBM_Reassignment_Engine, (type(self), 0x9f6179c, None), state
  *     else:
 */
   if (__pyx_v_use_setstate) {
 
     /* "(tree fragment)":13
- *         use_setstate = self.empirical_noise_energy_ is not None or self.energy_computer is not None or self.metric is not None or self.metric_params is not None or self.noise_energy_details_ is not None
+ *         use_setstate = self.empirical_noise_energy_ is not None or self.energy_computer is not None or self.incremental_tda is not None or self.metric is not None or self.metric_params is not None or self.noise_energy_details_ is not None
  *     if use_setstate:
- *         return __pyx_unpickle_EBM_Reassignment_Engine, (type(self), 0x66e8b4b, None), state             # <<<<<<<<<<<<<<
+ *         return __pyx_unpickle_EBM_Reassignment_Engine, (type(self), 0x9f6179c, None), state             # <<<<<<<<<<<<<<
  *     else:
- *         return __pyx_unpickle_EBM_Reassignment_Engine, (type(self), 0x66e8b4b, state)
+ *         return __pyx_unpickle_EBM_Reassignment_Engine, (type(self), 0x9f6179c, state)
 */
     __Pyx_XDECREF(__pyx_r);
-    __Pyx_GetModuleGlobalName(__pyx_t_11, __pyx_mstate_global->__pyx_n_u_pyx_unpickle_EBM_Reassignment); if (unlikely(!__pyx_t_11)) __PYX_ERR(3, 13, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_11);
-    __pyx_t_12 = PyTuple_New(3); if (unlikely(!__pyx_t_12)) __PYX_ERR(3, 13, __pyx_L1_error)
+    __Pyx_GetModuleGlobalName(__pyx_t_12, __pyx_mstate_global->__pyx_n_u_pyx_unpickle_EBM_Reassignment); if (unlikely(!__pyx_t_12)) __PYX_ERR(3, 13, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_12);
+    __pyx_t_13 = PyTuple_New(3); if (unlikely(!__pyx_t_13)) __PYX_ERR(3, 13, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_13);
     __Pyx_INCREF(((PyObject *)Py_TYPE(((PyObject *)__pyx_v_self))));
     __Pyx_GIVEREF(((PyObject *)Py_TYPE(((PyObject *)__pyx_v_self))));
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_12, 0, ((PyObject *)Py_TYPE(((PyObject *)__pyx_v_self)))) != (0)) __PYX_ERR(3, 13, __pyx_L1_error);
-    __Pyx_INCREF(__pyx_mstate_global->__pyx_int_107907915);
-    __Pyx_GIVEREF(__pyx_mstate_global->__pyx_int_107907915);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_12, 1, __pyx_mstate_global->__pyx_int_107907915) != (0)) __PYX_ERR(3, 13, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_13, 0, ((PyObject *)Py_TYPE(((PyObject *)__pyx_v_self)))) != (0)) __PYX_ERR(3, 13, __pyx_L1_error);
+    __Pyx_INCREF(__pyx_mstate_global->__pyx_int_167122844);
+    __Pyx_GIVEREF(__pyx_mstate_global->__pyx_int_167122844);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_13, 1, __pyx_mstate_global->__pyx_int_167122844) != (0)) __PYX_ERR(3, 13, __pyx_L1_error);
     __Pyx_INCREF(Py_None);
     __Pyx_GIVEREF(Py_None);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_12, 2, Py_None) != (0)) __PYX_ERR(3, 13, __pyx_L1_error);
-    __pyx_t_10 = PyTuple_New(3); if (unlikely(!__pyx_t_10)) __PYX_ERR(3, 13, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_10);
-    __Pyx_GIVEREF(__pyx_t_11);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_10, 0, __pyx_t_11) != (0)) __PYX_ERR(3, 13, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_13, 2, Py_None) != (0)) __PYX_ERR(3, 13, __pyx_L1_error);
+    __pyx_t_11 = PyTuple_New(3); if (unlikely(!__pyx_t_11)) __PYX_ERR(3, 13, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_11);
     __Pyx_GIVEREF(__pyx_t_12);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_10, 1, __pyx_t_12) != (0)) __PYX_ERR(3, 13, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_11, 0, __pyx_t_12) != (0)) __PYX_ERR(3, 13, __pyx_L1_error);
+    __Pyx_GIVEREF(__pyx_t_13);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_11, 1, __pyx_t_13) != (0)) __PYX_ERR(3, 13, __pyx_L1_error);
     __Pyx_INCREF(__pyx_v_state);
     __Pyx_GIVEREF(__pyx_v_state);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_10, 2, __pyx_v_state) != (0)) __PYX_ERR(3, 13, __pyx_L1_error);
-    __pyx_t_11 = 0;
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_11, 2, __pyx_v_state) != (0)) __PYX_ERR(3, 13, __pyx_L1_error);
     __pyx_t_12 = 0;
-    __pyx_r = __pyx_t_10;
-    __pyx_t_10 = 0;
+    __pyx_t_13 = 0;
+    __pyx_r = __pyx_t_11;
+    __pyx_t_11 = 0;
     goto __pyx_L0;
 
     /* "(tree fragment)":12
  *     else:
- *         use_setstate = self.empirical_noise_energy_ is not None or self.energy_computer is not None or self.metric is not None or self.metric_params is not None or self.noise_energy_details_ is not None
+ *         use_setstate = self.empirical_noise_energy_ is not None or self.energy_computer is not None or self.incremental_tda is not None or self.metric is not None or self.metric_params is not None or self.noise_energy_details_ is not None
  *     if use_setstate:             # <<<<<<<<<<<<<<
- *         return __pyx_unpickle_EBM_Reassignment_Engine, (type(self), 0x66e8b4b, None), state
+ *         return __pyx_unpickle_EBM_Reassignment_Engine, (type(self), 0x9f6179c, None), state
  *     else:
 */
   }
 
   /* "(tree fragment)":15
- *         return __pyx_unpickle_EBM_Reassignment_Engine, (type(self), 0x66e8b4b, None), state
+ *         return __pyx_unpickle_EBM_Reassignment_Engine, (type(self), 0x9f6179c, None), state
  *     else:
- *         return __pyx_unpickle_EBM_Reassignment_Engine, (type(self), 0x66e8b4b, state)             # <<<<<<<<<<<<<<
+ *         return __pyx_unpickle_EBM_Reassignment_Engine, (type(self), 0x9f6179c, state)             # <<<<<<<<<<<<<<
  * def __setstate_cython__(self, __pyx_state):
  *     __pyx_unpickle_EBM_Reassignment_Engine__set_state(self, __pyx_state)
 */
   /*else*/ {
     __Pyx_XDECREF(__pyx_r);
-    __Pyx_GetModuleGlobalName(__pyx_t_10, __pyx_mstate_global->__pyx_n_u_pyx_unpickle_EBM_Reassignment); if (unlikely(!__pyx_t_10)) __PYX_ERR(3, 15, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_10);
-    __pyx_t_12 = PyTuple_New(3); if (unlikely(!__pyx_t_12)) __PYX_ERR(3, 15, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_12);
+    __Pyx_GetModuleGlobalName(__pyx_t_11, __pyx_mstate_global->__pyx_n_u_pyx_unpickle_EBM_Reassignment); if (unlikely(!__pyx_t_11)) __PYX_ERR(3, 15, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_11);
+    __pyx_t_13 = PyTuple_New(3); if (unlikely(!__pyx_t_13)) __PYX_ERR(3, 15, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_13);
     __Pyx_INCREF(((PyObject *)Py_TYPE(((PyObject *)__pyx_v_self))));
     __Pyx_GIVEREF(((PyObject *)Py_TYPE(((PyObject *)__pyx_v_self))));
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_12, 0, ((PyObject *)Py_TYPE(((PyObject *)__pyx_v_self)))) != (0)) __PYX_ERR(3, 15, __pyx_L1_error);
-    __Pyx_INCREF(__pyx_mstate_global->__pyx_int_107907915);
-    __Pyx_GIVEREF(__pyx_mstate_global->__pyx_int_107907915);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_12, 1, __pyx_mstate_global->__pyx_int_107907915) != (0)) __PYX_ERR(3, 15, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_13, 0, ((PyObject *)Py_TYPE(((PyObject *)__pyx_v_self)))) != (0)) __PYX_ERR(3, 15, __pyx_L1_error);
+    __Pyx_INCREF(__pyx_mstate_global->__pyx_int_167122844);
+    __Pyx_GIVEREF(__pyx_mstate_global->__pyx_int_167122844);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_13, 1, __pyx_mstate_global->__pyx_int_167122844) != (0)) __PYX_ERR(3, 15, __pyx_L1_error);
     __Pyx_INCREF(__pyx_v_state);
     __Pyx_GIVEREF(__pyx_v_state);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_12, 2, __pyx_v_state) != (0)) __PYX_ERR(3, 15, __pyx_L1_error);
-    __pyx_t_11 = PyTuple_New(2); if (unlikely(!__pyx_t_11)) __PYX_ERR(3, 15, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_11);
-    __Pyx_GIVEREF(__pyx_t_10);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_11, 0, __pyx_t_10) != (0)) __PYX_ERR(3, 15, __pyx_L1_error);
-    __Pyx_GIVEREF(__pyx_t_12);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_11, 1, __pyx_t_12) != (0)) __PYX_ERR(3, 15, __pyx_L1_error);
-    __pyx_t_10 = 0;
-    __pyx_t_12 = 0;
-    __pyx_r = __pyx_t_11;
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_13, 2, __pyx_v_state) != (0)) __PYX_ERR(3, 15, __pyx_L1_error);
+    __pyx_t_12 = PyTuple_New(2); if (unlikely(!__pyx_t_12)) __PYX_ERR(3, 15, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_12);
+    __Pyx_GIVEREF(__pyx_t_11);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_12, 0, __pyx_t_11) != (0)) __PYX_ERR(3, 15, __pyx_L1_error);
+    __Pyx_GIVEREF(__pyx_t_13);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_12, 1, __pyx_t_13) != (0)) __PYX_ERR(3, 15, __pyx_L1_error);
     __pyx_t_11 = 0;
+    __pyx_t_13 = 0;
+    __pyx_r = __pyx_t_12;
+    __pyx_t_12 = 0;
     goto __pyx_L0;
   }
 
@@ -14030,6 +14967,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_16__red
   __Pyx_XDECREF(__pyx_t_10);
   __Pyx_XDECREF(__pyx_t_11);
   __Pyx_XDECREF(__pyx_t_12);
+  __Pyx_XDECREF(__pyx_t_13);
   __Pyx_AddTraceback("entrap.ebm_engine.EBM_Reassignment_Engine.__reduce_cython__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
@@ -14042,7 +14980,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_16__red
 
 /* "(tree fragment)":16
  *     else:
- *         return __pyx_unpickle_EBM_Reassignment_Engine, (type(self), 0x66e8b4b, state)
+ *         return __pyx_unpickle_EBM_Reassignment_Engine, (type(self), 0x9f6179c, state)
  * def __setstate_cython__(self, __pyx_state):             # <<<<<<<<<<<<<<
  *     __pyx_unpickle_EBM_Reassignment_Engine__set_state(self, __pyx_state)
 */
@@ -14143,7 +15081,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_18__set
   __Pyx_RefNannySetupContext("__setstate_cython__", 0);
 
   /* "(tree fragment)":17
- *         return __pyx_unpickle_EBM_Reassignment_Engine, (type(self), 0x66e8b4b, state)
+ *         return __pyx_unpickle_EBM_Reassignment_Engine, (type(self), 0x9f6179c, state)
  * def __setstate_cython__(self, __pyx_state):
  *     __pyx_unpickle_EBM_Reassignment_Engine__set_state(self, __pyx_state)             # <<<<<<<<<<<<<<
 */
@@ -14154,7 +15092,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine_23EBM_Reassignment_Engine_18__set
 
   /* "(tree fragment)":16
  *     else:
- *         return __pyx_unpickle_EBM_Reassignment_Engine, (type(self), 0x66e8b4b, state)
+ *         return __pyx_unpickle_EBM_Reassignment_Engine, (type(self), 0x9f6179c, state)
  * def __setstate_cython__(self, __pyx_state):             # <<<<<<<<<<<<<<
  *     __pyx_unpickle_EBM_Reassignment_Engine__set_state(self, __pyx_state)
 */
@@ -14297,21 +15235,21 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine___pyx_unpickle_EBM_Reassignment_E
   /* "(tree fragment)":4
  *     cdef object __pyx_PickleError
  *     cdef object __pyx_result
- *     if __pyx_checksum not in (0x66e8b4b, 0x9ef3519, 0x1fa2104):             # <<<<<<<<<<<<<<
+ *     if __pyx_checksum not in (0x9f6179c, 0x828e6c7, 0x8f8dc98):             # <<<<<<<<<<<<<<
  *         from pickle import PickleError as __pyx_PickleError
- *         raise __pyx_PickleError, "Incompatible checksums (0x%x vs (0x66e8b4b, 0x9ef3519, 0x1fa2104) = (alpha, beta, empirical_noise_energy_, energy_computer, eps0, lambda_G0, lambda_T, landmark_variance_threshold, max_landmarks, metric, metric_params, min_landmarks, noise_energy_details_, ridge_epsilon, tau, use_memmap))" % __pyx_checksum
+ *         raise __pyx_PickleError, "Incompatible checksums (0x%x vs (0x9f6179c, 0x828e6c7, 0x8f8dc98) = (alpha, beta, empirical_noise_energy_, energy_computer, eps0, incremental_tda, lambda_G0, lambda_T, landmark_variance_threshold, max_landmarks, metric, metric_params, min_landmarks, noise_energy_details_, ridge_epsilon, tau, use_incremental_tda, use_memmap))" % __pyx_checksum
 */
   __pyx_t_1 = __Pyx_PyLong_From_long(__pyx_v___pyx_checksum); if (unlikely(!__pyx_t_1)) __PYX_ERR(3, 4, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = (__Pyx_PySequence_ContainsTF(__pyx_t_1, __pyx_mstate_global->__pyx_tuple[2], Py_NE)); if (unlikely((__pyx_t_2 < 0))) __PYX_ERR(3, 4, __pyx_L1_error)
+  __pyx_t_2 = (__Pyx_PySequence_ContainsTF(__pyx_t_1, __pyx_mstate_global->__pyx_tuple[4], Py_NE)); if (unlikely((__pyx_t_2 < 0))) __PYX_ERR(3, 4, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   if (__pyx_t_2) {
 
     /* "(tree fragment)":5
  *     cdef object __pyx_result
- *     if __pyx_checksum not in (0x66e8b4b, 0x9ef3519, 0x1fa2104):
+ *     if __pyx_checksum not in (0x9f6179c, 0x828e6c7, 0x8f8dc98):
  *         from pickle import PickleError as __pyx_PickleError             # <<<<<<<<<<<<<<
- *         raise __pyx_PickleError, "Incompatible checksums (0x%x vs (0x66e8b4b, 0x9ef3519, 0x1fa2104) = (alpha, beta, empirical_noise_energy_, energy_computer, eps0, lambda_G0, lambda_T, landmark_variance_threshold, max_landmarks, metric, metric_params, min_landmarks, noise_energy_details_, ridge_epsilon, tau, use_memmap))" % __pyx_checksum
+ *         raise __pyx_PickleError, "Incompatible checksums (0x%x vs (0x9f6179c, 0x828e6c7, 0x8f8dc98) = (alpha, beta, empirical_noise_energy_, energy_computer, eps0, incremental_tda, lambda_G0, lambda_T, landmark_variance_threshold, max_landmarks, metric, metric_params, min_landmarks, noise_energy_details_, ridge_epsilon, tau, use_incremental_tda, use_memmap))" % __pyx_checksum
  *     __pyx_result = EBM_Reassignment_Engine.__new__(__pyx_type)
 */
     __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(3, 5, __pyx_L1_error)
@@ -14330,9 +15268,9 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine___pyx_unpickle_EBM_Reassignment_E
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
     /* "(tree fragment)":6
- *     if __pyx_checksum not in (0x66e8b4b, 0x9ef3519, 0x1fa2104):
+ *     if __pyx_checksum not in (0x9f6179c, 0x828e6c7, 0x8f8dc98):
  *         from pickle import PickleError as __pyx_PickleError
- *         raise __pyx_PickleError, "Incompatible checksums (0x%x vs (0x66e8b4b, 0x9ef3519, 0x1fa2104) = (alpha, beta, empirical_noise_energy_, energy_computer, eps0, lambda_G0, lambda_T, landmark_variance_threshold, max_landmarks, metric, metric_params, min_landmarks, noise_energy_details_, ridge_epsilon, tau, use_memmap))" % __pyx_checksum             # <<<<<<<<<<<<<<
+ *         raise __pyx_PickleError, "Incompatible checksums (0x%x vs (0x9f6179c, 0x828e6c7, 0x8f8dc98) = (alpha, beta, empirical_noise_energy_, energy_computer, eps0, incremental_tda, lambda_G0, lambda_T, landmark_variance_threshold, max_landmarks, metric, metric_params, min_landmarks, noise_energy_details_, ridge_epsilon, tau, use_incremental_tda, use_memmap))" % __pyx_checksum             # <<<<<<<<<<<<<<
  *     __pyx_result = EBM_Reassignment_Engine.__new__(__pyx_type)
  *     if __pyx_state is not None:
 */
@@ -14348,15 +15286,15 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine___pyx_unpickle_EBM_Reassignment_E
     /* "(tree fragment)":4
  *     cdef object __pyx_PickleError
  *     cdef object __pyx_result
- *     if __pyx_checksum not in (0x66e8b4b, 0x9ef3519, 0x1fa2104):             # <<<<<<<<<<<<<<
+ *     if __pyx_checksum not in (0x9f6179c, 0x828e6c7, 0x8f8dc98):             # <<<<<<<<<<<<<<
  *         from pickle import PickleError as __pyx_PickleError
- *         raise __pyx_PickleError, "Incompatible checksums (0x%x vs (0x66e8b4b, 0x9ef3519, 0x1fa2104) = (alpha, beta, empirical_noise_energy_, energy_computer, eps0, lambda_G0, lambda_T, landmark_variance_threshold, max_landmarks, metric, metric_params, min_landmarks, noise_energy_details_, ridge_epsilon, tau, use_memmap))" % __pyx_checksum
+ *         raise __pyx_PickleError, "Incompatible checksums (0x%x vs (0x9f6179c, 0x828e6c7, 0x8f8dc98) = (alpha, beta, empirical_noise_energy_, energy_computer, eps0, incremental_tda, lambda_G0, lambda_T, landmark_variance_threshold, max_landmarks, metric, metric_params, min_landmarks, noise_energy_details_, ridge_epsilon, tau, use_incremental_tda, use_memmap))" % __pyx_checksum
 */
   }
 
   /* "(tree fragment)":7
  *         from pickle import PickleError as __pyx_PickleError
- *         raise __pyx_PickleError, "Incompatible checksums (0x%x vs (0x66e8b4b, 0x9ef3519, 0x1fa2104) = (alpha, beta, empirical_noise_energy_, energy_computer, eps0, lambda_G0, lambda_T, landmark_variance_threshold, max_landmarks, metric, metric_params, min_landmarks, noise_energy_details_, ridge_epsilon, tau, use_memmap))" % __pyx_checksum
+ *         raise __pyx_PickleError, "Incompatible checksums (0x%x vs (0x9f6179c, 0x828e6c7, 0x8f8dc98) = (alpha, beta, empirical_noise_energy_, energy_computer, eps0, incremental_tda, lambda_G0, lambda_T, landmark_variance_threshold, max_landmarks, metric, metric_params, min_landmarks, noise_energy_details_, ridge_epsilon, tau, use_incremental_tda, use_memmap))" % __pyx_checksum
  *     __pyx_result = EBM_Reassignment_Engine.__new__(__pyx_type)             # <<<<<<<<<<<<<<
  *     if __pyx_state is not None:
  *         __pyx_unpickle_EBM_Reassignment_Engine__set_state(<EBM_Reassignment_Engine> __pyx_result, __pyx_state)
@@ -14375,7 +15313,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine___pyx_unpickle_EBM_Reassignment_E
   __pyx_t_1 = 0;
 
   /* "(tree fragment)":8
- *         raise __pyx_PickleError, "Incompatible checksums (0x%x vs (0x66e8b4b, 0x9ef3519, 0x1fa2104) = (alpha, beta, empirical_noise_energy_, energy_computer, eps0, lambda_G0, lambda_T, landmark_variance_threshold, max_landmarks, metric, metric_params, min_landmarks, noise_energy_details_, ridge_epsilon, tau, use_memmap))" % __pyx_checksum
+ *         raise __pyx_PickleError, "Incompatible checksums (0x%x vs (0x9f6179c, 0x828e6c7, 0x8f8dc98) = (alpha, beta, empirical_noise_energy_, energy_computer, eps0, incremental_tda, lambda_G0, lambda_T, landmark_variance_threshold, max_landmarks, metric, metric_params, min_landmarks, noise_energy_details_, ridge_epsilon, tau, use_incremental_tda, use_memmap))" % __pyx_checksum
  *     __pyx_result = EBM_Reassignment_Engine.__new__(__pyx_type)
  *     if __pyx_state is not None:             # <<<<<<<<<<<<<<
  *         __pyx_unpickle_EBM_Reassignment_Engine__set_state(<EBM_Reassignment_Engine> __pyx_result, __pyx_state)
@@ -14397,7 +15335,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine___pyx_unpickle_EBM_Reassignment_E
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
     /* "(tree fragment)":8
- *         raise __pyx_PickleError, "Incompatible checksums (0x%x vs (0x66e8b4b, 0x9ef3519, 0x1fa2104) = (alpha, beta, empirical_noise_energy_, energy_computer, eps0, lambda_G0, lambda_T, landmark_variance_threshold, max_landmarks, metric, metric_params, min_landmarks, noise_energy_details_, ridge_epsilon, tau, use_memmap))" % __pyx_checksum
+ *         raise __pyx_PickleError, "Incompatible checksums (0x%x vs (0x9f6179c, 0x828e6c7, 0x8f8dc98) = (alpha, beta, empirical_noise_energy_, energy_computer, eps0, incremental_tda, lambda_G0, lambda_T, landmark_variance_threshold, max_landmarks, metric, metric_params, min_landmarks, noise_energy_details_, ridge_epsilon, tau, use_incremental_tda, use_memmap))" % __pyx_checksum
  *     __pyx_result = EBM_Reassignment_Engine.__new__(__pyx_type)
  *     if __pyx_state is not None:             # <<<<<<<<<<<<<<
  *         __pyx_unpickle_EBM_Reassignment_Engine__set_state(<EBM_Reassignment_Engine> __pyx_result, __pyx_state)
@@ -14410,7 +15348,7 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine___pyx_unpickle_EBM_Reassignment_E
  *         __pyx_unpickle_EBM_Reassignment_Engine__set_state(<EBM_Reassignment_Engine> __pyx_result, __pyx_state)
  *     return __pyx_result             # <<<<<<<<<<<<<<
  * cdef __pyx_unpickle_EBM_Reassignment_Engine__set_state(EBM_Reassignment_Engine __pyx_result, tuple __pyx_state):
- *     __pyx_result.alpha = __pyx_state[0]; __pyx_result.beta = __pyx_state[1]; __pyx_result.empirical_noise_energy_ = __pyx_state[2]; __pyx_result.energy_computer = __pyx_state[3]; __pyx_result.eps0 = __pyx_state[4]; __pyx_result.lambda_G0 = __pyx_state[5]; __pyx_result.lambda_T = __pyx_state[6]; __pyx_result.landmark_variance_threshold = __pyx_state[7]; __pyx_result.max_landmarks = __pyx_state[8]; __pyx_result.metric = __pyx_state[9]; __pyx_result.metric_params = __pyx_state[10]; __pyx_result.min_landmarks = __pyx_state[11]; __pyx_result.noise_energy_details_ = __pyx_state[12]; __pyx_result.ridge_epsilon = __pyx_state[13]; __pyx_result.tau = __pyx_state[14]; __pyx_result.use_memmap = __pyx_state[15]
+ *     __pyx_result.alpha = __pyx_state[0]; __pyx_result.beta = __pyx_state[1]; __pyx_result.empirical_noise_energy_ = __pyx_state[2]; __pyx_result.energy_computer = __pyx_state[3]; __pyx_result.eps0 = __pyx_state[4]; __pyx_result.incremental_tda = __pyx_state[5]; __pyx_result.lambda_G0 = __pyx_state[6]; __pyx_result.lambda_T = __pyx_state[7]; __pyx_result.landmark_variance_threshold = __pyx_state[8]; __pyx_result.max_landmarks = __pyx_state[9]; __pyx_result.metric = __pyx_state[10]; __pyx_result.metric_params = __pyx_state[11]; __pyx_result.min_landmarks = __pyx_state[12]; __pyx_result.noise_energy_details_ = __pyx_state[13]; __pyx_result.ridge_epsilon = __pyx_state[14]; __pyx_result.tau = __pyx_state[15]; __pyx_result.use_incremental_tda = __pyx_state[16]; __pyx_result.use_memmap = __pyx_state[17]
 */
   __Pyx_XDECREF(__pyx_r);
   __Pyx_INCREF(__pyx_v___pyx_result);
@@ -14441,8 +15379,8 @@ static PyObject *__pyx_pf_6entrap_10ebm_engine___pyx_unpickle_EBM_Reassignment_E
  *         __pyx_unpickle_EBM_Reassignment_Engine__set_state(<EBM_Reassignment_Engine> __pyx_result, __pyx_state)
  *     return __pyx_result
  * cdef __pyx_unpickle_EBM_Reassignment_Engine__set_state(EBM_Reassignment_Engine __pyx_result, tuple __pyx_state):             # <<<<<<<<<<<<<<
- *     __pyx_result.alpha = __pyx_state[0]; __pyx_result.beta = __pyx_state[1]; __pyx_result.empirical_noise_energy_ = __pyx_state[2]; __pyx_result.energy_computer = __pyx_state[3]; __pyx_result.eps0 = __pyx_state[4]; __pyx_result.lambda_G0 = __pyx_state[5]; __pyx_result.lambda_T = __pyx_state[6]; __pyx_result.landmark_variance_threshold = __pyx_state[7]; __pyx_result.max_landmarks = __pyx_state[8]; __pyx_result.metric = __pyx_state[9]; __pyx_result.metric_params = __pyx_state[10]; __pyx_result.min_landmarks = __pyx_state[11]; __pyx_result.noise_energy_details_ = __pyx_state[12]; __pyx_result.ridge_epsilon = __pyx_state[13]; __pyx_result.tau = __pyx_state[14]; __pyx_result.use_memmap = __pyx_state[15]
- *     if len(__pyx_state) > 16 and hasattr(__pyx_result, '__dict__'):
+ *     __pyx_result.alpha = __pyx_state[0]; __pyx_result.beta = __pyx_state[1]; __pyx_result.empirical_noise_energy_ = __pyx_state[2]; __pyx_result.energy_computer = __pyx_state[3]; __pyx_result.eps0 = __pyx_state[4]; __pyx_result.incremental_tda = __pyx_state[5]; __pyx_result.lambda_G0 = __pyx_state[6]; __pyx_result.lambda_T = __pyx_state[7]; __pyx_result.landmark_variance_threshold = __pyx_state[8]; __pyx_result.max_landmarks = __pyx_state[9]; __pyx_result.metric = __pyx_state[10]; __pyx_result.metric_params = __pyx_state[11]; __pyx_result.min_landmarks = __pyx_state[12]; __pyx_result.noise_energy_details_ = __pyx_state[13]; __pyx_result.ridge_epsilon = __pyx_state[14]; __pyx_result.tau = __pyx_state[15]; __pyx_result.use_incremental_tda = __pyx_state[16]; __pyx_result.use_memmap = __pyx_state[17]
+ *     if len(__pyx_state) > 18 and hasattr(__pyx_result, '__dict__'):
 */
 
 static PyObject *__pyx_f_6entrap_10ebm_engine___pyx_unpickle_EBM_Reassignment_Engine__set_state(struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *__pyx_v___pyx_result, PyObject *__pyx_v___pyx_state) {
@@ -14465,9 +15403,9 @@ static PyObject *__pyx_f_6entrap_10ebm_engine___pyx_unpickle_EBM_Reassignment_En
   /* "(tree fragment)":12
  *     return __pyx_result
  * cdef __pyx_unpickle_EBM_Reassignment_Engine__set_state(EBM_Reassignment_Engine __pyx_result, tuple __pyx_state):
- *     __pyx_result.alpha = __pyx_state[0]; __pyx_result.beta = __pyx_state[1]; __pyx_result.empirical_noise_energy_ = __pyx_state[2]; __pyx_result.energy_computer = __pyx_state[3]; __pyx_result.eps0 = __pyx_state[4]; __pyx_result.lambda_G0 = __pyx_state[5]; __pyx_result.lambda_T = __pyx_state[6]; __pyx_result.landmark_variance_threshold = __pyx_state[7]; __pyx_result.max_landmarks = __pyx_state[8]; __pyx_result.metric = __pyx_state[9]; __pyx_result.metric_params = __pyx_state[10]; __pyx_result.min_landmarks = __pyx_state[11]; __pyx_result.noise_energy_details_ = __pyx_state[12]; __pyx_result.ridge_epsilon = __pyx_state[13]; __pyx_result.tau = __pyx_state[14]; __pyx_result.use_memmap = __pyx_state[15]             # <<<<<<<<<<<<<<
- *     if len(__pyx_state) > 16 and hasattr(__pyx_result, '__dict__'):
- *         __pyx_result.__dict__.update(__pyx_state[16])
+ *     __pyx_result.alpha = __pyx_state[0]; __pyx_result.beta = __pyx_state[1]; __pyx_result.empirical_noise_energy_ = __pyx_state[2]; __pyx_result.energy_computer = __pyx_state[3]; __pyx_result.eps0 = __pyx_state[4]; __pyx_result.incremental_tda = __pyx_state[5]; __pyx_result.lambda_G0 = __pyx_state[6]; __pyx_result.lambda_T = __pyx_state[7]; __pyx_result.landmark_variance_threshold = __pyx_state[8]; __pyx_result.max_landmarks = __pyx_state[9]; __pyx_result.metric = __pyx_state[10]; __pyx_result.metric_params = __pyx_state[11]; __pyx_result.min_landmarks = __pyx_state[12]; __pyx_result.noise_energy_details_ = __pyx_state[13]; __pyx_result.ridge_epsilon = __pyx_state[14]; __pyx_result.tau = __pyx_state[15]; __pyx_result.use_incremental_tda = __pyx_state[16]; __pyx_result.use_memmap = __pyx_state[17]             # <<<<<<<<<<<<<<
+ *     if len(__pyx_state) > 18 and hasattr(__pyx_result, '__dict__'):
+ *         __pyx_result.__dict__.update(__pyx_state[18])
 */
   if (unlikely(__pyx_v___pyx_state == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
@@ -14513,31 +15451,42 @@ static PyObject *__pyx_f_6entrap_10ebm_engine___pyx_unpickle_EBM_Reassignment_En
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
     __PYX_ERR(3, 12, __pyx_L1_error)
   }
-  __pyx_t_1 = __Pyx_PyFloat_AsDouble(__Pyx_PyTuple_GET_ITEM(__pyx_v___pyx_state, 5)); if (unlikely((__pyx_t_1 == (double)-1) && PyErr_Occurred())) __PYX_ERR(3, 12, __pyx_L1_error)
-  __pyx_v___pyx_result->lambda_G0 = __pyx_t_1;
+  __pyx_t_2 = __Pyx_PyTuple_GET_ITEM(__pyx_v___pyx_state, 5);
+  __Pyx_INCREF(__pyx_t_2);
+  __Pyx_GIVEREF(__pyx_t_2);
+  __Pyx_GOTREF(__pyx_v___pyx_result->incremental_tda);
+  __Pyx_DECREF(__pyx_v___pyx_result->incremental_tda);
+  __pyx_v___pyx_result->incremental_tda = __pyx_t_2;
+  __pyx_t_2 = 0;
   if (unlikely(__pyx_v___pyx_state == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
     __PYX_ERR(3, 12, __pyx_L1_error)
   }
   __pyx_t_1 = __Pyx_PyFloat_AsDouble(__Pyx_PyTuple_GET_ITEM(__pyx_v___pyx_state, 6)); if (unlikely((__pyx_t_1 == (double)-1) && PyErr_Occurred())) __PYX_ERR(3, 12, __pyx_L1_error)
-  __pyx_v___pyx_result->lambda_T = __pyx_t_1;
+  __pyx_v___pyx_result->lambda_G0 = __pyx_t_1;
   if (unlikely(__pyx_v___pyx_state == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
     __PYX_ERR(3, 12, __pyx_L1_error)
   }
   __pyx_t_1 = __Pyx_PyFloat_AsDouble(__Pyx_PyTuple_GET_ITEM(__pyx_v___pyx_state, 7)); if (unlikely((__pyx_t_1 == (double)-1) && PyErr_Occurred())) __PYX_ERR(3, 12, __pyx_L1_error)
+  __pyx_v___pyx_result->lambda_T = __pyx_t_1;
+  if (unlikely(__pyx_v___pyx_state == Py_None)) {
+    PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+    __PYX_ERR(3, 12, __pyx_L1_error)
+  }
+  __pyx_t_1 = __Pyx_PyFloat_AsDouble(__Pyx_PyTuple_GET_ITEM(__pyx_v___pyx_state, 8)); if (unlikely((__pyx_t_1 == (double)-1) && PyErr_Occurred())) __PYX_ERR(3, 12, __pyx_L1_error)
   __pyx_v___pyx_result->landmark_variance_threshold = __pyx_t_1;
   if (unlikely(__pyx_v___pyx_state == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
     __PYX_ERR(3, 12, __pyx_L1_error)
   }
-  __pyx_t_3 = __Pyx_PyLong_As_int(__Pyx_PyTuple_GET_ITEM(__pyx_v___pyx_state, 8)); if (unlikely((__pyx_t_3 == (int)-1) && PyErr_Occurred())) __PYX_ERR(3, 12, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyLong_As_int(__Pyx_PyTuple_GET_ITEM(__pyx_v___pyx_state, 9)); if (unlikely((__pyx_t_3 == (int)-1) && PyErr_Occurred())) __PYX_ERR(3, 12, __pyx_L1_error)
   __pyx_v___pyx_result->max_landmarks = __pyx_t_3;
   if (unlikely(__pyx_v___pyx_state == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
     __PYX_ERR(3, 12, __pyx_L1_error)
   }
-  __pyx_t_2 = __Pyx_PyTuple_GET_ITEM(__pyx_v___pyx_state, 9);
+  __pyx_t_2 = __Pyx_PyTuple_GET_ITEM(__pyx_v___pyx_state, 10);
   __Pyx_INCREF(__pyx_t_2);
   __Pyx_GIVEREF(__pyx_t_2);
   __Pyx_GOTREF(__pyx_v___pyx_result->metric);
@@ -14548,7 +15497,7 @@ static PyObject *__pyx_f_6entrap_10ebm_engine___pyx_unpickle_EBM_Reassignment_En
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
     __PYX_ERR(3, 12, __pyx_L1_error)
   }
-  __pyx_t_2 = __Pyx_PyTuple_GET_ITEM(__pyx_v___pyx_state, 10);
+  __pyx_t_2 = __Pyx_PyTuple_GET_ITEM(__pyx_v___pyx_state, 11);
   __Pyx_INCREF(__pyx_t_2);
   if (!(likely(PyDict_CheckExact(__pyx_t_2))||((__pyx_t_2) == Py_None) || __Pyx_RaiseUnexpectedTypeError("dict", __pyx_t_2))) __PYX_ERR(3, 12, __pyx_L1_error)
   __Pyx_GIVEREF(__pyx_t_2);
@@ -14560,13 +15509,13 @@ static PyObject *__pyx_f_6entrap_10ebm_engine___pyx_unpickle_EBM_Reassignment_En
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
     __PYX_ERR(3, 12, __pyx_L1_error)
   }
-  __pyx_t_3 = __Pyx_PyLong_As_int(__Pyx_PyTuple_GET_ITEM(__pyx_v___pyx_state, 11)); if (unlikely((__pyx_t_3 == (int)-1) && PyErr_Occurred())) __PYX_ERR(3, 12, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyLong_As_int(__Pyx_PyTuple_GET_ITEM(__pyx_v___pyx_state, 12)); if (unlikely((__pyx_t_3 == (int)-1) && PyErr_Occurred())) __PYX_ERR(3, 12, __pyx_L1_error)
   __pyx_v___pyx_result->min_landmarks = __pyx_t_3;
   if (unlikely(__pyx_v___pyx_state == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
     __PYX_ERR(3, 12, __pyx_L1_error)
   }
-  __pyx_t_2 = __Pyx_PyTuple_GET_ITEM(__pyx_v___pyx_state, 12);
+  __pyx_t_2 = __Pyx_PyTuple_GET_ITEM(__pyx_v___pyx_state, 13);
   __Pyx_INCREF(__pyx_t_2);
   if (!(likely(PyDict_CheckExact(__pyx_t_2))||((__pyx_t_2) == Py_None) || __Pyx_RaiseUnexpectedTypeError("dict", __pyx_t_2))) __PYX_ERR(3, 12, __pyx_L1_error)
   __Pyx_GIVEREF(__pyx_t_2);
@@ -14578,33 +15527,39 @@ static PyObject *__pyx_f_6entrap_10ebm_engine___pyx_unpickle_EBM_Reassignment_En
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
     __PYX_ERR(3, 12, __pyx_L1_error)
   }
-  __pyx_t_1 = __Pyx_PyFloat_AsDouble(__Pyx_PyTuple_GET_ITEM(__pyx_v___pyx_state, 13)); if (unlikely((__pyx_t_1 == (double)-1) && PyErr_Occurred())) __PYX_ERR(3, 12, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyFloat_AsDouble(__Pyx_PyTuple_GET_ITEM(__pyx_v___pyx_state, 14)); if (unlikely((__pyx_t_1 == (double)-1) && PyErr_Occurred())) __PYX_ERR(3, 12, __pyx_L1_error)
   __pyx_v___pyx_result->ridge_epsilon = __pyx_t_1;
   if (unlikely(__pyx_v___pyx_state == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
     __PYX_ERR(3, 12, __pyx_L1_error)
   }
-  __pyx_t_1 = __Pyx_PyFloat_AsDouble(__Pyx_PyTuple_GET_ITEM(__pyx_v___pyx_state, 14)); if (unlikely((__pyx_t_1 == (double)-1) && PyErr_Occurred())) __PYX_ERR(3, 12, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyFloat_AsDouble(__Pyx_PyTuple_GET_ITEM(__pyx_v___pyx_state, 15)); if (unlikely((__pyx_t_1 == (double)-1) && PyErr_Occurred())) __PYX_ERR(3, 12, __pyx_L1_error)
   __pyx_v___pyx_result->tau = __pyx_t_1;
   if (unlikely(__pyx_v___pyx_state == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
     __PYX_ERR(3, 12, __pyx_L1_error)
   }
-  __pyx_t_4 = __Pyx_PyObject_IsTrue(__Pyx_PyTuple_GET_ITEM(__pyx_v___pyx_state, 15)); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) __PYX_ERR(3, 12, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_IsTrue(__Pyx_PyTuple_GET_ITEM(__pyx_v___pyx_state, 16)); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) __PYX_ERR(3, 12, __pyx_L1_error)
+  __pyx_v___pyx_result->use_incremental_tda = __pyx_t_4;
+  if (unlikely(__pyx_v___pyx_state == Py_None)) {
+    PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+    __PYX_ERR(3, 12, __pyx_L1_error)
+  }
+  __pyx_t_4 = __Pyx_PyObject_IsTrue(__Pyx_PyTuple_GET_ITEM(__pyx_v___pyx_state, 17)); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) __PYX_ERR(3, 12, __pyx_L1_error)
   __pyx_v___pyx_result->use_memmap = __pyx_t_4;
 
   /* "(tree fragment)":13
  * cdef __pyx_unpickle_EBM_Reassignment_Engine__set_state(EBM_Reassignment_Engine __pyx_result, tuple __pyx_state):
- *     __pyx_result.alpha = __pyx_state[0]; __pyx_result.beta = __pyx_state[1]; __pyx_result.empirical_noise_energy_ = __pyx_state[2]; __pyx_result.energy_computer = __pyx_state[3]; __pyx_result.eps0 = __pyx_state[4]; __pyx_result.lambda_G0 = __pyx_state[5]; __pyx_result.lambda_T = __pyx_state[6]; __pyx_result.landmark_variance_threshold = __pyx_state[7]; __pyx_result.max_landmarks = __pyx_state[8]; __pyx_result.metric = __pyx_state[9]; __pyx_result.metric_params = __pyx_state[10]; __pyx_result.min_landmarks = __pyx_state[11]; __pyx_result.noise_energy_details_ = __pyx_state[12]; __pyx_result.ridge_epsilon = __pyx_state[13]; __pyx_result.tau = __pyx_state[14]; __pyx_result.use_memmap = __pyx_state[15]
- *     if len(__pyx_state) > 16 and hasattr(__pyx_result, '__dict__'):             # <<<<<<<<<<<<<<
- *         __pyx_result.__dict__.update(__pyx_state[16])
+ *     __pyx_result.alpha = __pyx_state[0]; __pyx_result.beta = __pyx_state[1]; __pyx_result.empirical_noise_energy_ = __pyx_state[2]; __pyx_result.energy_computer = __pyx_state[3]; __pyx_result.eps0 = __pyx_state[4]; __pyx_result.incremental_tda = __pyx_state[5]; __pyx_result.lambda_G0 = __pyx_state[6]; __pyx_result.lambda_T = __pyx_state[7]; __pyx_result.landmark_variance_threshold = __pyx_state[8]; __pyx_result.max_landmarks = __pyx_state[9]; __pyx_result.metric = __pyx_state[10]; __pyx_result.metric_params = __pyx_state[11]; __pyx_result.min_landmarks = __pyx_state[12]; __pyx_result.noise_energy_details_ = __pyx_state[13]; __pyx_result.ridge_epsilon = __pyx_state[14]; __pyx_result.tau = __pyx_state[15]; __pyx_result.use_incremental_tda = __pyx_state[16]; __pyx_result.use_memmap = __pyx_state[17]
+ *     if len(__pyx_state) > 18 and hasattr(__pyx_result, '__dict__'):             # <<<<<<<<<<<<<<
+ *         __pyx_result.__dict__.update(__pyx_state[18])
 */
   if (unlikely(__pyx_v___pyx_state == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
     __PYX_ERR(3, 13, __pyx_L1_error)
   }
   __pyx_t_5 = __Pyx_PyTuple_GET_SIZE(__pyx_v___pyx_state); if (unlikely(__pyx_t_5 == ((Py_ssize_t)-1))) __PYX_ERR(3, 13, __pyx_L1_error)
-  __pyx_t_6 = (__pyx_t_5 > 16);
+  __pyx_t_6 = (__pyx_t_5 > 18);
   if (__pyx_t_6) {
   } else {
     __pyx_t_4 = __pyx_t_6;
@@ -14616,9 +15571,9 @@ static PyObject *__pyx_f_6entrap_10ebm_engine___pyx_unpickle_EBM_Reassignment_En
   if (__pyx_t_4) {
 
     /* "(tree fragment)":14
- *     __pyx_result.alpha = __pyx_state[0]; __pyx_result.beta = __pyx_state[1]; __pyx_result.empirical_noise_energy_ = __pyx_state[2]; __pyx_result.energy_computer = __pyx_state[3]; __pyx_result.eps0 = __pyx_state[4]; __pyx_result.lambda_G0 = __pyx_state[5]; __pyx_result.lambda_T = __pyx_state[6]; __pyx_result.landmark_variance_threshold = __pyx_state[7]; __pyx_result.max_landmarks = __pyx_state[8]; __pyx_result.metric = __pyx_state[9]; __pyx_result.metric_params = __pyx_state[10]; __pyx_result.min_landmarks = __pyx_state[11]; __pyx_result.noise_energy_details_ = __pyx_state[12]; __pyx_result.ridge_epsilon = __pyx_state[13]; __pyx_result.tau = __pyx_state[14]; __pyx_result.use_memmap = __pyx_state[15]
- *     if len(__pyx_state) > 16 and hasattr(__pyx_result, '__dict__'):
- *         __pyx_result.__dict__.update(__pyx_state[16])             # <<<<<<<<<<<<<<
+ *     __pyx_result.alpha = __pyx_state[0]; __pyx_result.beta = __pyx_state[1]; __pyx_result.empirical_noise_energy_ = __pyx_state[2]; __pyx_result.energy_computer = __pyx_state[3]; __pyx_result.eps0 = __pyx_state[4]; __pyx_result.incremental_tda = __pyx_state[5]; __pyx_result.lambda_G0 = __pyx_state[6]; __pyx_result.lambda_T = __pyx_state[7]; __pyx_result.landmark_variance_threshold = __pyx_state[8]; __pyx_result.max_landmarks = __pyx_state[9]; __pyx_result.metric = __pyx_state[10]; __pyx_result.metric_params = __pyx_state[11]; __pyx_result.min_landmarks = __pyx_state[12]; __pyx_result.noise_energy_details_ = __pyx_state[13]; __pyx_result.ridge_epsilon = __pyx_state[14]; __pyx_result.tau = __pyx_state[15]; __pyx_result.use_incremental_tda = __pyx_state[16]; __pyx_result.use_memmap = __pyx_state[17]
+ *     if len(__pyx_state) > 18 and hasattr(__pyx_result, '__dict__'):
+ *         __pyx_result.__dict__.update(__pyx_state[18])             # <<<<<<<<<<<<<<
 */
     __pyx_t_8 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v___pyx_result), __pyx_mstate_global->__pyx_n_u_dict); if (unlikely(!__pyx_t_8)) __PYX_ERR(3, 14, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_8);
@@ -14630,7 +15585,7 @@ static PyObject *__pyx_f_6entrap_10ebm_engine___pyx_unpickle_EBM_Reassignment_En
     }
     __pyx_t_9 = 0;
     {
-      PyObject *__pyx_callargs[2] = {__pyx_t_7, __Pyx_PyTuple_GET_ITEM(__pyx_v___pyx_state, 16)};
+      PyObject *__pyx_callargs[2] = {__pyx_t_7, __Pyx_PyTuple_GET_ITEM(__pyx_v___pyx_state, 18)};
       __pyx_t_2 = __Pyx_PyObject_FastCallMethod(__pyx_mstate_global->__pyx_n_u_update, __pyx_callargs+__pyx_t_9, (2-__pyx_t_9) | (1*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
       __Pyx_XDECREF(__pyx_t_7); __pyx_t_7 = 0;
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
@@ -14641,9 +15596,9 @@ static PyObject *__pyx_f_6entrap_10ebm_engine___pyx_unpickle_EBM_Reassignment_En
 
     /* "(tree fragment)":13
  * cdef __pyx_unpickle_EBM_Reassignment_Engine__set_state(EBM_Reassignment_Engine __pyx_result, tuple __pyx_state):
- *     __pyx_result.alpha = __pyx_state[0]; __pyx_result.beta = __pyx_state[1]; __pyx_result.empirical_noise_energy_ = __pyx_state[2]; __pyx_result.energy_computer = __pyx_state[3]; __pyx_result.eps0 = __pyx_state[4]; __pyx_result.lambda_G0 = __pyx_state[5]; __pyx_result.lambda_T = __pyx_state[6]; __pyx_result.landmark_variance_threshold = __pyx_state[7]; __pyx_result.max_landmarks = __pyx_state[8]; __pyx_result.metric = __pyx_state[9]; __pyx_result.metric_params = __pyx_state[10]; __pyx_result.min_landmarks = __pyx_state[11]; __pyx_result.noise_energy_details_ = __pyx_state[12]; __pyx_result.ridge_epsilon = __pyx_state[13]; __pyx_result.tau = __pyx_state[14]; __pyx_result.use_memmap = __pyx_state[15]
- *     if len(__pyx_state) > 16 and hasattr(__pyx_result, '__dict__'):             # <<<<<<<<<<<<<<
- *         __pyx_result.__dict__.update(__pyx_state[16])
+ *     __pyx_result.alpha = __pyx_state[0]; __pyx_result.beta = __pyx_state[1]; __pyx_result.empirical_noise_energy_ = __pyx_state[2]; __pyx_result.energy_computer = __pyx_state[3]; __pyx_result.eps0 = __pyx_state[4]; __pyx_result.incremental_tda = __pyx_state[5]; __pyx_result.lambda_G0 = __pyx_state[6]; __pyx_result.lambda_T = __pyx_state[7]; __pyx_result.landmark_variance_threshold = __pyx_state[8]; __pyx_result.max_landmarks = __pyx_state[9]; __pyx_result.metric = __pyx_state[10]; __pyx_result.metric_params = __pyx_state[11]; __pyx_result.min_landmarks = __pyx_state[12]; __pyx_result.noise_energy_details_ = __pyx_state[13]; __pyx_result.ridge_epsilon = __pyx_state[14]; __pyx_result.tau = __pyx_state[15]; __pyx_result.use_incremental_tda = __pyx_state[16]; __pyx_result.use_memmap = __pyx_state[17]
+ *     if len(__pyx_state) > 18 and hasattr(__pyx_result, '__dict__'):             # <<<<<<<<<<<<<<
+ *         __pyx_result.__dict__.update(__pyx_state[18])
 */
   }
 
@@ -14651,8 +15606,8 @@ static PyObject *__pyx_f_6entrap_10ebm_engine___pyx_unpickle_EBM_Reassignment_En
  *         __pyx_unpickle_EBM_Reassignment_Engine__set_state(<EBM_Reassignment_Engine> __pyx_result, __pyx_state)
  *     return __pyx_result
  * cdef __pyx_unpickle_EBM_Reassignment_Engine__set_state(EBM_Reassignment_Engine __pyx_result, tuple __pyx_state):             # <<<<<<<<<<<<<<
- *     __pyx_result.alpha = __pyx_state[0]; __pyx_result.beta = __pyx_state[1]; __pyx_result.empirical_noise_energy_ = __pyx_state[2]; __pyx_result.energy_computer = __pyx_state[3]; __pyx_result.eps0 = __pyx_state[4]; __pyx_result.lambda_G0 = __pyx_state[5]; __pyx_result.lambda_T = __pyx_state[6]; __pyx_result.landmark_variance_threshold = __pyx_state[7]; __pyx_result.max_landmarks = __pyx_state[8]; __pyx_result.metric = __pyx_state[9]; __pyx_result.metric_params = __pyx_state[10]; __pyx_result.min_landmarks = __pyx_state[11]; __pyx_result.noise_energy_details_ = __pyx_state[12]; __pyx_result.ridge_epsilon = __pyx_state[13]; __pyx_result.tau = __pyx_state[14]; __pyx_result.use_memmap = __pyx_state[15]
- *     if len(__pyx_state) > 16 and hasattr(__pyx_result, '__dict__'):
+ *     __pyx_result.alpha = __pyx_state[0]; __pyx_result.beta = __pyx_state[1]; __pyx_result.empirical_noise_energy_ = __pyx_state[2]; __pyx_result.energy_computer = __pyx_state[3]; __pyx_result.eps0 = __pyx_state[4]; __pyx_result.incremental_tda = __pyx_state[5]; __pyx_result.lambda_G0 = __pyx_state[6]; __pyx_result.lambda_T = __pyx_state[7]; __pyx_result.landmark_variance_threshold = __pyx_state[8]; __pyx_result.max_landmarks = __pyx_state[9]; __pyx_result.metric = __pyx_state[10]; __pyx_result.metric_params = __pyx_state[11]; __pyx_result.min_landmarks = __pyx_state[12]; __pyx_result.noise_energy_details_ = __pyx_state[13]; __pyx_result.ridge_epsilon = __pyx_state[14]; __pyx_result.tau = __pyx_state[15]; __pyx_result.use_incremental_tda = __pyx_state[16]; __pyx_result.use_memmap = __pyx_state[17]
+ *     if len(__pyx_state) > 18 and hasattr(__pyx_result, '__dict__'):
 */
 
   /* function exit code */
@@ -14691,6 +15646,7 @@ static PyObject *__pyx_tp_new_6entrap_10ebm_engine_EBM_Reassignment_Engine(PyTyp
   p->metric = Py_None; Py_INCREF(Py_None);
   p->metric_params = ((PyObject*)Py_None); Py_INCREF(Py_None);
   p->energy_computer = Py_None; Py_INCREF(Py_None);
+  p->incremental_tda = Py_None; Py_INCREF(Py_None);
   p->empirical_noise_energy_ = Py_None; Py_INCREF(Py_None);
   p->noise_energy_details_ = ((PyObject*)Py_None); Py_INCREF(Py_None);
   return o;
@@ -14709,6 +15665,7 @@ static void __pyx_tp_dealloc_6entrap_10ebm_engine_EBM_Reassignment_Engine(PyObje
   Py_CLEAR(p->metric);
   Py_CLEAR(p->metric_params);
   Py_CLEAR(p->energy_computer);
+  Py_CLEAR(p->incremental_tda);
   Py_CLEAR(p->empirical_noise_energy_);
   Py_CLEAR(p->noise_energy_details_);
   #if CYTHON_USE_TYPE_SLOTS
@@ -14737,6 +15694,9 @@ static int __pyx_tp_traverse_6entrap_10ebm_engine_EBM_Reassignment_Engine(PyObje
   if (p->energy_computer) {
     e = (*v)(p->energy_computer, a); if (e) return e;
   }
+  if (p->incremental_tda) {
+    e = (*v)(p->incremental_tda, a); if (e) return e;
+  }
   if (p->empirical_noise_energy_) {
     e = (*v)(p->empirical_noise_energy_, a); if (e) return e;
   }
@@ -14757,6 +15717,9 @@ static int __pyx_tp_clear_6entrap_10ebm_engine_EBM_Reassignment_Engine(PyObject 
   Py_XDECREF(tmp);
   tmp = ((PyObject*)p->energy_computer);
   p->energy_computer = Py_None; Py_INCREF(Py_None);
+  Py_XDECREF(tmp);
+  tmp = ((PyObject*)p->incremental_tda);
+  p->incremental_tda = Py_None; Py_INCREF(Py_None);
   Py_XDECREF(tmp);
   tmp = ((PyObject*)p->empirical_noise_energy_);
   p->empirical_noise_energy_ = Py_None; Py_INCREF(Py_None);
@@ -14947,6 +15910,20 @@ static int __pyx_setprop_6entrap_10ebm_engine_23EBM_Reassignment_Engine_use_memm
   }
 }
 
+static PyObject *__pyx_getprop_6entrap_10ebm_engine_23EBM_Reassignment_Engine_use_incremental_tda(PyObject *o, CYTHON_UNUSED void *x) {
+  return __pyx_pw_6entrap_10ebm_engine_23EBM_Reassignment_Engine_19use_incremental_tda_1__get__(o);
+}
+
+static int __pyx_setprop_6entrap_10ebm_engine_23EBM_Reassignment_Engine_use_incremental_tda(PyObject *o, PyObject *v, CYTHON_UNUSED void *x) {
+  if (v) {
+    return __pyx_pw_6entrap_10ebm_engine_23EBM_Reassignment_Engine_19use_incremental_tda_3__set__(o, v);
+  }
+  else {
+    PyErr_SetString(PyExc_NotImplementedError, "__del__");
+    return -1;
+  }
+}
+
 static PyObject *__pyx_getprop_6entrap_10ebm_engine_23EBM_Reassignment_Engine_energy_computer(PyObject *o, CYTHON_UNUSED void *x) {
   return __pyx_pw_6entrap_10ebm_engine_23EBM_Reassignment_Engine_15energy_computer_1__get__(o);
 }
@@ -14957,6 +15934,19 @@ static int __pyx_setprop_6entrap_10ebm_engine_23EBM_Reassignment_Engine_energy_c
   }
   else {
     return __pyx_pw_6entrap_10ebm_engine_23EBM_Reassignment_Engine_15energy_computer_5__del__(o);
+  }
+}
+
+static PyObject *__pyx_getprop_6entrap_10ebm_engine_23EBM_Reassignment_Engine_incremental_tda(PyObject *o, CYTHON_UNUSED void *x) {
+  return __pyx_pw_6entrap_10ebm_engine_23EBM_Reassignment_Engine_15incremental_tda_1__get__(o);
+}
+
+static int __pyx_setprop_6entrap_10ebm_engine_23EBM_Reassignment_Engine_incremental_tda(PyObject *o, PyObject *v, CYTHON_UNUSED void *x) {
+  if (v) {
+    return __pyx_pw_6entrap_10ebm_engine_23EBM_Reassignment_Engine_15incremental_tda_3__set__(o, v);
+  }
+  else {
+    return __pyx_pw_6entrap_10ebm_engine_23EBM_Reassignment_Engine_15incremental_tda_5__del__(o);
   }
 }
 
@@ -15007,7 +15997,9 @@ static struct PyGetSetDef __pyx_getsets_6entrap_10ebm_engine_EBM_Reassignment_En
   {"metric", __pyx_getprop_6entrap_10ebm_engine_23EBM_Reassignment_Engine_metric, __pyx_setprop_6entrap_10ebm_engine_23EBM_Reassignment_Engine_metric, PyDoc_STR("metric: object"), 0},
   {"metric_params", __pyx_getprop_6entrap_10ebm_engine_23EBM_Reassignment_Engine_metric_params, __pyx_setprop_6entrap_10ebm_engine_23EBM_Reassignment_Engine_metric_params, PyDoc_STR("metric_params: dict"), 0},
   {"use_memmap", __pyx_getprop_6entrap_10ebm_engine_23EBM_Reassignment_Engine_use_memmap, __pyx_setprop_6entrap_10ebm_engine_23EBM_Reassignment_Engine_use_memmap, PyDoc_STR("use_memmap: 'bool'"), 0},
+  {"use_incremental_tda", __pyx_getprop_6entrap_10ebm_engine_23EBM_Reassignment_Engine_use_incremental_tda, __pyx_setprop_6entrap_10ebm_engine_23EBM_Reassignment_Engine_use_incremental_tda, PyDoc_STR("use_incremental_tda: 'bool'"), 0},
   {"energy_computer", __pyx_getprop_6entrap_10ebm_engine_23EBM_Reassignment_Engine_energy_computer, __pyx_setprop_6entrap_10ebm_engine_23EBM_Reassignment_Engine_energy_computer, PyDoc_STR("energy_computer: object"), 0},
+  {"incremental_tda", __pyx_getprop_6entrap_10ebm_engine_23EBM_Reassignment_Engine_incremental_tda, __pyx_setprop_6entrap_10ebm_engine_23EBM_Reassignment_Engine_incremental_tda, PyDoc_STR("incremental_tda: object"), 0},
   {"empirical_noise_energy_", __pyx_getprop_6entrap_10ebm_engine_23EBM_Reassignment_Engine_empirical_noise_energy_, __pyx_setprop_6entrap_10ebm_engine_23EBM_Reassignment_Engine_empirical_noise_energy_, PyDoc_STR("empirical_noise_energy_: object"), 0},
   {"noise_energy_details_", __pyx_getprop_6entrap_10ebm_engine_23EBM_Reassignment_Engine_noise_energy_details_, __pyx_setprop_6entrap_10ebm_engine_23EBM_Reassignment_Engine_noise_energy_details_, PyDoc_STR("noise_energy_details_: dict"), 0},
   {0, 0, 0, 0, 0}
@@ -15015,7 +16007,7 @@ static struct PyGetSetDef __pyx_getsets_6entrap_10ebm_engine_EBM_Reassignment_En
 #if CYTHON_USE_TYPE_SPECS
 static PyType_Slot __pyx_type_6entrap_10ebm_engine_EBM_Reassignment_Engine_slots[] = {
   {Py_tp_dealloc, (void *)__pyx_tp_dealloc_6entrap_10ebm_engine_EBM_Reassignment_Engine},
-  {Py_tp_doc, (void *)PyDoc_STR("EBM_Reassignment_Engine(double alpha=0.5, double beta=0.5, double eps0=1.0, double lambda_T=1.0, double lambda_G0=1.0, double tau=5.0, int max_landmarks=5000, int min_landmarks=10, double landmark_variance_threshold=0.95, double ridge_epsilon=1e-06, str metric='euclidean', bool use_memmap=True, **metric_params)\n\nEnergy-based noise point reassignment engine.\n\nCombines Mahalanobis (geometric) and topological energies to decide\nwhether noise points should be assigned to clusters. Uses exact TDA\non full cluster points (no landmarks) for accurate energy computation,\nwith early stopping and sorted evaluation to minimize expensive calls.\n\nAttributes\n----------\nalpha, beta : float\n    Topological energy normalization and trust-region decay exponents.\neps0 : float\n    Base trust-region radius.\nlambda_T, lambda_G0 : float\n    Weighting parameters for topological and geometric energies.\ntau : float\n    Annealing time constant.\nempirical_noise_energy_ : float or None\n    Estimated noise baseline energy.\nnoise_energy_details_ : dict\n    Detailed noise energy computation metadata.")},
+  {Py_tp_doc, (void *)PyDoc_STR("EBM_Reassignment_Engine(double alpha=0.5, double beta=0.5, double eps0=1.0, double lambda_T=1.0, double lambda_G0=1.0, double tau=5.0, int max_landmarks=5000, int min_landmarks=10, double landmark_variance_threshold=0.95, double ridge_epsilon=1e-06, str metric='euclidean', bool use_memmap=True, bool use_incremental_tda=False, **metric_params)\n\nEnergy-based noise point reassignment engine.\n\nCombines Mahalanobis (geometric) and topological energies to decide\nwhether noise points should be assigned to clusters. Uses exact TDA\non full cluster points (no landmarks) for accurate energy computation,\nwith early stopping and sorted evaluation to minimize expensive calls.\n\nAttributes\n----------\nalpha, beta : float\n    Topological energy normalization and trust-region decay exponents.\neps0 : float\n    Base trust-region radius.\nlambda_T, lambda_G0 : float\n    Weighting parameters for topological and geometric energies.\ntau : float\n    Annealing time constant.\nempirical_noise_energy_ : float or None\n    Estimated noise baseline energy.\nnoise_energy_details_ : dict\n    Detailed noise energy computation metadata.")},
   {Py_tp_traverse, (void *)__pyx_tp_traverse_6entrap_10ebm_engine_EBM_Reassignment_Engine},
   {Py_tp_clear, (void *)__pyx_tp_clear_6entrap_10ebm_engine_EBM_Reassignment_Engine},
   {Py_tp_methods, (void *)__pyx_methods_6entrap_10ebm_engine_EBM_Reassignment_Engine},
@@ -15059,7 +16051,7 @@ static PyTypeObject __pyx_type_6entrap_10ebm_engine_EBM_Reassignment_Engine = {
   0, /*tp_setattro*/
   0, /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT|Py_TPFLAGS_HAVE_VERSION_TAG|Py_TPFLAGS_CHECKTYPES|Py_TPFLAGS_HAVE_NEWBUFFER|Py_TPFLAGS_BASETYPE|Py_TPFLAGS_HAVE_GC, /*tp_flags*/
-  PyDoc_STR("EBM_Reassignment_Engine(double alpha=0.5, double beta=0.5, double eps0=1.0, double lambda_T=1.0, double lambda_G0=1.0, double tau=5.0, int max_landmarks=5000, int min_landmarks=10, double landmark_variance_threshold=0.95, double ridge_epsilon=1e-06, str metric='euclidean', bool use_memmap=True, **metric_params)\n\nEnergy-based noise point reassignment engine.\n\nCombines Mahalanobis (geometric) and topological energies to decide\nwhether noise points should be assigned to clusters. Uses exact TDA\non full cluster points (no landmarks) for accurate energy computation,\nwith early stopping and sorted evaluation to minimize expensive calls.\n\nAttributes\n----------\nalpha, beta : float\n    Topological energy normalization and trust-region decay exponents.\neps0 : float\n    Base trust-region radius.\nlambda_T, lambda_G0 : float\n    Weighting parameters for topological and geometric energies.\ntau : float\n    Annealing time constant.\nempirical_noise_energy_ : float or None\n    Estimated noise baseline energy.\nnoise_energy_details_ : dict\n    Detailed noise energy computation metadata."), /*tp_doc*/
+  PyDoc_STR("EBM_Reassignment_Engine(double alpha=0.5, double beta=0.5, double eps0=1.0, double lambda_T=1.0, double lambda_G0=1.0, double tau=5.0, int max_landmarks=5000, int min_landmarks=10, double landmark_variance_threshold=0.95, double ridge_epsilon=1e-06, str metric='euclidean', bool use_memmap=True, bool use_incremental_tda=False, **metric_params)\n\nEnergy-based noise point reassignment engine.\n\nCombines Mahalanobis (geometric) and topological energies to decide\nwhether noise points should be assigned to clusters. Uses exact TDA\non full cluster points (no landmarks) for accurate energy computation,\nwith early stopping and sorted evaluation to minimize expensive calls.\n\nAttributes\n----------\nalpha, beta : float\n    Topological energy normalization and trust-region decay exponents.\neps0 : float\n    Base trust-region radius.\nlambda_T, lambda_G0 : float\n    Weighting parameters for topological and geometric energies.\ntau : float\n    Annealing time constant.\nempirical_noise_energy_ : float or None\n    Estimated noise baseline energy.\nnoise_energy_details_ : dict\n    Detailed noise energy computation metadata."), /*tp_doc*/
   __pyx_tp_traverse_6entrap_10ebm_engine_EBM_Reassignment_Engine, /*tp_traverse*/
   __pyx_tp_clear_6entrap_10ebm_engine_EBM_Reassignment_Engine, /*tp_clear*/
   0, /*tp_richcompare*/
@@ -15150,10 +16142,17 @@ static int __Pyx_modinit_variable_export_code(__pyx_mstatetype *__pyx_mstate) {
 static int __Pyx_modinit_function_export_code(__pyx_mstatetype *__pyx_mstate) {
   __Pyx_RefNannyDeclarations
   CYTHON_UNUSED_VAR(__pyx_mstate);
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__Pyx_modinit_function_export_code", 0);
   /*--- Function export code ---*/
+  if (__Pyx_ExportFunction("_get_energy_value", (void (*)(void))__pyx_f_6entrap_10ebm_engine__get_energy_value, "double (PyObject *)") < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   __Pyx_RefNannyFinishContext();
   return 0;
+  __pyx_L1_error:;
+  __Pyx_RefNannyFinishContext();
+  return -1;
 }
 
 static int __Pyx_modinit_type_init_code(__pyx_mstatetype *__pyx_mstate) {
@@ -15172,15 +16171,15 @@ static int __Pyx_modinit_type_init_code(__pyx_mstatetype *__pyx_mstate) {
   __pyx_vtable_6entrap_10ebm_engine_EBM_Reassignment_Engine.estimate_noise_energy = (double (*)(struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *, PyArrayObject *, PyArrayObject *, int __pyx_skip_dispatch))__pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_estimate_noise_energy;
   __pyx_vtable_6entrap_10ebm_engine_EBM_Reassignment_Engine.cleanup = (void (*)(struct __pyx_obj_6entrap_10ebm_engine_EBM_Reassignment_Engine *, int __pyx_skip_dispatch))__pyx_f_6entrap_10ebm_engine_23EBM_Reassignment_Engine_cleanup;
   #if CYTHON_USE_TYPE_SPECS
-  __pyx_mstate->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine = (PyTypeObject *) __Pyx_PyType_FromModuleAndSpec(__pyx_m, &__pyx_type_6entrap_10ebm_engine_EBM_Reassignment_Engine_spec, NULL); if (unlikely(!__pyx_mstate->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine)) __PYX_ERR(0, 46, __pyx_L1_error)
-  if (__Pyx_fix_up_extension_type_from_spec(&__pyx_type_6entrap_10ebm_engine_EBM_Reassignment_Engine_spec, __pyx_mstate->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine) < 0) __PYX_ERR(0, 46, __pyx_L1_error)
+  __pyx_mstate->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine = (PyTypeObject *) __Pyx_PyType_FromModuleAndSpec(__pyx_m, &__pyx_type_6entrap_10ebm_engine_EBM_Reassignment_Engine_spec, NULL); if (unlikely(!__pyx_mstate->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine)) __PYX_ERR(0, 55, __pyx_L1_error)
+  if (__Pyx_fix_up_extension_type_from_spec(&__pyx_type_6entrap_10ebm_engine_EBM_Reassignment_Engine_spec, __pyx_mstate->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine) < 0) __PYX_ERR(0, 55, __pyx_L1_error)
   #else
   __pyx_mstate->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine = &__pyx_type_6entrap_10ebm_engine_EBM_Reassignment_Engine;
   #endif
   #if !CYTHON_COMPILING_IN_LIMITED_API
   #endif
   #if !CYTHON_USE_TYPE_SPECS
-  if (__Pyx_PyType_Ready(__pyx_mstate->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine) < 0) __PYX_ERR(0, 46, __pyx_L1_error)
+  if (__Pyx_PyType_Ready(__pyx_mstate->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine) < 0) __PYX_ERR(0, 55, __pyx_L1_error)
   #endif
   #if !CYTHON_COMPILING_IN_LIMITED_API
   if ((CYTHON_USE_TYPE_SLOTS && CYTHON_USE_PYTYPE_LOOKUP) && likely(!__pyx_mstate->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine->tp_dictoffset && __pyx_mstate->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine->tp_getattro == PyObject_GenericGetAttr)) {
@@ -15189,7 +16188,7 @@ static int __Pyx_modinit_type_init_code(__pyx_mstatetype *__pyx_mstate) {
   #endif
   #if CYTHON_UPDATE_DESCRIPTOR_DOC
   {
-    PyObject *wrapper = PyObject_GetAttrString((PyObject *)__pyx_mstate->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine, "__init__"); if (unlikely(!wrapper)) __PYX_ERR(0, 46, __pyx_L1_error)
+    PyObject *wrapper = PyObject_GetAttrString((PyObject *)__pyx_mstate->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine, "__init__"); if (unlikely(!wrapper)) __PYX_ERR(0, 55, __pyx_L1_error)
     if (__Pyx_IS_TYPE(wrapper, &PyWrapperDescr_Type)) {
       __pyx_wrapperbase_6entrap_10ebm_engine_23EBM_Reassignment_Engine___init__ = *((PyWrapperDescrObject *)wrapper)->d_base;
       __pyx_wrapperbase_6entrap_10ebm_engine_23EBM_Reassignment_Engine___init__.doc = __pyx_doc_6entrap_10ebm_engine_23EBM_Reassignment_Engine___init__;
@@ -15197,10 +16196,10 @@ static int __Pyx_modinit_type_init_code(__pyx_mstatetype *__pyx_mstate) {
     }
   }
   #endif
-  if (__Pyx_SetVtable(__pyx_mstate->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine, __pyx_vtabptr_6entrap_10ebm_engine_EBM_Reassignment_Engine) < 0) __PYX_ERR(0, 46, __pyx_L1_error)
-  if (__Pyx_MergeVtables(__pyx_mstate->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine) < 0) __PYX_ERR(0, 46, __pyx_L1_error)
-  if (PyObject_SetAttr(__pyx_m, __pyx_mstate_global->__pyx_n_u_EBM_Reassignment_Engine, (PyObject *) __pyx_mstate->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine) < 0) __PYX_ERR(0, 46, __pyx_L1_error)
-  if (__Pyx_setup_reduce((PyObject *) __pyx_mstate->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine) < 0) __PYX_ERR(0, 46, __pyx_L1_error)
+  if (__Pyx_SetVtable(__pyx_mstate->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine, __pyx_vtabptr_6entrap_10ebm_engine_EBM_Reassignment_Engine) < 0) __PYX_ERR(0, 55, __pyx_L1_error)
+  if (__Pyx_MergeVtables(__pyx_mstate->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine) < 0) __PYX_ERR(0, 55, __pyx_L1_error)
+  if (PyObject_SetAttr(__pyx_m, __pyx_mstate_global->__pyx_n_u_EBM_Reassignment_Engine, (PyObject *) __pyx_mstate->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine) < 0) __PYX_ERR(0, 55, __pyx_L1_error)
+  if (__Pyx_setup_reduce((PyObject *) __pyx_mstate->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine) < 0) __PYX_ERR(0, 55, __pyx_L1_error)
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -15693,7 +16692,7 @@ __Pyx_RefNannySetupContext("PyInit_ebm_engine", 0);
   /*--- Global type/function init code ---*/
   (void)__Pyx_modinit_global_init_code(__pyx_mstate);
   (void)__Pyx_modinit_variable_export_code(__pyx_mstate);
-  (void)__Pyx_modinit_function_export_code(__pyx_mstate);
+  if (unlikely((__Pyx_modinit_function_export_code(__pyx_mstate) < 0))) __PYX_ERR(0, 1, __pyx_L1_error)
   if (unlikely((__Pyx_modinit_type_init_code(__pyx_mstate) < 0))) __PYX_ERR(0, 1, __pyx_L1_error)
   if (unlikely((__Pyx_modinit_type_import_code(__pyx_mstate) < 0))) __PYX_ERR(0, 1, __pyx_L1_error)
   (void)__Pyx_modinit_variable_import_code(__pyx_mstate);
@@ -15771,7 +16770,7 @@ __Pyx_RefNannySetupContext("PyInit_ebm_engine", 0);
  * # Import Topological Energy Computer dari pure Python
  * from .topological_energy import Topological_Energy_Computer             # <<<<<<<<<<<<<<
  * 
- * # Import dari Cython modules
+ * # Import Incremental TDA Engine for memory-bounded caching
 */
   __pyx_t_3 = __Pyx_PyList_Pack(1, __pyx_mstate_global->__pyx_n_u_Topological_Energy_Computer); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 15, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
@@ -15784,191 +16783,209 @@ __Pyx_RefNannySetupContext("PyInit_ebm_engine", 0);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "entrap/ebm_engine.pyx":25
+  /* "entrap/ebm_engine.pyx":18
+ * 
+ * # Import Incremental TDA Engine for memory-bounded caching
+ * from .incremental_tda import Incremental_TDA_Engine             # <<<<<<<<<<<<<<
+ * 
+ * # Import dari Cython modules
+*/
+  __pyx_t_2 = __Pyx_PyList_Pack(1, __pyx_mstate_global->__pyx_n_u_Incremental_TDA_Engine); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 18, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_3 = __Pyx_Import(__pyx_mstate_global->__pyx_n_u_incremental_tda, __pyx_t_2, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 18, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_2 = __Pyx_ImportFrom(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_Incremental_TDA_Engine); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 18, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_Incremental_TDA_Engine, __pyx_t_2) < 0) __PYX_ERR(0, 18, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+
+  /* "entrap/ebm_engine.pyx":28
  * )
  * from .utilities cimport validate_metric, select_landmarks_lhs
  * import gc             # <<<<<<<<<<<<<<
  * import logging
  * 
 */
-  __pyx_t_2 = __Pyx_ImportDottedModule(__pyx_mstate_global->__pyx_n_u_gc, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 25, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_gc, __pyx_t_2) < 0) __PYX_ERR(0, 25, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_3 = __Pyx_ImportDottedModule(__pyx_mstate_global->__pyx_n_u_gc, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 28, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_gc, __pyx_t_3) < 0) __PYX_ERR(0, 28, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "entrap/ebm_engine.pyx":26
+  /* "entrap/ebm_engine.pyx":29
  * from .utilities cimport validate_metric, select_landmarks_lhs
  * import gc
  * import logging             # <<<<<<<<<<<<<<
  * 
  * np.import_array()
 */
-  __pyx_t_2 = __Pyx_ImportDottedModule(__pyx_mstate_global->__pyx_n_u_logging, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 26, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_logging, __pyx_t_2) < 0) __PYX_ERR(0, 26, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_3 = __Pyx_ImportDottedModule(__pyx_mstate_global->__pyx_n_u_logging, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 29, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_logging, __pyx_t_3) < 0) __PYX_ERR(0, 29, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "entrap/ebm_engine.pyx":28
+  /* "entrap/ebm_engine.pyx":31
  * import logging
  * 
  * np.import_array()             # <<<<<<<<<<<<<<
  * 
  * logger = logging.getLogger(__name__)
 */
-  __pyx_t_4 = __pyx_f_5numpy_import_array(); if (unlikely(__pyx_t_4 == ((int)-1))) __PYX_ERR(0, 28, __pyx_L1_error)
+  __pyx_t_4 = __pyx_f_5numpy_import_array(); if (unlikely(__pyx_t_4 == ((int)-1))) __PYX_ERR(0, 31, __pyx_L1_error)
 
-  /* "entrap/ebm_engine.pyx":30
+  /* "entrap/ebm_engine.pyx":33
  * np.import_array()
  * 
  * logger = logging.getLogger(__name__)             # <<<<<<<<<<<<<<
  * 
- * # Constants
+ * # Helper: Extract energy from tuple for sorting (replaces lambda)
 */
-  __pyx_t_3 = NULL;
-  __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_logging); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 30, __pyx_L1_error)
+  __pyx_t_2 = NULL;
+  __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_logging); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 33, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_getLogger); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 30, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_getLogger); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 33, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_name); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 30, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_name); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 33, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __pyx_t_7 = 1;
   {
-    PyObject *__pyx_callargs[2] = {__pyx_t_3, __pyx_t_5};
-    __pyx_t_2 = __Pyx_PyObject_FastCall(__pyx_t_6, __pyx_callargs+__pyx_t_7, (2-__pyx_t_7) | (__pyx_t_7*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
-    __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
+    PyObject *__pyx_callargs[2] = {__pyx_t_2, __pyx_t_5};
+    __pyx_t_3 = __Pyx_PyObject_FastCall(__pyx_t_6, __pyx_callargs+__pyx_t_7, (2-__pyx_t_7) | (__pyx_t_7*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
+    __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 30, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_2);
+    if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 33, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
   }
-  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_logger, __pyx_t_2) < 0) __PYX_ERR(0, 30, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_logger, __pyx_t_3) < 0) __PYX_ERR(0, 33, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "entrap/ebm_engine.pyx":139
+  /* "entrap/ebm_engine.pyx":166
  *         self.noise_energy_details_ = None
  * 
  *     cpdef double geometric_energy(             # <<<<<<<<<<<<<<
  *         self,
  *         np.ndarray x,
 */
-  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_6entrap_10ebm_engine_23EBM_Reassignment_Engine_3geometric_energy, __Pyx_CYFUNCTION_CCLASS, __pyx_mstate_global->__pyx_n_u_EBM_Reassignment_Engine_geometri, NULL, __pyx_mstate_global->__pyx_n_u_entrap_ebm_engine, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[2])); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 139, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  if (__Pyx_SetItemOnTypeDict(__pyx_mstate_global->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine, __pyx_mstate_global->__pyx_n_u_geometric_energy, __pyx_t_2) < 0) __PYX_ERR(0, 139, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_3 = __Pyx_CyFunction_New(&__pyx_mdef_6entrap_10ebm_engine_23EBM_Reassignment_Engine_3geometric_energy, __Pyx_CYFUNCTION_CCLASS, __pyx_mstate_global->__pyx_n_u_EBM_Reassignment_Engine_geometri, NULL, __pyx_mstate_global->__pyx_n_u_entrap_ebm_engine, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[2])); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 166, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  if (__Pyx_SetItemOnTypeDict(__pyx_mstate_global->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine, __pyx_mstate_global->__pyx_n_u_geometric_energy, __pyx_t_3) < 0) __PYX_ERR(0, 166, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "entrap/ebm_engine.pyx":172
+  /* "entrap/ebm_engine.pyx":199
  *         return E_G
  * 
  *     cpdef double compute_normalized_topological_energy(             # <<<<<<<<<<<<<<
  *         self,
  *         np.ndarray points,
 */
-  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_6entrap_10ebm_engine_23EBM_Reassignment_Engine_5compute_normalized_topological_energy, __Pyx_CYFUNCTION_CCLASS, __pyx_mstate_global->__pyx_n_u_EBM_Reassignment_Engine_compute, NULL, __pyx_mstate_global->__pyx_n_u_entrap_ebm_engine, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[3])); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 172, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  if (__Pyx_SetItemOnTypeDict(__pyx_mstate_global->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine, __pyx_mstate_global->__pyx_n_u_compute_normalized_topological_e, __pyx_t_2) < 0) __PYX_ERR(0, 172, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_3 = __Pyx_CyFunction_New(&__pyx_mdef_6entrap_10ebm_engine_23EBM_Reassignment_Engine_5compute_normalized_topological_energy, __Pyx_CYFUNCTION_CCLASS, __pyx_mstate_global->__pyx_n_u_EBM_Reassignment_Engine_compute, NULL, __pyx_mstate_global->__pyx_n_u_entrap_ebm_engine, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[3])); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 199, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  if (__Pyx_SetItemOnTypeDict(__pyx_mstate_global->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine, __pyx_mstate_global->__pyx_n_u_compute_normalized_topological_e, __pyx_t_3) < 0) __PYX_ERR(0, 199, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "entrap/ebm_engine.pyx":200
+  /* "entrap/ebm_engine.pyx":227
  *         return T_norm
  * 
  *     cpdef double delta_topological_energy(             # <<<<<<<<<<<<<<
  *         self,
  *         np.ndarray x,
 */
-  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_6entrap_10ebm_engine_23EBM_Reassignment_Engine_7delta_topological_energy, __Pyx_CYFUNCTION_CCLASS, __pyx_mstate_global->__pyx_n_u_EBM_Reassignment_Engine_delta_to, NULL, __pyx_mstate_global->__pyx_n_u_entrap_ebm_engine, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[4])); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 200, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  if (__Pyx_SetItemOnTypeDict(__pyx_mstate_global->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine, __pyx_mstate_global->__pyx_n_u_delta_topological_energy, __pyx_t_2) < 0) __PYX_ERR(0, 200, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_3 = __Pyx_CyFunction_New(&__pyx_mdef_6entrap_10ebm_engine_23EBM_Reassignment_Engine_7delta_topological_energy, __Pyx_CYFUNCTION_CCLASS, __pyx_mstate_global->__pyx_n_u_EBM_Reassignment_Engine_delta_to, NULL, __pyx_mstate_global->__pyx_n_u_entrap_ebm_engine, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[4])); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 227, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  if (__Pyx_SetItemOnTypeDict(__pyx_mstate_global->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine, __pyx_mstate_global->__pyx_n_u_delta_topological_energy, __pyx_t_3) < 0) __PYX_ERR(0, 227, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "entrap/ebm_engine.pyx":234
+  /* "entrap/ebm_engine.pyx":261
  *         return T_new_norm - T_prev_norm
  * 
  *     cpdef double bounded_delta_energy(self, double delta_T, int cluster_size):             # <<<<<<<<<<<<<<
  *         """
  *         Apply trust-region bounding to topological energy change.
 */
-  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_6entrap_10ebm_engine_23EBM_Reassignment_Engine_9bounded_delta_energy, __Pyx_CYFUNCTION_CCLASS, __pyx_mstate_global->__pyx_n_u_EBM_Reassignment_Engine_bounded, NULL, __pyx_mstate_global->__pyx_n_u_entrap_ebm_engine, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[5])); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 234, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  if (__Pyx_SetItemOnTypeDict(__pyx_mstate_global->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine, __pyx_mstate_global->__pyx_n_u_bounded_delta_energy, __pyx_t_2) < 0) __PYX_ERR(0, 234, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_3 = __Pyx_CyFunction_New(&__pyx_mdef_6entrap_10ebm_engine_23EBM_Reassignment_Engine_9bounded_delta_energy, __Pyx_CYFUNCTION_CCLASS, __pyx_mstate_global->__pyx_n_u_EBM_Reassignment_Engine_bounded, NULL, __pyx_mstate_global->__pyx_n_u_entrap_ebm_engine, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[5])); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 261, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  if (__Pyx_SetItemOnTypeDict(__pyx_mstate_global->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine, __pyx_mstate_global->__pyx_n_u_bounded_delta_energy, __pyx_t_3) < 0) __PYX_ERR(0, 261, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "entrap/ebm_engine.pyx":256
+  /* "entrap/ebm_engine.pyx":283
  *         return bounded_delta_energy_cython(delta_T, eps)
  * 
  *     cpdef double estimate_noise_energy(             # <<<<<<<<<<<<<<
  *         self,
  *         np.ndarray X,
 */
-  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_6entrap_10ebm_engine_23EBM_Reassignment_Engine_11estimate_noise_energy, __Pyx_CYFUNCTION_CCLASS, __pyx_mstate_global->__pyx_n_u_EBM_Reassignment_Engine_estimate, NULL, __pyx_mstate_global->__pyx_n_u_entrap_ebm_engine, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[6])); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 256, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  if (__Pyx_SetItemOnTypeDict(__pyx_mstate_global->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine, __pyx_mstate_global->__pyx_n_u_estimate_noise_energy, __pyx_t_2) < 0) __PYX_ERR(0, 256, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_3 = __Pyx_CyFunction_New(&__pyx_mdef_6entrap_10ebm_engine_23EBM_Reassignment_Engine_11estimate_noise_energy, __Pyx_CYFUNCTION_CCLASS, __pyx_mstate_global->__pyx_n_u_EBM_Reassignment_Engine_estimate, NULL, __pyx_mstate_global->__pyx_n_u_entrap_ebm_engine, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[6])); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 283, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  if (__Pyx_SetItemOnTypeDict(__pyx_mstate_global->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine, __pyx_mstate_global->__pyx_n_u_estimate_noise_energy, __pyx_t_3) < 0) __PYX_ERR(0, 283, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "entrap/ebm_engine.pyx":362
+  /* "entrap/ebm_engine.pyx":389
  *             return E_noise
  * 
  *     def reassign(self, X, labels, dek_selector):             # <<<<<<<<<<<<<<
  *         """
  *         Execute energy-based noise reassignment.
 */
-  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_6entrap_10ebm_engine_23EBM_Reassignment_Engine_13reassign, __Pyx_CYFUNCTION_CCLASS, __pyx_mstate_global->__pyx_n_u_EBM_Reassignment_Engine_reassign, NULL, __pyx_mstate_global->__pyx_n_u_entrap_ebm_engine, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[7])); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 362, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  if (__Pyx_SetItemOnTypeDict(__pyx_mstate_global->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine, __pyx_mstate_global->__pyx_n_u_reassign, __pyx_t_2) < 0) __PYX_ERR(0, 362, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_3 = __Pyx_CyFunction_New(&__pyx_mdef_6entrap_10ebm_engine_23EBM_Reassignment_Engine_13reassign, __Pyx_CYFUNCTION_CCLASS, __pyx_mstate_global->__pyx_n_u_EBM_Reassignment_Engine_reassign, NULL, __pyx_mstate_global->__pyx_n_u_entrap_ebm_engine, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[7])); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 389, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  if (__Pyx_SetItemOnTypeDict(__pyx_mstate_global->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine, __pyx_mstate_global->__pyx_n_u_reassign, __pyx_t_3) < 0) __PYX_ERR(0, 389, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "entrap/ebm_engine.pyx":614
+  /* "entrap/ebm_engine.pyx":686
  *         return refined_labels, total_rescued, cluster_stats
  * 
  *     cpdef void cleanup(self):             # <<<<<<<<<<<<<<
- *         """Release memory-mapped resources."""
+ *         """Release memory-mapped resources and incremental TDA cache."""
  *         self.energy_computer.cleanup()
 */
-  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_6entrap_10ebm_engine_23EBM_Reassignment_Engine_15cleanup, __Pyx_CYFUNCTION_CCLASS, __pyx_mstate_global->__pyx_n_u_EBM_Reassignment_Engine_cleanup, NULL, __pyx_mstate_global->__pyx_n_u_entrap_ebm_engine, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[8])); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 614, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  if (__Pyx_SetItemOnTypeDict(__pyx_mstate_global->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine, __pyx_mstate_global->__pyx_n_u_cleanup, __pyx_t_2) < 0) __PYX_ERR(0, 614, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_3 = __Pyx_CyFunction_New(&__pyx_mdef_6entrap_10ebm_engine_23EBM_Reassignment_Engine_15cleanup, __Pyx_CYFUNCTION_CCLASS, __pyx_mstate_global->__pyx_n_u_EBM_Reassignment_Engine_cleanup, NULL, __pyx_mstate_global->__pyx_n_u_entrap_ebm_engine, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[8])); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 686, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  if (__Pyx_SetItemOnTypeDict(__pyx_mstate_global->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine, __pyx_mstate_global->__pyx_n_u_cleanup, __pyx_t_3) < 0) __PYX_ERR(0, 686, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
   /* "(tree fragment)":1
  * def __reduce_cython__(self):             # <<<<<<<<<<<<<<
  *     cdef tuple state
  *     cdef object _dict
 */
-  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_6entrap_10ebm_engine_23EBM_Reassignment_Engine_17__reduce_cython__, __Pyx_CYFUNCTION_CCLASS, __pyx_mstate_global->__pyx_n_u_EBM_Reassignment_Engine___reduce, NULL, __pyx_mstate_global->__pyx_n_u_entrap_ebm_engine, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[9])); if (unlikely(!__pyx_t_2)) __PYX_ERR(3, 1, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  if (__Pyx_SetItemOnTypeDict(__pyx_mstate_global->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine, __pyx_mstate_global->__pyx_n_u_reduce_cython, __pyx_t_2) < 0) __PYX_ERR(3, 1, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_3 = __Pyx_CyFunction_New(&__pyx_mdef_6entrap_10ebm_engine_23EBM_Reassignment_Engine_17__reduce_cython__, __Pyx_CYFUNCTION_CCLASS, __pyx_mstate_global->__pyx_n_u_EBM_Reassignment_Engine___reduce, NULL, __pyx_mstate_global->__pyx_n_u_entrap_ebm_engine, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[9])); if (unlikely(!__pyx_t_3)) __PYX_ERR(3, 1, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  if (__Pyx_SetItemOnTypeDict(__pyx_mstate_global->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine, __pyx_mstate_global->__pyx_n_u_reduce_cython, __pyx_t_3) < 0) __PYX_ERR(3, 1, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
   /* "(tree fragment)":16
  *     else:
- *         return __pyx_unpickle_EBM_Reassignment_Engine, (type(self), 0x66e8b4b, state)
+ *         return __pyx_unpickle_EBM_Reassignment_Engine, (type(self), 0x9f6179c, state)
  * def __setstate_cython__(self, __pyx_state):             # <<<<<<<<<<<<<<
  *     __pyx_unpickle_EBM_Reassignment_Engine__set_state(self, __pyx_state)
 */
-  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_6entrap_10ebm_engine_23EBM_Reassignment_Engine_19__setstate_cython__, __Pyx_CYFUNCTION_CCLASS, __pyx_mstate_global->__pyx_n_u_EBM_Reassignment_Engine___setsta, NULL, __pyx_mstate_global->__pyx_n_u_entrap_ebm_engine, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[10])); if (unlikely(!__pyx_t_2)) __PYX_ERR(3, 16, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  if (__Pyx_SetItemOnTypeDict(__pyx_mstate_global->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine, __pyx_mstate_global->__pyx_n_u_setstate_cython, __pyx_t_2) < 0) __PYX_ERR(3, 16, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_3 = __Pyx_CyFunction_New(&__pyx_mdef_6entrap_10ebm_engine_23EBM_Reassignment_Engine_19__setstate_cython__, __Pyx_CYFUNCTION_CCLASS, __pyx_mstate_global->__pyx_n_u_EBM_Reassignment_Engine___setsta, NULL, __pyx_mstate_global->__pyx_n_u_entrap_ebm_engine, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[10])); if (unlikely(!__pyx_t_3)) __PYX_ERR(3, 16, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  if (__Pyx_SetItemOnTypeDict(__pyx_mstate_global->__pyx_ptype_6entrap_10ebm_engine_EBM_Reassignment_Engine, __pyx_mstate_global->__pyx_n_u_setstate_cython, __pyx_t_3) < 0) __PYX_ERR(3, 16, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
   /* "(tree fragment)":1
  * def __pyx_unpickle_EBM_Reassignment_Engine(__pyx_type, long __pyx_checksum, __pyx_state):             # <<<<<<<<<<<<<<
  *     cdef object __pyx_PickleError
  *     cdef object __pyx_result
 */
-  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_6entrap_10ebm_engine_1__pyx_unpickle_EBM_Reassignment_Engine, 0, __pyx_mstate_global->__pyx_n_u_pyx_unpickle_EBM_Reassignment, NULL, __pyx_mstate_global->__pyx_n_u_entrap_ebm_engine, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[11])); if (unlikely(!__pyx_t_2)) __PYX_ERR(3, 1, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_pyx_unpickle_EBM_Reassignment, __pyx_t_2) < 0) __PYX_ERR(3, 1, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_3 = __Pyx_CyFunction_New(&__pyx_mdef_6entrap_10ebm_engine_1__pyx_unpickle_EBM_Reassignment_Engine, 0, __pyx_mstate_global->__pyx_n_u_pyx_unpickle_EBM_Reassignment, NULL, __pyx_mstate_global->__pyx_n_u_entrap_ebm_engine, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[11])); if (unlikely(!__pyx_t_3)) __PYX_ERR(3, 1, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_pyx_unpickle_EBM_Reassignment, __pyx_t_3) < 0) __PYX_ERR(3, 1, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
   /* "entrap/ebm_engine.pyx":1
  * # cython: language_level=3             # <<<<<<<<<<<<<<
  * # cython: boundscheck=False
  * # cython: wraparound=False
 */
-  __pyx_t_2 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 1, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_test, __pyx_t_2) < 0) __PYX_ERR(0, 1, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_3 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 1, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_test, __pyx_t_3) < 0) __PYX_ERR(0, 1, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
   /*--- Wrapped vars code ---*/
 
@@ -16008,11 +17025,11 @@ __Pyx_RefNannySetupContext("PyInit_ebm_engine", 0);
 
 typedef struct {
     const char *s;
-#if 288 <= 65535
+#if 326 <= 65535
     const unsigned short n;
-#elif 288 / 2 < INT_MAX
+#elif 326 / 2 < INT_MAX
     const unsigned int n;
-#elif 288 / 2 < LONG_MAX
+#elif 326 / 2 < LONG_MAX
     const unsigned long n;
 #else
     const Py_ssize_t n;
@@ -16032,6 +17049,7 @@ typedef struct {
 static const char * const __pyx_string_tab_encodings[] = { 0 };
 static const __Pyx_StringTabEntry __pyx_string_tab[] = {
   {__pyx_k_, sizeof(__pyx_k_), 0, 1, 0}, /* PyObject cname: __pyx_kp_u_ */
+  {__pyx_k_Cache_stats, sizeof(__pyx_k_Cache_stats), 0, 1, 0}, /* PyObject cname: __pyx_kp_u_Cache_stats */
   {__pyx_k_E0, sizeof(__pyx_k_E0), 0, 1, 1}, /* PyObject cname: __pyx_n_u_E0 */
   {__pyx_k_E1, sizeof(__pyx_k_E1), 0, 1, 1}, /* PyObject cname: __pyx_n_u_E1 */
   {__pyx_k_EBM_Reassignment_Engine, sizeof(__pyx_k_EBM_Reassignment_Engine), 0, 1, 1}, /* PyObject cname: __pyx_n_u_EBM_Reassignment_Engine */
@@ -16052,6 +17070,7 @@ static const __Pyx_StringTabEntry __pyx_string_tab[] = {
   {__pyx_k_H1_entropy, sizeof(__pyx_k_H1_entropy), 0, 1, 1}, /* PyObject cname: __pyx_n_u_H1_entropy */
   {__pyx_k_ImportError, sizeof(__pyx_k_ImportError), 0, 1, 1}, /* PyObject cname: __pyx_n_u_ImportError */
   {__pyx_k_Incompatible_checksums_0x_x_vs_0, sizeof(__pyx_k_Incompatible_checksums_0x_x_vs_0), 0, 1, 0}, /* PyObject cname: __pyx_kp_u_Incompatible_checksums_0x_x_vs_0 */
+  {__pyx_k_Incremental_TDA_Engine, sizeof(__pyx_k_Incremental_TDA_Engine), 0, 1, 1}, /* PyObject cname: __pyx_n_u_Incremental_TDA_Engine */
   {__pyx_k_N_noise, sizeof(__pyx_k_N_noise), 0, 1, 1}, /* PyObject cname: __pyx_n_u_N_noise */
   {__pyx_k_Noise_topology_computation_faile, sizeof(__pyx_k_Noise_topology_computation_faile), 0, 1, 0}, /* PyObject cname: __pyx_kp_u_Noise_topology_computation_faile */
   {__pyx_k_Note_that_Cython_is_deliberately, sizeof(__pyx_k_Note_that_Cython_is_deliberately), 0, 1, 0}, /* PyObject cname: __pyx_kp_u_Note_that_Cython_is_deliberately */
@@ -16077,6 +17096,10 @@ static const __Pyx_StringTabEntry __pyx_string_tab[] = {
   {__pyx_k_beta, sizeof(__pyx_k_beta), 0, 1, 1}, /* PyObject cname: __pyx_n_u_beta */
   {__pyx_k_bounded_delta_energy, sizeof(__pyx_k_bounded_delta_energy), 0, 1, 1}, /* PyObject cname: __pyx_n_u_bounded_delta_energy */
   {__pyx_k_cKDTree, sizeof(__pyx_k_cKDTree), 0, 1, 1}, /* PyObject cname: __pyx_n_u_cKDTree */
+  {__pyx_k_cache_config, sizeof(__pyx_k_cache_config), 0, 1, 1}, /* PyObject cname: __pyx_n_u_cache_config */
+  {__pyx_k_cache_hit, sizeof(__pyx_k_cache_hit), 0, 1, 1}, /* PyObject cname: __pyx_n_u_cache_hit */
+  {__pyx_k_cache_hits, sizeof(__pyx_k_cache_hits), 0, 1, 1}, /* PyObject cname: __pyx_n_u_cache_hits */
+  {__pyx_k_cache_stats, sizeof(__pyx_k_cache_stats), 0, 1, 1}, /* PyObject cname: __pyx_n_u_cache_stats */
   {__pyx_k_candidate_energies, sizeof(__pyx_k_candidate_energies), 0, 1, 1}, /* PyObject cname: __pyx_n_u_candidate_energies */
   {__pyx_k_candidate_global_indices, sizeof(__pyx_k_candidate_global_indices), 0, 1, 1}, /* PyObject cname: __pyx_n_u_candidate_global_indices */
   {__pyx_k_candidate_idx, sizeof(__pyx_k_candidate_idx), 0, 1, 1}, /* PyObject cname: __pyx_n_u_candidate_idx */
@@ -16089,6 +17112,8 @@ static const __Pyx_StringTabEntry __pyx_string_tab[] = {
   {__pyx_k_cleanup, sizeof(__pyx_k_cleanup), 0, 1, 1}, /* PyObject cname: __pyx_n_u_cleanup */
   {__pyx_k_cline_in_traceback, sizeof(__pyx_k_cline_in_traceback), 0, 1, 1}, /* PyObject cname: __pyx_n_u_cline_in_traceback */
   {__pyx_k_cluster_candidate_sets, sizeof(__pyx_k_cluster_candidate_sets), 0, 1, 1}, /* PyObject cname: __pyx_n_u_cluster_candidate_sets */
+  {__pyx_k_cluster_indices, sizeof(__pyx_k_cluster_indices), 0, 1, 1}, /* PyObject cname: __pyx_n_u_cluster_indices */
+  {__pyx_k_cluster_indices_current, sizeof(__pyx_k_cluster_indices_current), 0, 1, 1}, /* PyObject cname: __pyx_n_u_cluster_indices_current */
   {__pyx_k_cluster_mask, sizeof(__pyx_k_cluster_mask), 0, 1, 1}, /* PyObject cname: __pyx_n_u_cluster_mask */
   {__pyx_k_cluster_mask_current, sizeof(__pyx_k_cluster_mask_current), 0, 1, 1}, /* PyObject cname: __pyx_n_u_cluster_mask_current */
   {__pyx_k_cluster_mask_updated, sizeof(__pyx_k_cluster_mask_updated), 0, 1, 1}, /* PyObject cname: __pyx_n_u_cluster_mask_updated */
@@ -16101,6 +17126,7 @@ static const __Pyx_StringTabEntry __pyx_string_tab[] = {
   {__pyx_k_cluster_stats, sizeof(__pyx_k_cluster_stats), 0, 1, 1}, /* PyObject cname: __pyx_n_u_cluster_stats */
   {__pyx_k_collect, sizeof(__pyx_k_collect), 0, 1, 1}, /* PyObject cname: __pyx_n_u_collect */
   {__pyx_k_compact_nodes, sizeof(__pyx_k_compact_nodes), 0, 1, 1}, /* PyObject cname: __pyx_n_u_compact_nodes */
+  {__pyx_k_compute_delta_topological_energy, sizeof(__pyx_k_compute_delta_topological_energy), 0, 1, 1}, /* PyObject cname: __pyx_n_u_compute_delta_topological_energy */
   {__pyx_k_compute_normalized_topological_e, sizeof(__pyx_k_compute_normalized_topological_e), 0, 1, 1}, /* PyObject cname: __pyx_n_u_compute_normalized_topological_e */
   {__pyx_k_compute_raw_topological_energy, sizeof(__pyx_k_compute_raw_topological_energy), 0, 1, 1}, /* PyObject cname: __pyx_n_u_compute_raw_topological_energy */
   {__pyx_k_consecutive_rejects, sizeof(__pyx_k_consecutive_rejects), 0, 1, 1}, /* PyObject cname: __pyx_n_u_consecutive_rejects */
@@ -16135,16 +17161,19 @@ static const __Pyx_StringTabEntry __pyx_string_tab[] = {
   {__pyx_k_geometric_energy, sizeof(__pyx_k_geometric_energy), 0, 1, 1}, /* PyObject cname: __pyx_n_u_geometric_energy */
   {__pyx_k_get, sizeof(__pyx_k_get), 0, 1, 1}, /* PyObject cname: __pyx_n_u_get */
   {__pyx_k_getLogger, sizeof(__pyx_k_getLogger), 0, 1, 1}, /* PyObject cname: __pyx_n_u_getLogger */
+  {__pyx_k_get_cache_stats, sizeof(__pyx_k_get_cache_stats), 0, 1, 1}, /* PyObject cname: __pyx_n_u_get_cache_stats */
   {__pyx_k_get_k_percentile, sizeof(__pyx_k_get_k_percentile), 0, 1, 1}, /* PyObject cname: __pyx_n_u_get_k_percentile */
   {__pyx_k_getstate, sizeof(__pyx_k_getstate), 0, 1, 1}, /* PyObject cname: __pyx_n_u_getstate */
   {__pyx_k_idx, sizeof(__pyx_k_idx), 0, 1, 1}, /* PyObject cname: __pyx_n_u_idx */
+  {__pyx_k_incremental_tda, sizeof(__pyx_k_incremental_tda), 0, 1, 1}, /* PyObject cname: __pyx_n_u_incremental_tda */
   {__pyx_k_indices, sizeof(__pyx_k_indices), 0, 1, 1}, /* PyObject cname: __pyx_n_u_indices */
+  {__pyx_k_info, sizeof(__pyx_k_info), 0, 1, 1}, /* PyObject cname: __pyx_n_u_info */
   {__pyx_k_initializing, sizeof(__pyx_k_initializing), 0, 1, 1}, /* PyObject cname: __pyx_n_u_initializing */
   {__pyx_k_int64, sizeof(__pyx_k_int64), 0, 1, 1}, /* PyObject cname: __pyx_n_u_int64 */
   {__pyx_k_inv, sizeof(__pyx_k_inv), 0, 1, 1}, /* PyObject cname: __pyx_n_u_inv */
+  {__pyx_k_invalidate_cluster_cache, sizeof(__pyx_k_invalidate_cluster_cache), 0, 1, 1}, /* PyObject cname: __pyx_n_u_invalidate_cluster_cache */
   {__pyx_k_is_coroutine, sizeof(__pyx_k_is_coroutine), 0, 1, 1}, /* PyObject cname: __pyx_n_u_is_coroutine */
   {__pyx_k_isenabled, sizeof(__pyx_k_isenabled), 0, 1, 0}, /* PyObject cname: __pyx_kp_u_isenabled */
-  {__pyx_k_item, sizeof(__pyx_k_item), 0, 1, 1}, /* PyObject cname: __pyx_n_u_item */
   {__pyx_k_items, sizeof(__pyx_k_items), 0, 1, 1}, /* PyObject cname: __pyx_n_u_items */
   {__pyx_k_iteration, sizeof(__pyx_k_iteration), 0, 1, 1}, /* PyObject cname: __pyx_n_u_iteration */
   {__pyx_k_iterations, sizeof(__pyx_k_iterations), 0, 1, 1}, /* PyObject cname: __pyx_n_u_iterations */
@@ -16163,8 +17192,10 @@ static const __Pyx_StringTabEntry __pyx_string_tab[] = {
   {__pyx_k_logger, sizeof(__pyx_k_logger), 0, 1, 1}, /* PyObject cname: __pyx_n_u_logger */
   {__pyx_k_logging, sizeof(__pyx_k_logging), 0, 1, 1}, /* PyObject cname: __pyx_n_u_logging */
   {__pyx_k_main, sizeof(__pyx_k_main), 0, 1, 1}, /* PyObject cname: __pyx_n_u_main */
+  {__pyx_k_max_diagrams, sizeof(__pyx_k_max_diagrams), 0, 1, 1}, /* PyObject cname: __pyx_n_u_max_diagrams */
   {__pyx_k_max_landmarks, sizeof(__pyx_k_max_landmarks), 0, 1, 1}, /* PyObject cname: __pyx_n_u_max_landmarks */
   {__pyx_k_maximum, sizeof(__pyx_k_maximum), 0, 1, 1}, /* PyObject cname: __pyx_n_u_maximum */
+  {__pyx_k_memory_threshold_mb, sizeof(__pyx_k_memory_threshold_mb), 0, 1, 1}, /* PyObject cname: __pyx_n_u_memory_threshold_mb */
   {__pyx_k_method, sizeof(__pyx_k_method), 0, 1, 1}, /* PyObject cname: __pyx_n_u_method */
   {__pyx_k_metric, sizeof(__pyx_k_metric), 0, 1, 1}, /* PyObject cname: __pyx_n_u_metric */
   {__pyx_k_min_landmarks, sizeof(__pyx_k_min_landmarks), 0, 1, 1}, /* PyObject cname: __pyx_n_u_min_landmarks */
@@ -16178,6 +17209,7 @@ static const __Pyx_StringTabEntry __pyx_string_tab[] = {
   {__pyx_k_name, sizeof(__pyx_k_name), 0, 1, 1}, /* PyObject cname: __pyx_n_u_name */
   {__pyx_k_needs_T_update, sizeof(__pyx_k_needs_T_update), 0, 1, 1}, /* PyObject cname: __pyx_n_u_needs_T_update */
   {__pyx_k_new, sizeof(__pyx_k_new), 0, 1, 1}, /* PyObject cname: __pyx_n_u_new */
+  {__pyx_k_next_iteration, sizeof(__pyx_k_next_iteration), 0, 1, 1}, /* PyObject cname: __pyx_n_u_next_iteration */
   {__pyx_k_no_noise, sizeof(__pyx_k_no_noise), 0, 1, 1}, /* PyObject cname: __pyx_n_u_no_noise */
   {__pyx_k_noise_indices, sizeof(__pyx_k_noise_indices), 0, 1, 1}, /* PyObject cname: __pyx_n_u_noise_indices */
   {__pyx_k_noise_mask, sizeof(__pyx_k_noise_mask), 0, 1, 1}, /* PyObject cname: __pyx_n_u_noise_mask */
@@ -16223,18 +17255,21 @@ static const __Pyx_StringTabEntry __pyx_string_tab[] = {
   {__pyx_k_set_name, sizeof(__pyx_k_set_name), 0, 1, 1}, /* PyObject cname: __pyx_n_u_set_name */
   {__pyx_k_setstate, sizeof(__pyx_k_setstate), 0, 1, 1}, /* PyObject cname: __pyx_n_u_setstate */
   {__pyx_k_setstate_cython, sizeof(__pyx_k_setstate_cython), 0, 1, 1}, /* PyObject cname: __pyx_n_u_setstate_cython */
-  {__pyx_k_shape, sizeof(__pyx_k_shape), 0, 1, 1}, /* PyObject cname: __pyx_n_u_shape */
   {__pyx_k_size, sizeof(__pyx_k_size), 0, 1, 1}, /* PyObject cname: __pyx_n_u_size */
   {__pyx_k_slogdet, sizeof(__pyx_k_slogdet), 0, 1, 1}, /* PyObject cname: __pyx_n_u_slogdet */
   {__pyx_k_sort, sizeof(__pyx_k_sort), 0, 1, 1}, /* PyObject cname: __pyx_n_u_sort */
+  {__pyx_k_sorted, sizeof(__pyx_k_sorted), 0, 1, 1}, /* PyObject cname: __pyx_n_u_sorted */
   {__pyx_k_sorted_cluster_ids, sizeof(__pyx_k_sorted_cluster_ids), 0, 1, 1}, /* PyObject cname: __pyx_n_u_sorted_cluster_ids */
   {__pyx_k_spec, sizeof(__pyx_k_spec), 0, 1, 1}, /* PyObject cname: __pyx_n_u_spec */
   {__pyx_k_state, sizeof(__pyx_k_state), 0, 1, 1}, /* PyObject cname: __pyx_n_u_state */
   {__pyx_k_stringsource, sizeof(__pyx_k_stringsource), 0, 1, 0}, /* PyObject cname: __pyx_kp_u_stringsource */
   {__pyx_k_sum, sizeof(__pyx_k_sum), 0, 1, 1}, /* PyObject cname: __pyx_n_u_sum */
+  {__pyx_k_t, sizeof(__pyx_k_t), 0, 1, 1}, /* PyObject cname: __pyx_n_u_t */
   {__pyx_k_tau, sizeof(__pyx_k_tau), 0, 1, 1}, /* PyObject cname: __pyx_n_u_tau */
   {__pyx_k_tda_calls, sizeof(__pyx_k_tda_calls), 0, 1, 1}, /* PyObject cname: __pyx_n_u_tda_calls */
+  {__pyx_k_tda_meta, sizeof(__pyx_k_tda_meta), 0, 1, 1}, /* PyObject cname: __pyx_n_u_tda_meta */
   {__pyx_k_test, sizeof(__pyx_k_test), 0, 1, 1}, /* PyObject cname: __pyx_n_u_test */
+  {__pyx_k_tolist, sizeof(__pyx_k_tolist), 0, 1, 1}, /* PyObject cname: __pyx_n_u_tolist */
   {__pyx_k_topological_energy, sizeof(__pyx_k_topological_energy), 0, 1, 1}, /* PyObject cname: __pyx_n_u_topological_energy */
   {__pyx_k_topological_normalized, sizeof(__pyx_k_topological_normalized), 0, 1, 1}, /* PyObject cname: __pyx_n_u_topological_normalized */
   {__pyx_k_total_rescued, sizeof(__pyx_k_total_rescued), 0, 1, 1}, /* PyObject cname: __pyx_n_u_total_rescued */
@@ -16244,8 +17279,10 @@ static const __Pyx_StringTabEntry __pyx_string_tab[] = {
   {__pyx_k_unique, sizeof(__pyx_k_unique), 0, 1, 1}, /* PyObject cname: __pyx_n_u_unique */
   {__pyx_k_unique_labels, sizeof(__pyx_k_unique_labels), 0, 1, 1}, /* PyObject cname: __pyx_n_u_unique_labels */
   {__pyx_k_update, sizeof(__pyx_k_update), 0, 1, 1}, /* PyObject cname: __pyx_n_u_update */
+  {__pyx_k_use_incremental_tda, sizeof(__pyx_k_use_incremental_tda), 0, 1, 1}, /* PyObject cname: __pyx_n_u_use_incremental_tda */
   {__pyx_k_use_memmap, sizeof(__pyx_k_use_memmap), 0, 1, 1}, /* PyObject cname: __pyx_n_u_use_memmap */
   {__pyx_k_use_setstate, sizeof(__pyx_k_use_setstate), 0, 1, 1}, /* PyObject cname: __pyx_n_u_use_setstate */
+  {__pyx_k_validity_window, sizeof(__pyx_k_validity_window), 0, 1, 1}, /* PyObject cname: __pyx_n_u_validity_window */
   {__pyx_k_variance_captured, sizeof(__pyx_k_variance_captured), 0, 1, 1}, /* PyObject cname: __pyx_n_u_variance_captured */
   {__pyx_k_volume_fallback, sizeof(__pyx_k_volume_fallback), 0, 1, 1}, /* PyObject cname: __pyx_n_u_volume_fallback */
   {__pyx_k_vstack, sizeof(__pyx_k_vstack), 0, 1, 1}, /* PyObject cname: __pyx_n_u_vstack */
@@ -16262,6 +17299,7 @@ static int __Pyx_InitStrings(__Pyx_StringTabEntry const *t, PyObject **target, c
 
 static int __Pyx_InitCachedBuiltins(__pyx_mstatetype *__pyx_mstate) {
   CYTHON_UNUSED_VAR(__pyx_mstate);
+  __pyx_builtin_sorted = __Pyx_GetBuiltinName(__pyx_mstate->__pyx_n_u_sorted); if (!__pyx_builtin_sorted) __PYX_ERR(0, 577, __pyx_L1_error)
   __pyx_builtin_ImportError = __Pyx_GetBuiltinName(__pyx_mstate->__pyx_n_u_ImportError); if (!__pyx_builtin_ImportError) __PYX_ERR(1, 1025, __pyx_L1_error)
   return 0;
   __pyx_L1_error:;
@@ -16274,38 +17312,60 @@ static int __Pyx_InitCachedConstants(__pyx_mstatetype *__pyx_mstate) {
   CYTHON_UNUSED_VAR(__pyx_mstate);
   __Pyx_RefNannySetupContext("__Pyx_InitCachedConstants", 0);
 
-  /* "entrap/ebm_engine.pyx":228
+  /* "entrap/ebm_engine.pyx":255
  *             Change in normalized topological energy.
  *         """
  *         cdef np.ndarray augmented_cluster = np.vstack([cluster_points, x.reshape(1, -1)])             # <<<<<<<<<<<<<<
  *         cdef double T_new_norm = self.compute_normalized_topological_energy(
  *             augmented_cluster, cluster_size + 1
 */
-  __pyx_mstate_global->__pyx_tuple[0] = PyTuple_Pack(2, __pyx_mstate_global->__pyx_int_1, __pyx_mstate_global->__pyx_int_neg_1); if (unlikely(!__pyx_mstate_global->__pyx_tuple[0])) __PYX_ERR(0, 228, __pyx_L1_error)
+  __pyx_mstate_global->__pyx_tuple[0] = PyTuple_Pack(2, __pyx_mstate_global->__pyx_int_1, __pyx_mstate_global->__pyx_int_neg_1); if (unlikely(!__pyx_mstate_global->__pyx_tuple[0])) __PYX_ERR(0, 255, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_mstate_global->__pyx_tuple[0]);
   __Pyx_GIVEREF(__pyx_mstate_global->__pyx_tuple[0]);
 
-  /* "entrap/ebm_engine.pyx":584
+  /* "entrap/ebm_engine.pyx":608
+ *                         )
+ *                         state['tda_calls'] += 1
+ *                         if tda_meta.get('cache_hit', False):             # <<<<<<<<<<<<<<
+ *                             state['cache_hits'] += 1
+ *                     else:
+*/
+  __pyx_mstate_global->__pyx_tuple[1] = PyTuple_Pack(2, __pyx_mstate_global->__pyx_n_u_cache_hit, Py_False); if (unlikely(!__pyx_mstate_global->__pyx_tuple[1])) __PYX_ERR(0, 608, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_mstate_global->__pyx_tuple[1]);
+  __Pyx_GIVEREF(__pyx_mstate_global->__pyx_tuple[1]);
+
+  /* "entrap/ebm_engine.pyx":640
  *             for cid in sorted_cluster_ids:
  *                 state = cluster_states[cid]
  *                 if state.get('needs_T_update', False):             # <<<<<<<<<<<<<<
  *                     cluster_mask_updated = (refined_labels == cid)
  *                     cluster_points_updated = X[cluster_mask_updated]
 */
-  __pyx_mstate_global->__pyx_tuple[1] = PyTuple_Pack(2, __pyx_mstate_global->__pyx_n_u_needs_T_update, Py_False); if (unlikely(!__pyx_mstate_global->__pyx_tuple[1])) __PYX_ERR(0, 584, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_mstate_global->__pyx_tuple[1]);
-  __Pyx_GIVEREF(__pyx_mstate_global->__pyx_tuple[1]);
+  __pyx_mstate_global->__pyx_tuple[2] = PyTuple_Pack(2, __pyx_mstate_global->__pyx_n_u_needs_T_update, Py_False); if (unlikely(!__pyx_mstate_global->__pyx_tuple[2])) __PYX_ERR(0, 640, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_mstate_global->__pyx_tuple[2]);
+  __Pyx_GIVEREF(__pyx_mstate_global->__pyx_tuple[2]);
+
+  /* "entrap/ebm_engine.pyx":670
+ *                 'rescued': state['rescued_count'],
+ *                 'tda_calls': state['tda_calls'],
+ *                 'cache_hits': state.get('cache_hits', 0),             # <<<<<<<<<<<<<<
+ *                 'final_size': state['size'],
+ *                 'final_T_norm': state['T_norm'],
+*/
+  __pyx_mstate_global->__pyx_tuple[3] = PyTuple_Pack(2, __pyx_mstate_global->__pyx_n_u_cache_hits, __pyx_mstate_global->__pyx_int_0); if (unlikely(!__pyx_mstate_global->__pyx_tuple[3])) __PYX_ERR(0, 670, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_mstate_global->__pyx_tuple[3]);
+  __Pyx_GIVEREF(__pyx_mstate_global->__pyx_tuple[3]);
 
   /* "(tree fragment)":4
  *     cdef object __pyx_PickleError
  *     cdef object __pyx_result
- *     if __pyx_checksum not in (0x66e8b4b, 0x9ef3519, 0x1fa2104):             # <<<<<<<<<<<<<<
+ *     if __pyx_checksum not in (0x9f6179c, 0x828e6c7, 0x8f8dc98):             # <<<<<<<<<<<<<<
  *         from pickle import PickleError as __pyx_PickleError
- *         raise __pyx_PickleError, "Incompatible checksums (0x%x vs (0x66e8b4b, 0x9ef3519, 0x1fa2104) = (alpha, beta, empirical_noise_energy_, energy_computer, eps0, lambda_G0, lambda_T, landmark_variance_threshold, max_landmarks, metric, metric_params, min_landmarks, noise_energy_details_, ridge_epsilon, tau, use_memmap))" % __pyx_checksum
+ *         raise __pyx_PickleError, "Incompatible checksums (0x%x vs (0x9f6179c, 0x828e6c7, 0x8f8dc98) = (alpha, beta, empirical_noise_energy_, energy_computer, eps0, incremental_tda, lambda_G0, lambda_T, landmark_variance_threshold, max_landmarks, metric, metric_params, min_landmarks, noise_energy_details_, ridge_epsilon, tau, use_incremental_tda, use_memmap))" % __pyx_checksum
 */
-  __pyx_mstate_global->__pyx_tuple[2] = PyTuple_Pack(3, __pyx_mstate_global->__pyx_int_107907915, __pyx_mstate_global->__pyx_int_166671641, __pyx_mstate_global->__pyx_int_33169668); if (unlikely(!__pyx_mstate_global->__pyx_tuple[2])) __PYX_ERR(3, 4, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_mstate_global->__pyx_tuple[2]);
-  __Pyx_GIVEREF(__pyx_mstate_global->__pyx_tuple[2]);
+  __pyx_mstate_global->__pyx_tuple[4] = PyTuple_Pack(3, __pyx_mstate_global->__pyx_int_167122844, __pyx_mstate_global->__pyx_int_136898247, __pyx_mstate_global->__pyx_int_150527128); if (unlikely(!__pyx_mstate_global->__pyx_tuple[4])) __PYX_ERR(3, 4, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_mstate_global->__pyx_tuple[4]);
+  __Pyx_GIVEREF(__pyx_mstate_global->__pyx_tuple[4]);
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -16328,9 +17388,12 @@ static int __Pyx_InitConstants(__pyx_mstatetype *__pyx_mstate) {
   __pyx_mstate->__pyx_float_1eneg_12 = PyFloat_FromDouble(1e-12); if (unlikely(!__pyx_mstate->__pyx_float_1eneg_12)) __PYX_ERR(0, 1, __pyx_L1_error)
   __pyx_mstate->__pyx_int_0 = PyLong_FromLong(0); if (unlikely(!__pyx_mstate->__pyx_int_0)) __PYX_ERR(0, 1, __pyx_L1_error)
   __pyx_mstate->__pyx_int_1 = PyLong_FromLong(1); if (unlikely(!__pyx_mstate->__pyx_int_1)) __PYX_ERR(0, 1, __pyx_L1_error)
-  __pyx_mstate->__pyx_int_33169668 = PyLong_FromLong(33169668L); if (unlikely(!__pyx_mstate->__pyx_int_33169668)) __PYX_ERR(0, 1, __pyx_L1_error)
-  __pyx_mstate->__pyx_int_107907915 = PyLong_FromLong(107907915L); if (unlikely(!__pyx_mstate->__pyx_int_107907915)) __PYX_ERR(0, 1, __pyx_L1_error)
-  __pyx_mstate->__pyx_int_166671641 = PyLong_FromLong(166671641L); if (unlikely(!__pyx_mstate->__pyx_int_166671641)) __PYX_ERR(0, 1, __pyx_L1_error)
+  __pyx_mstate->__pyx_int_5 = PyLong_FromLong(5); if (unlikely(!__pyx_mstate->__pyx_int_5)) __PYX_ERR(0, 1, __pyx_L1_error)
+  __pyx_mstate->__pyx_int_10 = PyLong_FromLong(10); if (unlikely(!__pyx_mstate->__pyx_int_10)) __PYX_ERR(0, 1, __pyx_L1_error)
+  __pyx_mstate->__pyx_int_500 = PyLong_FromLong(500); if (unlikely(!__pyx_mstate->__pyx_int_500)) __PYX_ERR(0, 1, __pyx_L1_error)
+  __pyx_mstate->__pyx_int_136898247 = PyLong_FromLong(136898247L); if (unlikely(!__pyx_mstate->__pyx_int_136898247)) __PYX_ERR(0, 1, __pyx_L1_error)
+  __pyx_mstate->__pyx_int_150527128 = PyLong_FromLong(150527128L); if (unlikely(!__pyx_mstate->__pyx_int_150527128)) __PYX_ERR(0, 1, __pyx_L1_error)
+  __pyx_mstate->__pyx_int_167122844 = PyLong_FromLong(167122844L); if (unlikely(!__pyx_mstate->__pyx_int_167122844)) __PYX_ERR(0, 1, __pyx_L1_error)
   __pyx_mstate->__pyx_int_neg_1 = PyLong_FromLong(-1); if (unlikely(!__pyx_mstate->__pyx_int_neg_1)) __PYX_ERR(0, 1, __pyx_L1_error)
   return 0;
   __pyx_L1_error:;
@@ -16345,7 +17408,7 @@ static int __Pyx_InitConstants(__pyx_mstatetype *__pyx_mstate) {
             unsigned int nlocals : 7;
             unsigned int flags : 10;
             unsigned int first_line : 10;
-            unsigned int line_table_length : 15;
+            unsigned int line_table_length : 16;
         } __Pyx_PyCode_New_function_description;
 /* NewCodeObj.proto */
 static PyObject* __Pyx_PyCode_New(
@@ -16362,54 +17425,54 @@ static int __Pyx_CreateCodeObjects(__pyx_mstatetype *__pyx_mstate) {
   PyObject* tuple_dedup_map = PyDict_New();
   if (unlikely(!tuple_dedup_map)) return -1;
   {
-    const __Pyx_PyCode_New_function_description descr = {1, 0, 0, 1, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 423, 8};
+    const __Pyx_PyCode_New_function_description descr = {1, 0, 0, 1, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 465, 8};
     PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_x};
     __pyx_mstate_global->__pyx_codeobj_tab[0] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_entrap_ebm_engine_pyx, __pyx_mstate->__pyx_n_u_lambda, __pyx_k_z_1, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[0])) goto bad;
   }
   {
-    const __Pyx_PyCode_New_function_description descr = {1, 0, 0, 1, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 532, 8};
-    PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_item};
-    __pyx_mstate_global->__pyx_codeobj_tab[1] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_entrap_ebm_engine_pyx, __pyx_mstate->__pyx_n_u_lambda, __pyx_k_M_Qa, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[1])) goto bad;
+    const __Pyx_PyCode_New_function_description descr = {1, 0, 0, 1, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 577, 9};
+    PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_t};
+    __pyx_mstate_global->__pyx_codeobj_tab[1] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_entrap_ebm_engine_pyx, __pyx_mstate->__pyx_n_u_lambda, __pyx_k_JaqPQ, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[1])) goto bad;
   }
   {
-    const __Pyx_PyCode_New_function_description descr = {5, 0, 0, 5, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 139, 47};
+    const __Pyx_PyCode_New_function_description descr = {5, 0, 0, 5, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 166, 47};
     PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_self, __pyx_mstate->__pyx_n_u_x, __pyx_mstate->__pyx_n_u_mu, __pyx_mstate->__pyx_n_u_Sigma_inv, __pyx_mstate->__pyx_n_u_log_det_Sigma};
     __pyx_mstate_global->__pyx_codeobj_tab[2] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_entrap_ebm_engine_pyx, __pyx_mstate->__pyx_n_u_geometric_energy, __pyx_k_A8_r_1_1F_b_r_Rq_q, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[2])) goto bad;
   }
   {
-    const __Pyx_PyCode_New_function_description descr = {3, 0, 0, 3, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 172, 48};
+    const __Pyx_PyCode_New_function_description descr = {3, 0, 0, 3, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 199, 48};
     PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_self, __pyx_mstate->__pyx_n_u_points, __pyx_mstate->__pyx_n_u_cluster_size};
     __pyx_mstate_global->__pyx_codeobj_tab[3] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_entrap_ebm_engine_pyx, __pyx_mstate->__pyx_n_u_compute_normalized_topological_e, __pyx_k_A_4_Naq_F_1_V3m3d_q, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[3])) goto bad;
   }
   {
-    const __Pyx_PyCode_New_function_description descr = {5, 0, 0, 5, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 200, 59};
+    const __Pyx_PyCode_New_function_description descr = {5, 0, 0, 5, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 227, 59};
     PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_self, __pyx_mstate->__pyx_n_u_x, __pyx_mstate->__pyx_n_u_cluster_points, __pyx_mstate->__pyx_n_u_T_prev_norm, __pyx_mstate->__pyx_n_u_cluster_size};
     __pyx_mstate_global->__pyx_codeobj_tab[4] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_entrap_ebm_engine_pyx, __pyx_mstate->__pyx_n_u_delta_topological_energy, __pyx_k_A8_BgQa7Gq_PQQUUV_K1_Ba_A, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[4])) goto bad;
   }
   {
-    const __Pyx_PyCode_New_function_description descr = {3, 0, 0, 3, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 234, 35};
+    const __Pyx_PyCode_New_function_description descr = {3, 0, 0, 3, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 261, 35};
     PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_self, __pyx_mstate->__pyx_n_u_delta_T, __pyx_mstate->__pyx_n_u_cluster_size};
     __pyx_mstate_global->__pyx_codeobj_tab[5] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_entrap_ebm_engine_pyx, __pyx_mstate->__pyx_n_u_bounded_delta_energy, __pyx_k_A_fC_D_Q_9A, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[5])) goto bad;
   }
   {
-    const __Pyx_PyCode_New_function_description descr = {3, 0, 0, 3, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 256, 473};
+    const __Pyx_PyCode_New_function_description descr = {3, 0, 0, 3, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 283, 473};
     PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_self, __pyx_mstate->__pyx_n_u_X, __pyx_mstate->__pyx_n_u_true_noise_indices};
     __pyx_mstate_global->__pyx_codeobj_tab[6] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_entrap_ebm_engine_pyx, __pyx_mstate->__pyx_n_u_estimate_noise_energy, __pyx_k_A8_Qa_83a_L_1_1_82Q_1AQ_HARt1N_t, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[6])) goto bad;
   }
   {
-    const __Pyx_PyCode_New_function_description descr = {4, 0, 0, 65, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 362, 1421};
-    PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_self, __pyx_mstate->__pyx_n_u_X, __pyx_mstate->__pyx_n_u_labels, __pyx_mstate->__pyx_n_u_dek_selector, __pyx_mstate->__pyx_n_u_iteration, __pyx_mstate->__pyx_n_u_total_rescued, __pyx_mstate->__pyx_n_u_cid, __pyx_mstate->__pyx_n_u_candidate_idx, __pyx_mstate->__pyx_n_u_k_adaptive, __pyx_mstate->__pyx_n_u_k_query, __pyx_mstate->__pyx_n_u_d, __pyx_mstate->__pyx_n_u_recruited_this_round, __pyx_mstate->__pyx_n_u_noise_mask_any, __pyx_mstate->__pyx_n_u_consecutive_rejects, __pyx_mstate->__pyx_n_u_early_stop_threshold, __pyx_mstate->__pyx_n_u_E_G, __pyx_mstate->__pyx_n_u_E_cheap, __pyx_mstate->__pyx_n_u_E_total, __pyx_mstate->__pyx_n_u_E_noise, __pyx_mstate->__pyx_n_u_delta_T, __pyx_mstate->__pyx_n_u_delta_T_hat, __pyx_mstate->__pyx_n_u_lambda_G_t, __pyx_mstate->__pyx_n_u_candidate_local_indices_len, __pyx_mstate->__pyx_n_u_cluster_size, __pyx_mstate->__pyx_n_u_N_noise, __pyx_mstate->__pyx_n_u_len_candidates_list, __pyx_mstate->__pyx_n_u_refined_labels, __pyx_mstate->__pyx_n_u_noise_mask, __pyx_mstate->__pyx_n_u_unique_labels, __pyx_mstate->__pyx_n_u_cluster_sizes, __pyx_mstate->__pyx_n_u_sorted_cluster_ids, __pyx_mstate->__pyx_n_u_cluster_candidate_sets, __pyx_mstate->__pyx_n_u_all_claimed_candidates, __pyx_mstate->__pyx_n_u_noise_indices, __pyx_mstate->__pyx_n_u_noise_points, __pyx_mstate->__pyx_n_u_noise_tree, __pyx_mstate->__pyx_n_u_cluster_mask, __pyx_mstate->__pyx_n_u_cluster_points, __pyx_mstate->__pyx_n_u_distances, __pyx_mstate->__pyx_n_u_indices, __pyx_mstate->__pyx_n_u_candidate_local_indices, __pyx_mstate->__pyx_n_u_candidate_global_indices, __pyx_mstate->__pyx_n_u_true_noise_indices, __pyx_mstate->__pyx_n_u_true_noise_indices_arr, __pyx_mstate->__pyx_n_u_cluster_states, __pyx_mstate->__pyx_n_u_T_norm, __pyx_mstate->__pyx_n_u_state, __pyx_mstate->__pyx_n_u_candidates, __pyx_mstate->__pyx_n_u_candidates_list, __pyx_mstate->__pyx_n_u_mu, __pyx_mstate->__pyx_n_u_Sigma_reg, __pyx_mstate->__pyx_n_u_Sigma_inv, __pyx_mstate->__pyx_n_u_log_det_Sigma, __pyx_mstate->__pyx_n_u_candidate_energies, __pyx_mstate->__pyx_n_u_x, __pyx_mstate->__pyx_n_u_cluster_mask_current, __pyx_mstate->__pyx_n_u_cluster_points_current, __pyx_mstate->__pyx_n_u_other_cid, __pyx_mstate->__pyx_n_u_cluster_mask_updated, __pyx_mstate->__pyx_n_u_cluster_points_updated, __pyx_mstate->__pyx_n_u_cluster_stats, __pyx_mstate->__pyx_n_u_cid, __pyx_mstate->__pyx_n_u_cid, __pyx_mstate->__pyx_n_u__3, __pyx_mstate->__pyx_n_u_idx};
-    __pyx_mstate_global->__pyx_codeobj_tab[7] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_entrap_ebm_engine_pyx, __pyx_mstate->__pyx_n_u_reassign, __pyx_k_A_Q_uA_oT_4z_Q_3a_1_3a_c_3a_QfCq, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[7])) goto bad;
+    const __Pyx_PyCode_New_function_description descr = {4, 0, 0, 68, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 389, 1686};
+    PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_self, __pyx_mstate->__pyx_n_u_X, __pyx_mstate->__pyx_n_u_labels, __pyx_mstate->__pyx_n_u_dek_selector, __pyx_mstate->__pyx_n_u_iteration, __pyx_mstate->__pyx_n_u_total_rescued, __pyx_mstate->__pyx_n_u_cid, __pyx_mstate->__pyx_n_u_candidate_idx, __pyx_mstate->__pyx_n_u_k_adaptive, __pyx_mstate->__pyx_n_u_k_query, __pyx_mstate->__pyx_n_u_d, __pyx_mstate->__pyx_n_u_recruited_this_round, __pyx_mstate->__pyx_n_u_noise_mask_any, __pyx_mstate->__pyx_n_u_consecutive_rejects, __pyx_mstate->__pyx_n_u_early_stop_threshold, __pyx_mstate->__pyx_n_u_E_G, __pyx_mstate->__pyx_n_u_E_cheap, __pyx_mstate->__pyx_n_u_E_total, __pyx_mstate->__pyx_n_u_E_noise, __pyx_mstate->__pyx_n_u_delta_T, __pyx_mstate->__pyx_n_u_delta_T_hat, __pyx_mstate->__pyx_n_u_lambda_G_t, __pyx_mstate->__pyx_n_u_candidate_local_indices_len, __pyx_mstate->__pyx_n_u_cluster_size, __pyx_mstate->__pyx_n_u_N_noise, __pyx_mstate->__pyx_n_u_len_candidates_list, __pyx_mstate->__pyx_n_u_refined_labels, __pyx_mstate->__pyx_n_u_noise_mask, __pyx_mstate->__pyx_n_u_unique_labels, __pyx_mstate->__pyx_n_u_cluster_sizes, __pyx_mstate->__pyx_n_u_sorted_cluster_ids, __pyx_mstate->__pyx_n_u_cluster_candidate_sets, __pyx_mstate->__pyx_n_u_cluster_states, __pyx_mstate->__pyx_n_u_all_claimed_candidates, __pyx_mstate->__pyx_n_u_candidates, __pyx_mstate->__pyx_n_u_noise_indices, __pyx_mstate->__pyx_n_u_noise_points, __pyx_mstate->__pyx_n_u_noise_tree, __pyx_mstate->__pyx_n_u_cluster_points, __pyx_mstate->__pyx_n_u_true_noise_indices_arr, __pyx_mstate->__pyx_n_u_distances, __pyx_mstate->__pyx_n_u_indices, __pyx_mstate->__pyx_n_u_candidate_energies, __pyx_mstate->__pyx_n_u_candidates_list, __pyx_mstate->__pyx_n_u_cluster_mask, __pyx_mstate->__pyx_n_u_candidate_local_indices, __pyx_mstate->__pyx_n_u_candidate_global_indices, __pyx_mstate->__pyx_n_u_true_noise_indices, __pyx_mstate->__pyx_n_u_T_norm, __pyx_mstate->__pyx_n_u_state, __pyx_mstate->__pyx_n_u_mu, __pyx_mstate->__pyx_n_u_Sigma_reg, __pyx_mstate->__pyx_n_u_Sigma_inv, __pyx_mstate->__pyx_n_u_log_det_Sigma, __pyx_mstate->__pyx_n_u_x, __pyx_mstate->__pyx_n_u_cluster_mask_current, __pyx_mstate->__pyx_n_u_cluster_points_current, __pyx_mstate->__pyx_n_u_cluster_indices_current, __pyx_mstate->__pyx_n_u_tda_meta, __pyx_mstate->__pyx_n_u_other_cid, __pyx_mstate->__pyx_n_u_cluster_mask_updated, __pyx_mstate->__pyx_n_u_cluster_points_updated, __pyx_mstate->__pyx_n_u_cluster_stats, __pyx_mstate->__pyx_n_u_cache_stats, __pyx_mstate->__pyx_n_u_cid, __pyx_mstate->__pyx_n_u_cid, __pyx_mstate->__pyx_n_u__3, __pyx_mstate->__pyx_n_u_idx};
+    __pyx_mstate_global->__pyx_codeobj_tab[7] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_entrap_ebm_engine_pyx, __pyx_mstate->__pyx_n_u_reassign, __pyx_k_AD_Q_uA_oT_4z_Q_3a_1_3a_c_3a_QfC, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[7])) goto bad;
   }
   {
-    const __Pyx_PyCode_New_function_description descr = {1, 0, 0, 1, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 614, 12};
+    const __Pyx_PyCode_New_function_description descr = {1, 0, 0, 1, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 686, 34};
     PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_self};
-    __pyx_mstate_global->__pyx_codeobj_tab[8] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_entrap_ebm_engine_pyx, __pyx_mstate->__pyx_n_u_cleanup, __pyx_k_A_HA, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[8])) goto bad;
+    __pyx_mstate_global->__pyx_codeobj_tab[8] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_entrap_ebm_engine_pyx, __pyx_mstate->__pyx_n_u_cleanup, __pyx_k_A_HA_4_q, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[8])) goto bad;
   }
   {
-    const __Pyx_PyCode_New_function_description descr = {1, 0, 0, 4, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 1, 355};
+    const __Pyx_PyCode_New_function_description descr = {1, 0, 0, 4, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 1, 426};
     PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_self, __pyx_mstate->__pyx_n_u_state, __pyx_mstate->__pyx_n_u_dict_2, __pyx_mstate->__pyx_n_u_use_setstate};
-    __pyx_mstate_global->__pyx_codeobj_tab[9] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_stringsource, __pyx_mstate->__pyx_n_u_reduce_cython, __pyx_k_T_WD_B_FXX_ccggssw_x_C_C_G_G_e, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[9])) goto bad;
+    __pyx_mstate_global->__pyx_codeobj_tab[9] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_stringsource, __pyx_mstate->__pyx_n_u_reduce_cython, __pyx_k_T_WD_B_FXX_ccggyy_J_J_N_N_Y_Y_O, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[9])) goto bad;
   }
   {
     const __Pyx_PyCode_New_function_description descr = {2, 0, 0, 2, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 16, 11};
@@ -16419,7 +17482,7 @@ static int __Pyx_CreateCodeObjects(__pyx_mstatetype *__pyx_mstate) {
   {
     const __Pyx_PyCode_New_function_description descr = {3, 0, 0, 5, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 1, 90};
     PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_pyx_type, __pyx_mstate->__pyx_n_u_pyx_checksum, __pyx_mstate->__pyx_n_u_pyx_state, __pyx_mstate->__pyx_n_u_pyx_PickleError, __pyx_mstate->__pyx_n_u_pyx_result};
-    __pyx_mstate_global->__pyx_codeobj_tab[11] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_stringsource, __pyx_mstate->__pyx_n_u_pyx_unpickle_EBM_Reassignment, __pyx_k_hk_A_1_E_E_G_G_H_1_7_9_TTbbc_1, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[11])) goto bad;
+    __pyx_mstate_global->__pyx_codeobj_tab[11] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_stringsource, __pyx_mstate->__pyx_n_u_pyx_unpickle_EBM_Reassignment, __pyx_k_hk_A_1_k_k_m_m_n_1_7_9_TTbbc_1, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[11])) goto bad;
   }
   Py_DECREF(tuple_dedup_map);
   return 0;
@@ -18597,6 +19660,38 @@ static CYTHON_INLINE int __Pyx_MergeKeywords(PyObject *kwdict, PyObject *source_
     }
 }
 
+/* PyObjectVectorCallKwBuilder */
+#if CYTHON_VECTORCALL
+static int __Pyx_VectorcallBuilder_AddArg(PyObject *key, PyObject *value, PyObject *builder, PyObject **args, int n) {
+    (void)__Pyx_PyObject_FastCallDict;
+    if (__Pyx_PyTuple_SET_ITEM(builder, n, key) != (0)) return -1;
+    Py_INCREF(key);
+    args[n] = value;
+    return 0;
+}
+CYTHON_UNUSED static int __Pyx_VectorcallBuilder_AddArg_Check(PyObject *key, PyObject *value, PyObject *builder, PyObject **args, int n) {
+    (void)__Pyx_VectorcallBuilder_AddArgStr;
+    if (unlikely(!PyUnicode_Check(key))) {
+        PyErr_SetString(PyExc_TypeError, "keywords must be strings");
+        return -1;
+    }
+    return __Pyx_VectorcallBuilder_AddArg(key, value, builder, args, n);
+}
+static int __Pyx_VectorcallBuilder_AddArgStr(const char *key, PyObject *value, PyObject *builder, PyObject **args, int n) {
+    PyObject *pyKey = PyUnicode_FromString(key);
+    if (!pyKey) return -1;
+    return __Pyx_VectorcallBuilder_AddArg(pyKey, value, builder, args, n);
+}
+#else // CYTHON_VECTORCALL
+CYTHON_UNUSED static int __Pyx_VectorcallBuilder_AddArg_Check(PyObject *key, PyObject *value, PyObject *builder, CYTHON_UNUSED PyObject **args, CYTHON_UNUSED int n) {
+    if (unlikely(!PyUnicode_Check(key))) {
+        PyErr_SetString(PyExc_TypeError, "keywords must be strings");
+        return -1;
+    }
+    return PyDict_SetItem(builder, key, value);
+}
+#endif
+
 /* ExtTypeTest */
 static CYTHON_INLINE int __Pyx_TypeTest(PyObject *obj, PyTypeObject *type) {
     __Pyx_TypeName obj_type_name;
@@ -18821,38 +19916,6 @@ static PyObject *__Pyx_PyObject_GetItem(PyObject *obj, PyObject *key) {
 }
 #endif
 
-/* PyObjectVectorCallKwBuilder */
-#if CYTHON_VECTORCALL
-static int __Pyx_VectorcallBuilder_AddArg(PyObject *key, PyObject *value, PyObject *builder, PyObject **args, int n) {
-    (void)__Pyx_PyObject_FastCallDict;
-    if (__Pyx_PyTuple_SET_ITEM(builder, n, key) != (0)) return -1;
-    Py_INCREF(key);
-    args[n] = value;
-    return 0;
-}
-CYTHON_UNUSED static int __Pyx_VectorcallBuilder_AddArg_Check(PyObject *key, PyObject *value, PyObject *builder, PyObject **args, int n) {
-    (void)__Pyx_VectorcallBuilder_AddArgStr;
-    if (unlikely(!PyUnicode_Check(key))) {
-        PyErr_SetString(PyExc_TypeError, "keywords must be strings");
-        return -1;
-    }
-    return __Pyx_VectorcallBuilder_AddArg(key, value, builder, args, n);
-}
-static int __Pyx_VectorcallBuilder_AddArgStr(const char *key, PyObject *value, PyObject *builder, PyObject **args, int n) {
-    PyObject *pyKey = PyUnicode_FromString(key);
-    if (!pyKey) return -1;
-    return __Pyx_VectorcallBuilder_AddArg(pyKey, value, builder, args, n);
-}
-#else // CYTHON_VECTORCALL
-CYTHON_UNUSED static int __Pyx_VectorcallBuilder_AddArg_Check(PyObject *key, PyObject *value, PyObject *builder, CYTHON_UNUSED PyObject **args, CYTHON_UNUSED int n) {
-    if (unlikely(!PyUnicode_Check(key))) {
-        PyErr_SetString(PyExc_TypeError, "keywords must be strings");
-        return -1;
-    }
-    return PyDict_SetItem(builder, key, value);
-}
-#endif
-
 /* PyFloatBinop */
 #if !CYTHON_COMPILING_IN_PYPY
 static PyObject* __Pyx_PyFloat_AddObjC(PyObject *op1, PyObject *op2, double floatval, int inplace, int zerodivision_check) {
@@ -18977,67 +20040,6 @@ static CYTHON_INLINE void __Pyx_ExceptionSwap(PyObject **type, PyObject **value,
     *tb = tmp_tb;
 }
 #endif
-
-/* PyLongCompare */
-static CYTHON_INLINE PyObject* __Pyx_PyLong_EqObjC(PyObject *op1, PyObject *op2, long intval, long inplace) {
-    CYTHON_MAYBE_UNUSED_VAR(intval);
-    CYTHON_UNUSED_VAR(inplace);
-    if (op1 == op2) {
-        Py_RETURN_TRUE;
-    }
-    #if CYTHON_USE_PYLONG_INTERNALS
-    if (likely(PyLong_CheckExact(op1))) {
-        int unequal;
-        unsigned long uintval;
-        Py_ssize_t size = __Pyx_PyLong_DigitCount(op1);
-        const digit* digits = __Pyx_PyLong_Digits(op1);
-        if (intval == 0) {
-            if (__Pyx_PyLong_IsZero(op1) == 1) Py_RETURN_TRUE; else Py_RETURN_FALSE;
-        } else if (intval < 0) {
-            if (__Pyx_PyLong_IsNonNeg(op1))
-                Py_RETURN_FALSE;
-            intval = -intval;
-        } else {
-            if (__Pyx_PyLong_IsNeg(op1))
-                Py_RETURN_FALSE;
-        }
-        uintval = (unsigned long) intval;
-#if PyLong_SHIFT * 4 < SIZEOF_LONG*8
-        if (uintval >> (PyLong_SHIFT * 4)) {
-            unequal = (size != 5) || (digits[0] != (uintval & (unsigned long) PyLong_MASK))
-                 | (digits[1] != ((uintval >> (1 * PyLong_SHIFT)) & (unsigned long) PyLong_MASK)) | (digits[2] != ((uintval >> (2 * PyLong_SHIFT)) & (unsigned long) PyLong_MASK)) | (digits[3] != ((uintval >> (3 * PyLong_SHIFT)) & (unsigned long) PyLong_MASK)) | (digits[4] != ((uintval >> (4 * PyLong_SHIFT)) & (unsigned long) PyLong_MASK));
-        } else
-#endif
-#if PyLong_SHIFT * 3 < SIZEOF_LONG*8
-        if (uintval >> (PyLong_SHIFT * 3)) {
-            unequal = (size != 4) || (digits[0] != (uintval & (unsigned long) PyLong_MASK))
-                 | (digits[1] != ((uintval >> (1 * PyLong_SHIFT)) & (unsigned long) PyLong_MASK)) | (digits[2] != ((uintval >> (2 * PyLong_SHIFT)) & (unsigned long) PyLong_MASK)) | (digits[3] != ((uintval >> (3 * PyLong_SHIFT)) & (unsigned long) PyLong_MASK));
-        } else
-#endif
-#if PyLong_SHIFT * 2 < SIZEOF_LONG*8
-        if (uintval >> (PyLong_SHIFT * 2)) {
-            unequal = (size != 3) || (digits[0] != (uintval & (unsigned long) PyLong_MASK))
-                 | (digits[1] != ((uintval >> (1 * PyLong_SHIFT)) & (unsigned long) PyLong_MASK)) | (digits[2] != ((uintval >> (2 * PyLong_SHIFT)) & (unsigned long) PyLong_MASK));
-        } else
-#endif
-#if PyLong_SHIFT * 1 < SIZEOF_LONG*8
-        if (uintval >> (PyLong_SHIFT * 1)) {
-            unequal = (size != 2) || (digits[0] != (uintval & (unsigned long) PyLong_MASK))
-                 | (digits[1] != ((uintval >> (1 * PyLong_SHIFT)) & (unsigned long) PyLong_MASK));
-        } else
-#endif
-            unequal = (size != 1) || (((unsigned long) digits[0]) != (uintval & (unsigned long) PyLong_MASK));
-        if (unequal == 0) Py_RETURN_TRUE; else Py_RETURN_FALSE;
-    }
-    #endif
-    if (PyFloat_CheckExact(op1)) {
-        const long b = intval;
-        double a = __Pyx_PyFloat_AS_DOUBLE(op1);
-        if ((double)a == (double)b) Py_RETURN_TRUE; else Py_RETURN_FALSE;
-    }
-    return (
-        PyObject_RichCompare(op1, op2, Py_EQ));
-}
 
 /* LimitedApiGetTypeDict */
 #if CYTHON_COMPILING_IN_LIMITED_API
@@ -20534,6 +21536,116 @@ static PyObject *__Pyx_Object_VectorcallMethod_CallFromBuilder(PyObject *name, P
 }
 #endif
 
+/* PyObjectCall2Args */
+static CYTHON_INLINE PyObject* __Pyx_PyObject_Call2Args(PyObject* function, PyObject* arg1, PyObject* arg2) {
+    PyObject *args[3] = {NULL, arg1, arg2};
+    return __Pyx_PyObject_FastCall(function, args+1, 2 | __Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET);
+}
+
+/* CallUnboundCMethod1 */
+#if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE PyObject* __Pyx_CallUnboundCMethod1(__Pyx_CachedCFunction* cfunc, PyObject* self, PyObject* arg) {
+    int was_initialized =  __Pyx_CachedCFunction_GetAndSetInitializing(cfunc);
+    if (likely(was_initialized == 2 && cfunc->func)) {
+        int flag = cfunc->flag;
+        if (flag == METH_O) {
+            return __Pyx_CallCFunction(cfunc, self, arg);
+        } else if (flag == METH_FASTCALL) {
+            return __Pyx_CallCFunctionFast(cfunc, self, &arg, 1);
+        } else if (flag == (METH_FASTCALL | METH_KEYWORDS)) {
+            return __Pyx_CallCFunctionFastWithKeywords(cfunc, self, &arg, 1, NULL);
+        }
+    }
+#if CYTHON_COMPILING_IN_CPYTHON_FREETHREADING
+    else if (unlikely(was_initialized == 1)) {
+        __Pyx_CachedCFunction tmp_cfunc = {
+#ifndef __cplusplus
+            0
+#endif
+        };
+        tmp_cfunc.type = cfunc->type;
+        tmp_cfunc.method_name = cfunc->method_name;
+        return __Pyx__CallUnboundCMethod1(&tmp_cfunc, self, arg);
+    }
+#endif
+    PyObject* result = __Pyx__CallUnboundCMethod1(cfunc, self, arg);
+    __Pyx_CachedCFunction_SetFinishedInitializing(cfunc);
+    return result;
+}
+#endif
+static PyObject* __Pyx__CallUnboundCMethod1(__Pyx_CachedCFunction* cfunc, PyObject* self, PyObject* arg){
+    PyObject *result = NULL;
+    if (unlikely(!cfunc->func && !cfunc->method) && unlikely(__Pyx_TryUnpackUnboundCMethod(cfunc) < 0)) return NULL;
+#if CYTHON_COMPILING_IN_CPYTHON
+    if (cfunc->func && (cfunc->flag & METH_VARARGS)) {
+        PyObject *args = PyTuple_New(1);
+        if (unlikely(!args)) return NULL;
+        Py_INCREF(arg);
+        PyTuple_SET_ITEM(args, 0, arg);
+        if (cfunc->flag & METH_KEYWORDS)
+            result = __Pyx_CallCFunctionWithKeywords(cfunc, self, args, NULL);
+        else
+            result = __Pyx_CallCFunction(cfunc, self, args);
+        Py_DECREF(args);
+    } else
+#endif
+    {
+        result = __Pyx_PyObject_Call2Args(cfunc->method, self, arg);
+    }
+    return result;
+}
+
+/* set_iter */
+static CYTHON_INLINE PyObject* __Pyx_set_iterator(PyObject* iterable, int is_set,
+                                                  Py_ssize_t* p_orig_length, int* p_source_is_set) {
+#if CYTHON_COMPILING_IN_CPYTHON && PY_VERSION_HEX < 0x030d0000
+    is_set = is_set || likely(PySet_CheckExact(iterable) || PyFrozenSet_CheckExact(iterable));
+    *p_source_is_set = is_set;
+    if (likely(is_set)) {
+        *p_orig_length = PySet_Size(iterable);
+        Py_INCREF(iterable);
+        return iterable;
+    }
+#else
+    CYTHON_UNUSED_VAR(is_set);
+    *p_source_is_set = 0;
+#endif
+    *p_orig_length = 0;
+    return PyObject_GetIter(iterable);
+}
+static CYTHON_INLINE int __Pyx_set_iter_next(
+        PyObject* iter_obj, Py_ssize_t orig_length,
+        Py_ssize_t* ppos, PyObject **value,
+        int source_is_set) {
+    if (!CYTHON_COMPILING_IN_CPYTHON || PY_VERSION_HEX >= 0x030d0000 || unlikely(!source_is_set)) {
+        *value = PyIter_Next(iter_obj);
+        if (unlikely(!*value)) {
+            return __Pyx_IterFinish();
+        }
+        CYTHON_UNUSED_VAR(orig_length);
+        CYTHON_UNUSED_VAR(ppos);
+        return 1;
+    }
+#if CYTHON_COMPILING_IN_CPYTHON && PY_VERSION_HEX < 0x030d0000
+    if (unlikely(PySet_GET_SIZE(iter_obj) != orig_length)) {
+        PyErr_SetString(
+            PyExc_RuntimeError,
+            "set changed size during iteration");
+        return -1;
+    }
+    {
+        Py_hash_t hash;
+        int ret = _PySet_NextEntry(iter_obj, ppos, value, &hash);
+        assert (ret != -1);
+        if (likely(ret)) {
+            Py_INCREF(*value);
+            return 1;
+        }
+    }
+#endif
+    return 0;
+}
+
 /* PyLongCompare */
 static CYTHON_INLINE int __Pyx_PyLong_BoolEqObjC(PyObject *op1, PyObject *op2, long intval, long inplace) {
     CYTHON_MAYBE_UNUSED_VAR(intval);
@@ -20593,65 +21705,6 @@ static CYTHON_INLINE int __Pyx_PyLong_BoolEqObjC(PyObject *op1, PyObject *op2, l
     }
     return __Pyx_PyObject_IsTrueAndDecref(
         PyObject_RichCompare(op1, op2, Py_EQ));
-}
-
-/* PyObjectCall2Args */
-static CYTHON_INLINE PyObject* __Pyx_PyObject_Call2Args(PyObject* function, PyObject* arg1, PyObject* arg2) {
-    PyObject *args[3] = {NULL, arg1, arg2};
-    return __Pyx_PyObject_FastCall(function, args+1, 2 | __Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET);
-}
-
-/* CallUnboundCMethod1 */
-#if CYTHON_COMPILING_IN_CPYTHON
-static CYTHON_INLINE PyObject* __Pyx_CallUnboundCMethod1(__Pyx_CachedCFunction* cfunc, PyObject* self, PyObject* arg) {
-    int was_initialized =  __Pyx_CachedCFunction_GetAndSetInitializing(cfunc);
-    if (likely(was_initialized == 2 && cfunc->func)) {
-        int flag = cfunc->flag;
-        if (flag == METH_O) {
-            return __Pyx_CallCFunction(cfunc, self, arg);
-        } else if (flag == METH_FASTCALL) {
-            return __Pyx_CallCFunctionFast(cfunc, self, &arg, 1);
-        } else if (flag == (METH_FASTCALL | METH_KEYWORDS)) {
-            return __Pyx_CallCFunctionFastWithKeywords(cfunc, self, &arg, 1, NULL);
-        }
-    }
-#if CYTHON_COMPILING_IN_CPYTHON_FREETHREADING
-    else if (unlikely(was_initialized == 1)) {
-        __Pyx_CachedCFunction tmp_cfunc = {
-#ifndef __cplusplus
-            0
-#endif
-        };
-        tmp_cfunc.type = cfunc->type;
-        tmp_cfunc.method_name = cfunc->method_name;
-        return __Pyx__CallUnboundCMethod1(&tmp_cfunc, self, arg);
-    }
-#endif
-    PyObject* result = __Pyx__CallUnboundCMethod1(cfunc, self, arg);
-    __Pyx_CachedCFunction_SetFinishedInitializing(cfunc);
-    return result;
-}
-#endif
-static PyObject* __Pyx__CallUnboundCMethod1(__Pyx_CachedCFunction* cfunc, PyObject* self, PyObject* arg){
-    PyObject *result = NULL;
-    if (unlikely(!cfunc->func && !cfunc->method) && unlikely(__Pyx_TryUnpackUnboundCMethod(cfunc) < 0)) return NULL;
-#if CYTHON_COMPILING_IN_CPYTHON
-    if (cfunc->func && (cfunc->flag & METH_VARARGS)) {
-        PyObject *args = PyTuple_New(1);
-        if (unlikely(!args)) return NULL;
-        Py_INCREF(arg);
-        PyTuple_SET_ITEM(args, 0, arg);
-        if (cfunc->flag & METH_KEYWORDS)
-            result = __Pyx_CallCFunctionWithKeywords(cfunc, self, args, NULL);
-        else
-            result = __Pyx_CallCFunction(cfunc, self, args);
-        Py_DECREF(args);
-    } else
-#endif
-    {
-        result = __Pyx_PyObject_Call2Args(cfunc->method, self, arg);
-    }
-    return result;
 }
 
 /* PyFloatBinop */
@@ -20910,6 +21963,73 @@ static CYTHON_INLINE int __Pyx_SetItemInt_Fast(PyObject *o, Py_ssize_t i, PyObje
     }
 #endif
     return __Pyx_SetItemInt_Generic(o, PyLong_FromSsize_t(i), v);
+}
+
+/* pyfrozenset_new */
+static CYTHON_INLINE PyObject* __Pyx_PyFrozenSet_New(PyObject* it) {
+    if (it) {
+        PyObject* result;
+#if CYTHON_COMPILING_IN_PYPY
+        PyObject* args;
+        args = PyTuple_Pack(1, it);
+        if (unlikely(!args))
+            return NULL;
+        result = PyObject_Call((PyObject*)&PyFrozenSet_Type, args, NULL);
+        Py_DECREF(args);
+        return result;
+#else
+        if (PyFrozenSet_CheckExact(it)) {
+            Py_INCREF(it);
+            return it;
+        }
+        result = PyFrozenSet_New(it);
+        if (unlikely(!result))
+            return NULL;
+        if ((__PYX_LIMITED_VERSION_HEX >= 0x030A0000)
+#if CYTHON_COMPILING_IN_LIMITED_API
+            || __Pyx_get_runtime_version() >= 0x030A0000
+#endif
+            )
+            return result;
+        {
+            Py_ssize_t size = __Pyx_PySet_GET_SIZE(result);
+            if (likely(size > 0))
+                return result;
+#if !CYTHON_ASSUME_SAFE_SIZE
+            if (unlikely(size < 0)) {
+                Py_DECREF(result);
+                return NULL;
+            }
+#endif
+        }
+        Py_DECREF(result);
+#endif
+    }
+    return __Pyx_PyObject_CallNoArg((PyObject*) &PyFrozenSet_Type);
+}
+
+/* py_set_discard_unhashable */
+static int __Pyx_PySet_DiscardUnhashable(PyObject *set, PyObject *key) {
+    PyObject *tmpkey;
+    int rv;
+    if (likely(!PySet_Check(key) || !PyErr_ExceptionMatches(PyExc_TypeError)))
+        return -1;
+    PyErr_Clear();
+    tmpkey = __Pyx_PyFrozenSet_New(key);
+    if (tmpkey == NULL)
+        return -1;
+    rv = PySet_Discard(set, tmpkey);
+    Py_DECREF(tmpkey);
+    return rv;
+}
+
+/* py_set_discard */
+static CYTHON_INLINE int __Pyx_PySet_Discard(PyObject *set, PyObject *key) {
+    int found = PySet_Discard(set, key);
+    if (unlikely(found < 0)) {
+        found = __Pyx_PySet_DiscardUnhashable(set, key);
+    }
+    return found;
 }
 
 /* RejectKeywords */
@@ -23309,6 +24429,39 @@ static int __Pyx_check_binary_version(unsigned long ct_version, unsigned long rt
        );
         return PyErr_WarnEx(NULL, message, 1);
     }
+}
+
+/* FunctionExport */
+static int __Pyx_ExportFunction(const char *name, void (*f)(void), const char *sig) {
+    PyObject *d = 0;
+    PyObject *cobj = 0;
+    union {
+        void (*fp)(void);
+        void *p;
+    } tmp;
+    d = PyObject_GetAttrString(__pyx_m, "__pyx_capi__");
+    if (!d) {
+        PyErr_Clear();
+        d = PyDict_New();
+        if (!d)
+            goto bad;
+        Py_INCREF(d);
+        if (PyModule_AddObject(__pyx_m, "__pyx_capi__", d) < 0)
+            goto bad;
+    }
+    tmp.fp = f;
+    cobj = PyCapsule_New(tmp.p, sig, 0);
+    if (!cobj)
+        goto bad;
+    if (PyDict_SetItemString(d, name, cobj) < 0)
+        goto bad;
+    Py_DECREF(cobj);
+    Py_DECREF(d);
+    return 0;
+bad:
+    Py_XDECREF(cobj);
+    Py_XDECREF(d);
+    return -1;
 }
 
 /* FunctionImport */

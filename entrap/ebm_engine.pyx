@@ -14,6 +14,9 @@ from numpy.linalg import slogdet
 # Import Topological Energy Computer dari pure Python
 from .topological_energy import Topological_Energy_Computer
 
+# Import Incremental TDA Engine for memory-bounded caching
+from .incremental_tda import Incremental_TDA_Engine
+
 # Import dari Cython modules
 from .kernels cimport (
     compute_cluster_mean,
@@ -28,6 +31,12 @@ import logging
 np.import_array()
 
 logger = logging.getLogger(__name__)
+
+# Helper: Extract energy from tuple for sorting (replaces lambda)
+cdef inline double _get_energy_value(tuple item):
+    """Extract energy value from (index, energy) tuple."""
+    return item[1]
+
 
 # Constants
 DEF ALPHA = 0.5
@@ -81,6 +90,7 @@ cdef class EBM_Reassignment_Engine:
                  double ridge_epsilon = RIDGE_EPSILON,
                  str metric = 'euclidean',
                  bint use_memmap = True,
+                 bint use_incremental_tda = False,
                  **metric_params):
         """
         Initialize EBM_Reassignment_Engine.
@@ -111,6 +121,9 @@ cdef class EBM_Reassignment_Engine:
             Distance metric.
         use_memmap : bool, default=True
             Use memory mapping for large distance matrices.
+        use_incremental_tda : bool, default=False
+            Enable incremental TDA with memory-bounded caching for faster
+            iterative topological energy computation.
         **metric_params
             Additional metric parameters.
         """
@@ -132,6 +145,20 @@ cdef class EBM_Reassignment_Engine:
         self.energy_computer = Topological_Energy_Computer(
             metric=metric, use_memmap=use_memmap, **metric_params
         )
+        
+        # Initialize incremental TDA engine if enabled
+        self.use_incremental_tda = use_incremental_tda
+        if use_incremental_tda:
+            self.incremental_tda = Incremental_TDA_Engine(
+                self.energy_computer,
+                cache_config={
+                    'max_diagrams': 10,
+                    'memory_threshold_mb': 500,
+                    'validity_window': 5
+                }
+            )
+        else:
+            self.incremental_tda = None
         
         self.empirical_noise_energy_ = None
         self.noise_energy_details_ = None
@@ -368,8 +395,10 @@ cdef class EBM_Reassignment_Engine:
         energy. Uses sorted evaluation and early stopping to minimize expensive
         TDA calls.
         
-        Note: This is a regular Python method (def not cpdef) to allow
-        flexible Python operations including lambda sorting.
+        Note: Uses def (not cpdef) because list comprehensions and lambdas create
+        closures which Cython doesn't support in cpdef. However, extensive type
+        declarations on internal variables still provide significant performance
+        benefits compared to pure Python.
         
         Parameters
         ----------
@@ -382,12 +411,13 @@ cdef class EBM_Reassignment_Engine:
         
         Returns
         -------
-        refined_labels : ndarray
-            Updated labels with noise points reassigned.
-        n_rescued : int
-            Number of points successfully reassigned.
-        cluster_stats : dict
-            Per-cluster statistics: {cluster_id: {iterations, rescued, tda_calls, ...}}
+        tuple : (refined_labels, n_rescued, cluster_stats)
+            refined_labels : ndarray
+                Updated labels with noise points reassigned.
+            n_rescued : int
+                Number of points successfully reassigned.
+            cluster_stats : dict
+                Per-cluster statistics: {cluster_id: {iterations, rescued, tda_calls, ...}}
         """
 
         cdef int iteration = 0
@@ -406,6 +436,18 @@ cdef class EBM_Reassignment_Engine:
         cdef int cluster_size
         cdef int N_noise
         cdef int len_candidates_list
+        cdef np.ndarray refined_labels
+        cdef np.ndarray noise_mask
+        cdef np.ndarray unique_labels
+        cdef list cluster_sizes, sorted_cluster_ids
+        cdef dict cluster_candidate_sets, cluster_states
+        cdef set all_claimed_candidates, candidates
+        cdef np.ndarray noise_indices, noise_points
+        cdef object noise_tree
+        cdef np.ndarray cluster_points
+        cdef np.ndarray true_noise_indices_arr
+        cdef np.ndarray distances, indices
+        cdef list candidate_energies, candidates_list
         
         refined_labels = labels.copy()
         noise_mask = (refined_labels == -1)
@@ -478,8 +520,10 @@ cdef class EBM_Reassignment_Engine:
                 'T_norm': T_norm,
                 'size': cluster_size,
                 'candidates': cluster_candidate_sets[cid].copy(),
+                'cluster_indices': np.where(cluster_mask)[0].tolist(),  # Track indices for caching
                 'rescued_count': 0,
                 'tda_calls': 0,
+                'cache_hits': 0,
                 'needs_T_update': False
             }
         
@@ -528,8 +572,9 @@ cdef class EBM_Reassignment_Engine:
                     E_G = self.geometric_energy(x, mu, Sigma_inv, log_det_Sigma)
                     candidate_energies.append((candidate_idx, E_G))
                 
-                # Sort by ascending E_G (lambda is OK here since it's def not cpdef)
-                candidate_energies.sort(key=lambda item: item[1])
+                # Sort by ascending E_G using sorted() - cpdef compatible
+                # (no lambda allowed, but sorted() with key param works fine in cpdef)
+                candidate_energies = sorted(candidate_energies, key=lambda t: t[1])
                 
                 # Early stopping counter
                 consecutive_rejects = 0
@@ -552,12 +597,23 @@ cdef class EBM_Reassignment_Engine:
                     cluster_mask_current = (refined_labels == cid)
                     cluster_points_current = X[cluster_mask_current]
                     
-                    delta_T = self.delta_topological_energy(
-                        x, cluster_points_current, state['T_norm'], state['size']
-                    )
-                    delta_T_hat = self.bounded_delta_energy(delta_T, state['size'])
-                    state['tda_calls'] += 1
+                    # Use incremental TDA if enabled, otherwise fall back to full computation
+                    if self.incremental_tda is not None:
+                        cluster_indices_current = np.where(cluster_mask_current)[0]
+                        delta_T, tda_meta = self.incremental_tda.compute_delta_topological_energy(
+                            x, cluster_points_current, cluster_indices_current,
+                            state['T_norm'], state['size']
+                        )
+                        state['tda_calls'] += 1
+                        if tda_meta.get('cache_hit', False):
+                            state['cache_hits'] += 1
+                    else:
+                        delta_T = self.delta_topological_energy(
+                            x, cluster_points_current, state['T_norm'], state['size']
+                        )
+                        state['tda_calls'] += 1
                     
+                    delta_T_hat = self.bounded_delta_energy(delta_T, state['size'])
                     E_total = E_cheap + self.lambda_T * delta_T_hat
                     
                     if E_total < E_noise:
@@ -589,6 +645,14 @@ cdef class EBM_Reassignment_Engine:
                         cluster_points_updated, state['size']
                     )
                     state['needs_T_update'] = False
+                
+                # Invalidate cache for completed cluster iteration
+                if self.incremental_tda is not None and len(state['candidates']) == 0:
+                    self.incremental_tda.invalidate_cluster_cache(state['cluster_indices'])
+            
+            # Signal iteration advance for cache staleness tracking
+            if self.incremental_tda is not None:
+                self.incremental_tda.next_iteration()
             
             iteration += 1
             
@@ -603,14 +667,24 @@ cdef class EBM_Reassignment_Engine:
                 'iterations': iteration,
                 'rescued': state['rescued_count'],
                 'tda_calls': state['tda_calls'],
+                'cache_hits': state.get('cache_hits', 0),
                 'final_size': state['size'],
                 'final_T_norm': state['T_norm'],
                 'converged': True
             }
         
+        # Log cache statistics if incremental TDA enabled
+        if self.incremental_tda is not None:
+            cache_stats = self.incremental_tda.get_cache_stats()
+            logger.info(f"Cache stats: {cache_stats}")
+            # Cleanup cache
+            self.incremental_tda.cleanup()
+        
         gc.collect()
         return refined_labels, total_rescued, cluster_stats
     
     cpdef void cleanup(self):
-        """Release memory-mapped resources."""
+        """Release memory-mapped resources and incremental TDA cache."""
         self.energy_computer.cleanup()
+        if self.incremental_tda is not None:
+            self.incremental_tda.cleanup()
